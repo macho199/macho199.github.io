@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Home"
+title: "Posts"
 ---
 <h1>Posts</h1>
 <ul>
