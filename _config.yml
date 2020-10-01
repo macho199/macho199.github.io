@@ -5,6 +5,7 @@ description: >- # this means to ignore newlines until "baseurl:"
   Programming, IT Trend, Story, PHP, Javascript, Python, Docker
 author: "js Kwon"
 lang: "ko-KR"
+logo: "/assets/img/logo.PNG"
 
 plugins:
   - jekyll-feed
