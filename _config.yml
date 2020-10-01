@@ -10,7 +10,7 @@ defaults:
   - scope:
       path: "assets/img"
     values:
-      image: logo1.png
+      image: logo.png
 
 plugins:
   - jekyll-feed
