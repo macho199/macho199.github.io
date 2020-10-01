@@ -9,6 +9,5 @@ gem "jekyll"
 
 group :jekyll_plugins do
   gem "jekyll-feed"
-  gem "jekyll-analytics"
   gem "jekyll-sitemap"
 end

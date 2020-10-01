@@ -4,10 +4,6 @@ title: "" # the name of your site, e.g. ACME Corp.
 
 plugins:
   - jekyll-feed
-  - jekyll-analytics
   - jekyll-sitemap
 
-jekyll_analytics:
-  GoogleAnalytics:          # Add, if you want to track with Google Analytics
-    id: UA-144643589-1      # Required - replace with your tracking id
-    anonymizeIp: false      # Optional - Default: false - set to true for anonymized tracking
+google_analytics: UA-144643589-1
