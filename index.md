@@ -1,6 +1,6 @@
 ---
 layout: default
-title: "Posts"
+title: "macho199 Blog"
 ---
 <h1>Posts</h1>
 <ul>
