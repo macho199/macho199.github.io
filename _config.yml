@@ -8,9 +8,9 @@ lang: "ko-KR"
 
 defaults:
   - scope:
-      path: ""
+      path: "assets/img"
     values:
-      image: /assets/img/logo.png
+      image: logo.png
 
 plugins:
   - jekyll-feed
