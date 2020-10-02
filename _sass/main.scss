@@ -2,8 +2,69 @@ $backgroundColor: #ffffff;
 $bodyColor: #000000;
 $bodyFont: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
 
-body {
-  background: $backgroundColor;
-  color: $bodyColor;
-  font-family: $bodyFont;
-}
+/** Reset some basic elements */
+body, h1, h2, h3, h4, h5, h6, p, blockquote, pre, hr, dl, dd, ol, ul, figure { margin: 0; padding: 0; }
+
+body { font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; color: #111; background-color: #fdfdfd; -webkit-text-size-adjust: 100%; -webkit-font-feature-settings: "kern" 1; -moz-font-feature-settings: "kern" 1; -o-font-feature-settings: "kern" 1; font-feature-settings: "kern" 1; font-kerning: normal; display: flex; min-height: 100vh; flex-direction: column; }
+
+/** Basic styling */
+/* body { font: 400 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; color: #111; background-color: #fdfdfd; -webkit-text-size-adjust: 100%; -webkit-font-feature-settings: "kern" 1; -moz-font-feature-settings: "kern" 1; -o-font-feature-settings: "kern" 1; font-feature-settings: "kern" 1; font-kerning: normal; display: flex; min-height: 100vh; flex-direction: column; } */
+
+/** Set `margin-bottom` to maintain vertical rhythm */
+h1, h2, h3, h4, h5, h6, p, blockquote, pre, ul, ol, dl, figure, .highlight { margin-bottom: 15px; }
+
+header { display:block; margin-bottom: 20px;}
+
+/** `main` element */
+main { display: block; /* Default value of `display` of `main` element is 'inline' in IE 11. */ }
+
+/** Images */
+img { max-width: 100%; vertical-align: middle; }
+
+/** Lists */
+ul, ol { margin-left: 30px; }
+
+li > ul, li > ol { margin-bottom: 0; }
+
+/** Headings */
+h1, h2, h3, h4, h5, h6 { font-weight: 400; }
+
+/** Blockquotes */
+blockquote { color: #828282; border-left: 4px solid #e8e8e8; padding-left: 15px; font-size: 18px; letter-spacing: -1px; font-style: italic; }
+
+blockquote > :last-child { margin-bottom: 0; }
+
+/** Code formatting */
+pre, code { font-size: 15px; border: 1px solid #e8e8e8; border-radius: 3px; background-color: #eef; }
+
+code { padding: 1px 5px; }
+
+pre { padding: 8px 12px; overflow-x: auto; }
+
+pre > code { border: 0; padding-right: 0; padding-left: 0; }
+
+/** Wrapper */
+.wrapper { max-width: -webkit-calc(800px - (30px * 2)); max-width: calc(800px - (30px * 2)); margin-right: auto; margin-left: auto; padding-right: 30px; padding-left: 30px; }
+
+@media screen and (max-width: 800px) { .wrapper { max-width: -webkit-calc(800px - (30px)); max-width: calc(800px - (30px)); padding-right: 15px; padding-left: 15px; } }
+
+/** Posts */
+.post-header { margin-bottom: 30px; }
+
+.post-title { font-size: 42px; letter-spacing: -1px; line-height: 1; }
+
+@media screen and (max-width: 800px) { .post-title { font-size: 36px; } }
+
+.post-content { margin-bottom: 60px; }
+
+.post-content h2 { font-size: 32px; }
+
+@media screen and (max-width: 800px) { .post-content h2 { font-size: 28px; } }
+
+.post-content h3 { font-size: 26px; }
+
+@media screen and (max-width: 800px) { .post-content h3 { font-size: 22px; } }
+
+.post-content h4 { font-size: 20px; }
+
+@media screen and (max-width: 800px) { .post-content h4 { font-size: 18px; } }
