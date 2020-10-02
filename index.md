@@ -11,7 +11,10 @@ title: "macho199 Blog"
       <ul>
         {% for post in site.posts %}
           <li>
-            <a href="{{ post.url }}">{{ post.title }}</a>
+            <a href="{{ post.url }}">
+              {{ post.date | date: '%B %d, %Y' }}<br>
+              {{ post.title }}
+            </a>
           </li>
         {% endfor %}
       </ul>
