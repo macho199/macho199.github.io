@@ -34,16 +34,6 @@ blockquote { color: #828282; border-left: 4px solid #e8e8e8; padding-left: 15px;
 
 blockquote > :last-child { margin-bottom: 0; }
 
-/** Code formatting */
-pre, code { font-size: 15px; border: 1px solid #e8e8e8; border-radius: 3px; background-color: #eef; }
-
-code { padding: 1px 5px; }
-
-pre { padding: 8px 12px; overflow-x: auto; }
-
-pre > code { border: 0; padding-right: 0; padding-left: 0; }
-
-/** Tables */
 table { margin-bottom: 30px; width: 100%; text-align: left; color: #3f3f3f; border-collapse: collapse; border: 1px solid #e8e8e8; }
 
 table tr:nth-child(even) { background-color: #f7f7f7; }
@@ -69,9 +59,7 @@ table td { border: 1px solid #e8e8e8; }
 
 @media screen and (max-width: 800px) { .post-title { font-size: 36px; } }
 
-.post-meta { margin-bottom: 0;}
-
-.post-content { margin-bottom: 60px; }
+.post-content { margin-bottom: 30px; }
 
 .post-content h2 { font-size: 32px; }
 

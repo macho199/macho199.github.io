@@ -9,7 +9,7 @@ layout: default
         <time class="dt-published" datetime="{{ page.date }}" itemprop="datePublished">
           {{ page.date | date: '%B %d, %Y' }}
           {% if page.modified %}
-           Last modified {{ page.modified | date: '%B %d, %Y' }}
+          <strong><em>Last Updated: {{ page.modified | date: '%B %d, %Y' }}</em></strong>
           {% endif %}
         </time>
         <div class="fb-like" data-href="{{ site.url }}{{ page.url | prepend: site.baseurl | replace: '//', '/' }}" data-width="" data-layout="button_count" data-action="like" data-size="small" data-show-faces="true" data-share="true"></div>
