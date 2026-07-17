@@ -53,13 +53,16 @@ test("restores semantic heading sizes after Tailwind Preflight", async () => {
 
   assert.match(
     themeCss,
-    /h1,\s*h2,\s*h3\s*\{[^}]*line-height: var\(--leading-tight\)/s,
+    /h1,\s*h2,\s*h3,\s*h4,\s*h5,\s*h6\s*\{[^}]*line-height: var\(--leading-tight\)/s,
   )
 
   for (const [selector, sizeToken] of [
     ["h1", "--text-3xl"],
     ["h2", "--text-2xl"],
     ["h3", "--text-xl"],
+    ["h4", "--text-lg"],
+    ["h5", "--text-base"],
+    ["h6", "--text-sm"],
   ]) {
     assert.match(
       themeCss,
