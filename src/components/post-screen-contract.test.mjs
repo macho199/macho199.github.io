@@ -127,3 +127,19 @@ test("uses the approved real post and local image assets", async () => {
     ),
   ])
 })
+
+test("registers a production verifier for the approved post", async () => {
+  const [packageSource, verifier] = await Promise.all([
+    readRepositoryFile("package.json"),
+    readRepositoryFile("scripts/verify-post-build.mjs"),
+  ])
+  const packageJson = JSON.parse(packageSource)
+
+  assert.equal(
+    packageJson.scripts["verify:post"],
+    "node scripts/verify-post-build.mjs",
+  )
+  assert.match(verifier, /public[\s\S]*gatsby-blog-1-getting-started/)
+  assert.match(verifier, /mdx-foundation/)
+  assert.match(verifier, /create-a-blog-site-with-gatsby1/)
+})

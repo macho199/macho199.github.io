@@ -5,7 +5,10 @@ const pages = [
   ["home", new URL("../public/index.html", import.meta.url)],
   [
     "post",
-    new URL("../public/posts/mdx-foundation/index.html", import.meta.url),
+    new URL(
+      "../public/posts/gatsby-blog-1-getting-started/index.html",
+      import.meta.url,
+    ),
   ],
 ]
 
