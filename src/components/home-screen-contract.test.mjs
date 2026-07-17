@@ -75,3 +75,36 @@ test("imports the React runtime required by Gatsby SSR", async () => {
     assert.match(source, /^import \* as React from "react"$/m)
   }
 })
+
+test("keeps GraphQL in the page and loads scoped home styles", async () => {
+  const [indexPage, browserEntry, homeCss] = await Promise.all([
+    readRepositoryFile("src/pages/index.tsx"),
+    readRepositoryFile("gatsby-browser.js"),
+    readRepositoryFile("src/styles/home.css"),
+  ])
+
+  assert.match(indexPage, /import HomeIntro from "\.\.\/components\/home-intro"/)
+  assert.match(indexPage, /import PostList from "\.\.\/components\/post-list"/)
+  assert.match(indexPage, /import type \{ PostSummary \}/)
+  assert.match(indexPage, /data\.allMdx\.nodes\.map/)
+  assert.match(indexPage, /<HomeIntro \/>/)
+  assert.match(indexPage, /<PostList posts=\{posts\} \/>/)
+  assert.match(indexPage, /allMdx\(sort: \{ frontmatter: \{ publishedAt: DESC \} \}\)/)
+  assert.match(indexPage, /publishedAtDisplay: publishedAt\(formatString: "YYYY\.MM\.DD"\)/)
+  assert.doesNotMatch(indexPage, /<article\b|<Link\b/)
+
+  assert.match(browserEntry, /\.\/src\/styles\/home\.css/)
+  assert.match(
+    homeCss,
+    /\.home-intro\s*\{[^}]*padding-block: var\(--space-8\) var\(--space-4\)/s,
+  )
+  assert.match(homeCss, /\.post-card-main\s*\{[^}]*max-width: 760px/s)
+  assert.match(
+    homeCss,
+    /\.post-list\s*\{[^}]*border-top: 1px solid var\(--border\)/s,
+  )
+  assert.match(
+    homeCss,
+    /\.post-list-item\s*\{[^}]*border-bottom: 1px solid var\(--border\)/s,
+  )
+})

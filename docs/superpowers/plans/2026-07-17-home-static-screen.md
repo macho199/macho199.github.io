@@ -281,6 +281,7 @@ git commit -m "feat: add typed home post components"
 
 **Files:**
 - Modify: `src/components/home-screen-contract.test.mjs`
+- Modify: `src/components/layout-contract.test.mjs`
 - Modify: `src/pages/index.tsx`
 - Create: `src/styles/home.css`
 - Modify: `gatsby-browser.js`
@@ -543,7 +544,7 @@ import "./src/styles/layout.css"
 import "./src/styles/home.css"
 ```
 
-- [ ] **Step 6: Run focused and regression checks**
+- [ ] **Step 6: Run focused checks and expose the superseded layout assertion**
 
 Run:
 
@@ -553,12 +554,33 @@ npm test
 npm run typecheck
 ```
 
-Expected: focused tests PASS 5/5, the full test suite passes, and TypeScript exits 0.
+Expected: focused tests PASS 5/5 and TypeScript exits 0. The full suite reports one failure from `layout-contract.test.mjs` because its earlier layout-only contract assumes the post link remains inline in `index.tsx`.
 
-- [ ] **Step 7: Commit the Gatsby data boundary and home styles**
+- [ ] **Step 7: Remove the superseded inline-link location assertion**
+
+Remove this assertion from `src/components/layout-contract.test.mjs`:
+
+```js
+assert.match(indexPage, /to=\{`\/posts\/\$\{post\.frontmatter\.slug\}\/`\}/)
+```
+
+Keep the new `PostCard` contract assertion as the single owner of the `/posts/<slug>/` link behavior.
+
+- [ ] **Step 8: Run the complete source regression checks**
+
+Run:
 
 ```bash
-git add gatsby-browser.js src/pages/index.tsx src/styles/home.css src/components/home-screen-contract.test.mjs
+npm test
+npm run typecheck
+```
+
+Expected: the full test suite passes and TypeScript exits 0.
+
+- [ ] **Step 9: Commit the Gatsby data boundary and home styles**
+
+```bash
+git add docs/superpowers/plans/2026-07-17-home-static-screen.md gatsby-browser.js src/pages/index.tsx src/styles/home.css src/components/home-screen-contract.test.mjs src/components/layout-contract.test.mjs
 git commit -m "feat: render responsive MDX home list"
 ```
 
