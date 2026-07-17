@@ -82,6 +82,15 @@ test("restores semantic list markers and indentation after Tailwind Preflight", 
   assert.match(themeCss, /(^|\n)\s*ol\s*\{[^}]*list-style: decimal/s)
 })
 
+test("restores visible link cues after Tailwind Preflight", async () => {
+  const themeCss = await readRepositoryFile("src/styles/theme.css")
+
+  assert.match(
+    themeCss,
+    /(^|\n)\s*a\s*\{[^}]*color: var\(--accent\)[^}]*text-decoration: underline/s,
+  )
+})
+
 test("keeps MDX semantic resets inside an explicit boundary", async () => {
   const [browserEntry, mdxCss, postTemplate] = await Promise.all([
     readRepositoryFile("gatsby-browser.js"),
