@@ -1,8 +1,11 @@
 import assert from "node:assert/strict"
 import { access, readFile } from "node:fs/promises"
+import { createRequire } from "node:module"
 import { test } from "node:test"
+import { fileURLToPath } from "node:url"
 
 const repositoryRoot = new URL("../../", import.meta.url)
+const require = createRequire(import.meta.url)
 
 /** @param {string} path */
 const readRepositoryFile = path =>
@@ -142,4 +145,35 @@ test("registers a production verifier for the approved post", async () => {
   assert.match(verifier, /public[\s\S]*gatsby-blog-1-getting-started/)
   assert.match(verifier, /mdx-foundation/)
   assert.match(verifier, /create-a-blog-site-with-gatsby1/)
+})
+
+test("renders the Gatsby body without streaming text corruption", async () => {
+  const ssrEntryUrl = new URL("gatsby-ssr.js", repositoryRoot)
+  const ssrEntry = await readRepositoryFile("gatsby-ssr.js")
+
+  assert.notEqual(ssrEntry, "", "gatsby-ssr.js must define the body renderer")
+
+  const React = require("react")
+  const { replaceRenderer } = require(fileURLToPath(ssrEntryUrl))
+  const bodyText = "가나다라마바사아자차카타파하".repeat(200)
+  let renderedBody = ""
+
+  /** @param {string} html */
+  const captureRenderedBody = html => {
+    renderedBody = html
+  }
+
+  replaceRenderer({
+    bodyComponent: React.createElement("p", null, bodyText),
+    replaceBodyHTMLString: captureRenderedBody,
+  })
+
+  assert.equal(renderedBody, `<p>${bodyText}</p>`)
+  assert.doesNotMatch(renderedBody, /\u0000/)
+})
+
+test("type-checks Gatsby JavaScript lifecycle entries", async () => {
+  const tsconfig = JSON.parse(await readRepositoryFile("tsconfig.json"))
+
+  assert.ok(tsconfig.include.includes("gatsby-*.js"))
 })

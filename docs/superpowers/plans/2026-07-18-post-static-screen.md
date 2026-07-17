@@ -42,9 +42,20 @@
 - Modify `scripts/verify-layout-build.mjs`: 실제 포스트 경로에서 공통 레이아웃을 검증한다.
 - Modify `scripts/verify-home-build.mjs`: 홈 카드의 기준 데이터를 새 실제 글로 바꾼다.
 - Create `scripts/verify-post-build.mjs`: 포스트 HTML, SEO, 자산, 제외 범위와 폐기 경로를 검증한다.
+- Create `gatsby-ssr.js`: React 18 스트리밍 렌더러의 텍스트 경계 손상을 피하도록 Gatsby 본문을 문자열 SSR로 렌더링한다.
+- Modify `tsconfig.json`: 루트 Gatsby JavaScript 수명 주기 파일도 기본 타입 검사에 포함한다.
 - Modify `package.json`: `verify:post` 명령을 등록한다.
 - Add `docs/superpowers/specs/2026-07-18-post-static-screen-design.md`: 승인된 설계를 보존한다.
 - Add `docs/superpowers/plans/2026-07-18-post-static-screen.md`: 이 실행 계획을 보존한다.
+
+## Implementation Note: React 18 Stream Boundary Corruption
+
+- 깨끗한 프로덕션 빌드에서 MDX 원문, 브라우저 번들, `page-data.json`은 정상이었지만 생성된 포스트 HTML의 한글 본문에만 NUL 바이트 6개가 섞였다.
+- 손상 위치는 React 18 서버 렌더러의 2,048바이트 스트리밍 버퍼 경계와 일치했고, Gatsby 5.16.1의 기본 정적 HTML 렌더러는 `renderToPipeableStream`을 사용한다.
+- 검증 조건을 느슨하게 하거나 산출물에서 NUL을 사후 제거하지 않는다. Gatsby의 `replaceRenderer` SSR API에서 React 18의 `renderToString`으로 본문을 한 번에 렌더링해 손상 발생 경로를 사용하지 않는다.
+- React 19에는 해당 경계 결함 수정이 포함되어 있지만, 이번 이슈에서는 Gatsby 호환성 범위를 넓히는 의존성 업그레이드를 함께 진행하지 않는다.
+- 회귀 방지를 위해 SSR 훅의 실제 렌더링 테스트와 프로덕션 HTML 전체의 NUL 부재 검증을 모두 둔다.
+- 참고: [React 변경 이력](https://github.com/facebook/react/blob/main/CHANGELOG.md), [Gatsby SSR API](https://www.gatsbyjs.com/docs/reference/config-files/gatsby-ssr/)
 
 ---
 

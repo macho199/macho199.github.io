@@ -10,6 +10,7 @@ const html = await readFile(postUrl, "utf8")
 const sitemap = await readFile(new URL("sitemap-0.xml", publicRoot), "utf8")
 const mainMatch = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)
 
+assert.doesNotMatch(html, /\u0000/, "post: generated HTML contains no NUL bytes")
 assert.ok(mainMatch, "post: main landmark")
 
 const main = mainMatch[1]
