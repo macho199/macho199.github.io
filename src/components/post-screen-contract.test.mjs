@@ -91,6 +91,16 @@ test("loads post styles once and keeps selectors inside post boundaries", async 
   assert.doesNotMatch(postCss, /(^|\n)\s*(?:h[1-6]|p|a|ul|ol|pre|table)\s*\{/)
 })
 
+test("keeps Korean post title words intact", async () => {
+  const postCss = await readRepositoryFile("src/styles/post.css")
+  const titleRule = postCss.match(/\.post-title\s*\{([^}]*)\}/s)
+
+  assert.ok(titleRule, "post title style rule")
+  assert.match(titleRule[1], /word-break:\s*keep-all/)
+  assert.match(titleRule[1], /overflow-wrap:\s*break-word/)
+  assert.doesNotMatch(titleRule[1], /overflow-wrap:\s*anywhere/)
+})
+
 test("documents the current Gatsby rebuild and Tailwind fixes", async () => {
   const [post, oldSample] = await Promise.all([
     readRepositoryFile("content/posts/gatsby-blog-1-getting-started/index.mdx"),
