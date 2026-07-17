@@ -87,3 +87,43 @@ test("loads post styles once and keeps selectors inside post boundaries", async 
   assert.match(postCss, /@media \(max-width: 720px\)/)
   assert.doesNotMatch(postCss, /(^|\n)\s*(?:h[1-6]|p|a|ul|ol|pre|table)\s*\{/)
 })
+
+test("uses the approved real post and local image assets", async () => {
+  const [post, oldSample] = await Promise.all([
+    readRepositoryFile("content/posts/gatsby-blog-1-getting-started/index.mdx"),
+    readRepositoryFile("content/posts/mdx-foundation/index.mdx"),
+  ])
+
+  assert.match(post, /title: "Gatsby로 블로그 사이트 만들기 1편 - 시작하기"/)
+  assert.match(post, /slug: "gatsby-blog-1-getting-started"/)
+  assert.match(post, /publishedAt: "2025-08-31"/)
+  assert.match(post, /2026년 재구축 과정에서 다시 검증하고 보수적으로 다듬었습니다/)
+  assert.match(post, /npm init gatsby/)
+  assert.match(post, /npm run serve/)
+  assert.match(
+    post,
+    /\/images\/posts\/gatsby-blog-1-getting-started\/hello-gatsby-tailwindcss\.png/,
+  )
+  assert.match(
+    post,
+    /\/images\/posts\/gatsby-blog-1-getting-started\/github-pages-setting\.png/,
+  )
+  assert.doesNotMatch(post, /npm install -g gatsby-cli|npm audit fix/)
+  assert.match(post, /`file:\/\/` 주소로 직접 열면/)
+  assert.equal(oldSample, "")
+
+  await Promise.all([
+    access(
+      new URL(
+        "static/images/posts/gatsby-blog-1-getting-started/hello-gatsby-tailwindcss.png",
+        repositoryRoot,
+      ),
+    ),
+    access(
+      new URL(
+        "static/images/posts/gatsby-blog-1-getting-started/github-pages-setting.png",
+        repositoryRoot,
+      ),
+    ),
+  ])
+})

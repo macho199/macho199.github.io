@@ -701,7 +701,8 @@ test("uses the approved real post and local image assets", async () => {
     post,
     /\/images\/posts\/gatsby-blog-1-getting-started\/github-pages-setting\.png/,
   )
-  assert.doesNotMatch(post, /npm install -g gatsby-cli|npm audit fix|file:\/\//)
+  assert.doesNotMatch(post, /npm install -g gatsby-cli|npm audit fix/)
+  assert.match(post, /`file:\/\/` 주소로 직접 열면/)
   assert.equal(oldSample, "")
 
   await Promise.all([
