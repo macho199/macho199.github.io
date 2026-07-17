@@ -57,8 +57,9 @@
 
   .post-title {
     color: var(--fg);
-    font-size: clamp(30px, 4vw, 40px);
+    font-size: clamp(30px, 4vw, 36px);
     overflow-wrap: break-word;
+    text-wrap: nowrap;
     word-break: keep-all;
   }
 
@@ -266,6 +267,7 @@
 
   .post-title {
     font-size: clamp(30px, 10vw, 36px);
+    text-wrap: wrap;
   }
 
   .post-description {
