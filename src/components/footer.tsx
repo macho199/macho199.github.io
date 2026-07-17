@@ -1,3 +1,5 @@
+import * as React from "react"
+
 import ContentContainer from "./content-container"
 
 const Footer = () => (

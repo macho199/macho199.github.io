@@ -1,3 +1,4 @@
+import * as React from "react"
 import type { PropsWithChildren } from "react"
 
 const ContentContainer = ({ children }: PropsWithChildren) => (

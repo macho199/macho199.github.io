@@ -37,6 +37,21 @@ test("defines a shared Header, main, and Footer shell", async () => {
   assert.match(container, /<div className="site-container">\{children\}<\/div>/)
 })
 
+test("imports the React runtime required by Gatsby SSR", async () => {
+  const componentSources = await Promise.all(
+    [
+      "src/components/content-container.tsx",
+      "src/components/header.tsx",
+      "src/components/footer.tsx",
+      "src/components/layout.tsx",
+    ].map(readRepositoryFile),
+  )
+
+  for (const source of componentSources) {
+    assert.match(source, /^import \* as React from "react"$/m)
+  }
+})
+
 test("loads a responsive 920px common container", async () => {
   const [browserEntry, layoutCss] = await Promise.all([
     readRepositoryFile("gatsby-browser.js"),
