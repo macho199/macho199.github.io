@@ -32,11 +32,11 @@ assert.match(
 )
 assert.match(
   main,
-  /Gatsby와 GitHub Pages로 개발자 블로그를 시작하며 정적 사이트 생성 방식, 프로젝트 설정, Tailwind CSS 확인, 당시 배포 과정을 정리합니다\./,
+  /배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다\./,
 )
 assert.match(
   main,
-  /<time\b(?=[^>]*class="[^"]*post-date[^"]*")(?=[^>]*datetime="2025-08-31")[^>]*>\s*2025\.08\.31\s*<\/time>/i,
+  /<time\b(?=[^>]*class="[^"]*post-date[^"]*")(?=[^>]*datetime="2026-04-18")[^>]*>\s*2026\.04\.18\s*<\/time>/i,
 )
 
 for (const tag of ["Gatsby", "GitHub Pages", "React", "Tailwind CSS"]) {
@@ -44,29 +44,32 @@ for (const tag of ["Gatsby", "GitHub Pages", "React", "Tailwind CSS"]) {
 }
 
 for (const heading of [
-  "개발자를 위한 블로그 구축",
-  "정적 사이트 생성기(SSG) 이해하기",
-  "Gatsby 프로젝트 생성",
-  "당시 Tailwind CSS 오류와 현재의 판단",
-  "프로덕션 빌드 확인",
-  "당시 GitHub Pages 배포 방식",
+  "왜 소스부터 다시 구축했는가",
+  "재현 가능한 Gatsby 5 기준선",
+  "MDX와 Tailwind를 별도 단계로 나눈 이유",
+  "Tailwind CSS 4와 PostCSS 연결",
+  "Preflight 이후 사라진 문서 의미 복원",
+  "로컬 폰트와 외부 요청 경계",
+  "검증과 현재 배포 경계",
   "마치며",
 ]) {
-  assert.match(main, new RegExp(`<h2[^>]*>${heading.replace(/[()]/g, "\\$&")}</h2>`))
+  assert.match(main, new RegExp(`<h2[^>]*>${heading}</h2>`))
 }
 
 assert.match(main, /<blockquote>/)
 assert.match(main, /<ol>/)
 assert.match(main, /<ul>/)
+assert.match(main, /<table>/)
 assert.match(main, /<pre><code class="language-shell">/)
-assert.match(main, /<code>npm init gatsby<\/code>/)
-assert.match(
+assert.match(main, /<pre><code class="language-javascript">/)
+assert.match(main, /<pre><code class="language-css">/)
+assert.match(main, /<pre><code class="language-shell">npm ci\s*<\/code><\/pre>/)
+assert.match(main, /제목 크기, 목록 마커, 링크 식별성/)
+assert.match(main, /4\.5:1/)
+assert.match(main, /GitHub Actions 배포는 아직 연결하지 않았다/)
+assert.doesNotMatch(
   main,
-  /<img\b(?=[^>]*src="\/images\/posts\/gatsby-blog-1-getting-started\/hello-gatsby-tailwindcss\.png")(?=[^>]*alt="Gatsby 시작 화면의 제목에 Tailwind CSS 색상 클래스를 적용한 모습")[^>]*>/,
-)
-assert.match(
-  main,
-  /<img\b(?=[^>]*src="\/images\/posts\/gatsby-blog-1-getting-started\/github-pages-setting\.png")(?=[^>]*alt="GitHub Pages 설정에서 main 브랜치와 루트 폴더를 배포 소스로 선택한 모습")[^>]*>/,
+  /2025|ERROR #98123|@mdx-js\/react|text-red-500|hello-gatsby-tailwindcss\.png|github-pages-setting\.png/,
 )
 
 assert.match(
@@ -75,7 +78,7 @@ assert.match(
 )
 assert.match(
   html,
-  /<meta\b(?=[^>]*name="description")(?=[^>]*content="Gatsby와 GitHub Pages로 개발자 블로그를 시작하며 정적 사이트 생성 방식, 프로젝트 설정, Tailwind CSS 확인, 당시 배포 과정을 정리합니다\.")[^>]*>/,
+  /<meta\b(?=[^>]*name="description")(?=[^>]*content="배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다\.")[^>]*>/,
 )
 assert.match(
   html,
@@ -83,7 +86,7 @@ assert.match(
 )
 assert.match(
   html,
-  /<meta\b(?=[^>]*property="article:published_time")(?=[^>]*content="2025-08-31")[^>]*>/,
+  /<meta\b(?=[^>]*property="article:published_time")(?=[^>]*content="2026-04-18")[^>]*>/,
 )
 for (const tag of ["Gatsby", "GitHub Pages", "React", "Tailwind CSS"]) {
   assert.match(
@@ -99,22 +102,10 @@ assert.doesNotMatch(
   main,
   /class="[^"]*(?:table-of-contents|code-copy|reading-time|related-posts|post-pagination)[^"]*"/,
 )
-assert.doesNotMatch(main, /이전 글|다음 글|관련 글|분 읽기/)
-
-await Promise.all([
-  access(
-    new URL(
-      "images/posts/gatsby-blog-1-getting-started/hello-gatsby-tailwindcss.png",
-      publicRoot,
-    ),
-  ),
-  access(
-    new URL(
-      "images/posts/gatsby-blog-1-getting-started/github-pages-setting.png",
-      publicRoot,
-    ),
-  ),
-])
+assert.doesNotMatch(
+  main,
+  />\s*(?:이전 글|다음 글|관련 글|\d+\s*분 읽기)\s*</,
+)
 
 for (const retiredPath of [
   "posts/mdx-foundation/index.html",
@@ -134,4 +125,6 @@ assert.match(
 assert.doesNotMatch(sitemap, /\/posts\/mdx-foundation\//)
 assert.doesNotMatch(sitemap, /\/posts\/create-a-blog-site-with-gatsby1\//)
 
-console.log("post build verified: reading screen, metadata, assets, and route contracts passed")
+console.log(
+  "post build verified: current Gatsby rebuild content, metadata, and route contracts passed",
+)

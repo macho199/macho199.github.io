@@ -50,11 +50,11 @@ for (const tag of ["Gatsby", "GitHub Pages", "React", "Tailwind CSS"]) {
 }
 assert.match(
   main,
-  /Gatsby와 GitHub Pages로 개발자 블로그를 시작하며 정적 사이트 생성 방식, 프로젝트 설정, Tailwind CSS 확인, 당시 배포 과정을 정리합니다\./,
+  /배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다\./,
 )
 assert.match(
   main,
-  /<time\b(?=[^>]*class="[^"]*post-card-date[^"]*")(?=[^>]*datetime="2025-08-31")[^>]*>\s*2025\.08\.31\s*<\/time>/i,
+  /<time\b(?=[^>]*class="[^"]*post-card-date[^"]*")(?=[^>]*datetime="2026-04-18")[^>]*>\s*2026\.04\.18\s*<\/time>/i,
 )
 assert.doesNotMatch(main, /\/posts\/mdx-foundation\//)
 
