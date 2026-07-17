@@ -87,8 +87,58 @@ test("restores visible link cues after Tailwind Preflight", async () => {
 
   assert.match(
     themeCss,
-    /(^|\n)\s*a\s*\{[^}]*color: var\(--accent\)[^}]*text-decoration: underline/s,
+    /(^|\n)\s*a\s*\{[^}]*color: var\(--link\)[^}]*text-decoration: underline/s,
   )
+  assert.match(themeCss, /a:hover\s*\{[^}]*color: var\(--link-hover\)/s)
+})
+
+test("keeps default and hover link colors above WCAG AA contrast", async () => {
+  const themeCss = await readRepositoryFile("src/styles/theme.css")
+  /** @param {string} token */
+  const readHexToken = token => {
+    const match = themeCss.match(
+      new RegExp(`--${token}: #([0-9a-f]{6});`, "i"),
+    )
+
+    assert.ok(match, `expected --${token} to be a six-digit hex color`)
+    return match[1]
+  }
+  /** @param {string} hex */
+  const relativeLuminance = hex => {
+    const pairs = hex.match(/../g)
+
+    assert.ok(pairs, "expected a six-digit hex color")
+
+    const channels = pairs
+      .map(channel => Number.parseInt(channel, 16) / 255)
+      .map(channel =>
+        channel <= 0.04045
+          ? channel / 12.92
+          : ((channel + 0.055) / 1.055) ** 2.4,
+      )
+
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+  }
+  /**
+   * @param {string} foreground
+   * @param {string} background
+   */
+  const contrastRatio = (foreground, background) => {
+    const luminances = [
+      relativeLuminance(foreground),
+      relativeLuminance(background),
+    ].sort((left, right) => right - left)
+
+    return (luminances[0] + 0.05) / (luminances[1] + 0.05)
+  }
+  const background = readHexToken("bg")
+
+  for (const token of ["link", "link-hover"]) {
+    assert.ok(
+      contrastRatio(readHexToken(token), background) >= 4.5,
+      `expected --${token} to have at least 4.5:1 contrast against --bg`,
+    )
+  }
 })
 
 test("keeps MDX semantic resets inside an explicit boundary", async () => {

@@ -16,6 +16,8 @@
   --accent-on: #ffffff;
   --accent-hover: #0a7a5e;
   --accent-active: color-mix(in oklab, var(--accent), black 14%);
+  --link: #0a7a5e;
+  --link-hover: #075b47;
   --success: #10a37f;
   --warn: #f5a623;
   --danger: #ef4146;
@@ -78,6 +80,8 @@
   --color-line: var(--border);
   --color-line-soft: var(--border-soft);
   --color-brand: var(--accent);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
   --font-ui: var(--font-body);
   --font-editorial: var(--font-display);
   --font-code: var(--font-mono);
@@ -161,14 +165,14 @@
   }
 
   a {
-    color: var(--accent);
+    color: var(--link);
     text-decoration: underline;
     text-decoration-thickness: 0.08em;
     text-underline-offset: 0.18em;
   }
 
   a:hover {
-    color: var(--accent-hover);
+    color: var(--link-hover);
   }
 
   button,
