@@ -65,3 +65,25 @@ test("imports the React runtime required by Gatsby SSR", async () => {
     assert.match(source, /^import \* as React from "react"$/m)
   }
 })
+
+test("loads post styles once and keeps selectors inside post boundaries", async () => {
+  const [browserEntry, postCss] = await Promise.all([
+    readRepositoryFile("gatsby-browser.js"),
+    readRepositoryFile("src/styles/post.css"),
+  ])
+
+  assert.equal(
+    (browserEntry.match(/\.\/src\/styles\/post\.css/g) ?? []).length,
+    1,
+  )
+  assert.match(postCss, /@layer components/)
+  assert.match(postCss, /\.post-back-nav\s*\{/)
+  assert.match(postCss, /\.post-page\s*\{/)
+  assert.match(postCss, /\.post-page \.mdx-content\s*\{/)
+  assert.match(postCss, /\.post-page \.mdx-content :where\(h2, h3, h4, h5\)/)
+  assert.match(postCss, /\.post-page \.mdx-content pre\s*\{[^}]*overflow-x: auto/s)
+  assert.match(postCss, /\.post-page \.mdx-content table\s*\{[^}]*overflow-x: auto/s)
+  assert.match(postCss, /@media \(max-width: 1020px\)/)
+  assert.match(postCss, /@media \(max-width: 720px\)/)
+  assert.doesNotMatch(postCss, /(^|\n)\s*(?:h[1-6]|p|a|ul|ol|pre|table)\s*\{/)
+})
