@@ -1,6 +1,8 @@
 import { graphql, Link, type HeadFC, type PageProps } from "gatsby"
 import type { ReactNode } from "react"
 
+import Seo from "../components/seo"
+
 type PostData = {
   mdx: {
     frontmatter: {
@@ -56,6 +58,13 @@ export const query = graphql`
   }
 `
 
-export const Head: HeadFC<PostData> = ({ data }) => (
-  <title>{data.mdx.frontmatter.title} | Developer Blog</title>
+export const Head: HeadFC<PostData> = ({ data, location }) => (
+  <Seo
+    title={data.mdx.frontmatter.title}
+    description={data.mdx.frontmatter.description}
+    pathname={location.pathname}
+    type="article"
+    publishedAt={data.mdx.frontmatter.publishedAt}
+    tags={data.mdx.frontmatter.tags}
+  />
 )

@@ -9,6 +9,7 @@ const rootDirectory = path.dirname(fileURLToPath(import.meta.url))
 const config = {
   siteMetadata: {
     title: "Developer Blog",
+    description: "Notes from building and operating software.",
     siteUrl: "https://macho199.github.io",
   },
   plugins: [
@@ -25,6 +26,12 @@ const config = {
       options: {
         name: "posts",
         path: path.join(rootDirectory, "content", "posts"),
+      },
+    },
+    {
+      resolve: "gatsby-plugin-sitemap",
+      options: {
+        excludes: ["/404.html"],
       },
     },
   ],

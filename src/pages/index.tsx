@@ -1,6 +1,8 @@
 import { graphql, Link, type HeadFC, type PageProps } from "gatsby"
 import * as React from "react"
 
+import Seo from "../components/seo"
+
 type IndexPageData = {
   allMdx: {
     nodes: Array<{
@@ -49,7 +51,7 @@ const IndexPage = ({ data }: PageProps<IndexPageData>) => {
 
 export default IndexPage
 
-export const Head: HeadFC = () => <title>Developer Blog</title>
+export const Head: HeadFC = ({ location }) => <Seo pathname={location.pathname} />
 
 export const query = graphql`
   query IndexPage {
