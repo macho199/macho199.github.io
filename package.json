@@ -10,7 +10,8 @@
     "serve": "gatsby serve --host 127.0.0.1",
     "clean": "gatsby clean",
     "test": "node --test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:styles": "node scripts/verify-style-build.mjs"
   },
   "engines": {
     "node": "24.14.1",
@@ -18,9 +19,12 @@
   },
   "packageManager": "npm@11.11.0",
   "dependencies": {
+    "@fontsource/noto-sans-kr": "5.2.9",
+    "@fontsource/noto-serif-kr": "5.2.9",
     "@mdx-js/react": "2.3.0",
     "gatsby": "5.16.1",
     "gatsby-plugin-mdx": "5.16.0",
+    "gatsby-plugin-postcss": "6.16.0",
     "gatsby-plugin-sitemap": "6.16.0",
     "gatsby-source-filesystem": "5.16.0",
     "react": "18.3.1",
@@ -28,9 +32,12 @@
     "remark-gfm": "3.0.1"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.13.3",
     "@types/react": "18.3.31",
     "@types/react-dom": "18.3.7",
+    "postcss": "8.5.19",
+    "tailwindcss": "4.3.3",
     "typescript": "5.9.3"
   }
 }
