@@ -1,6 +1,8 @@
 import { graphql, Link, type HeadFC, type PageProps } from "gatsby"
 import type { ReactNode } from "react"
 
+import ContentContainer from "../components/content-container"
+import Layout from "../components/layout"
 import Seo from "../components/seo"
 
 type PostData = {
@@ -23,22 +25,26 @@ const PostTemplate = ({ data, children }: PostTemplateProps) => {
   const { frontmatter } = data.mdx
 
   return (
-    <main>
-      <article>
-        <header>
-          <h1>{frontmatter.title}</h1>
-          <time dateTime={frontmatter.publishedAt}>{frontmatter.publishedAt}</time>
-          <p>{frontmatter.description}</p>
-          <ul aria-label="Tags">
-            {frontmatter.tags.map(tag => (
-              <li key={tag}>{tag}</li>
-            ))}
-          </ul>
-        </header>
-        <div className="mdx-content">{children}</div>
-      </article>
-      <Link to="/">Back to posts</Link>
-    </main>
+    <Layout>
+      <ContentContainer>
+        <article>
+          <header>
+            <h1>{frontmatter.title}</h1>
+            <time dateTime={frontmatter.publishedAt}>
+              {frontmatter.publishedAt}
+            </time>
+            <p>{frontmatter.description}</p>
+            <ul aria-label="Tags">
+              {frontmatter.tags.map(tag => (
+                <li key={tag}>{tag}</li>
+              ))}
+            </ul>
+          </header>
+          <div className="mdx-content">{children}</div>
+        </article>
+        <Link to="/">Back to posts</Link>
+      </ContentContainer>
+    </Layout>
   )
 }
 
