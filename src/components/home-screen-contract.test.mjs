@@ -90,6 +90,10 @@ test("keeps GraphQL in the page and loads scoped home styles", async () => {
   assert.match(indexPage, /<HomeIntro \/>/)
   assert.match(indexPage, /<PostList posts=\{posts\} \/>/)
   assert.match(indexPage, /allMdx\(sort: \{ frontmatter: \{ publishedAt: DESC \} \}\)/)
+  assert.match(
+    indexPage,
+    /publishedAt\(formatString: "YYYY-MM-DD"\)/,
+  )
   assert.match(indexPage, /publishedAtDisplay: publishedAt\(formatString: "YYYY\.MM\.DD"\)/)
   assert.doesNotMatch(indexPage, /<article\b|<Link\b/)
 

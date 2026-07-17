@@ -47,7 +47,7 @@ export const query = graphql`
         frontmatter {
           title
           slug
-          publishedAt
+          publishedAt(formatString: "YYYY-MM-DD")
           publishedAtDisplay: publishedAt(formatString: "YYYY.MM.DD")
           description
           tags
