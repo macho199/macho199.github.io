@@ -1,0 +1,11 @@
+node_modules/
+.cache/
+public/
+
+.env
+.env.*
+!.env.example
+
+*.tsbuildinfo
+npm-debug.log*
+.DS_Store
