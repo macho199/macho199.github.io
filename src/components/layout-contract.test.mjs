@@ -57,3 +57,20 @@ test("loads a responsive 920px common container", async () => {
     /@media \(max-width: 720px\)[\s\S]*?\.site-container\s*\{[^}]*padding-inline: var\(--container-gutter-phone\)/,
   )
 })
+
+test("applies the shared layout without changing page data boundaries", async () => {
+  const [indexPage, postTemplate] = await Promise.all([
+    readRepositoryFile("src/pages/index.tsx"),
+    readRepositoryFile("src/templates/post.tsx"),
+  ])
+
+  for (const source of [indexPage, postTemplate]) {
+    assert.match(source, /import ContentContainer from "\.\.\/components\/content-container"/)
+    assert.match(source, /import Layout from "\.\.\/components\/layout"/)
+    assert.match(source, /<Layout>[\s\S]*<ContentContainer>/)
+    assert.doesNotMatch(source, /<main\b/)
+  }
+
+  assert.match(indexPage, /to=\{`\/posts\/\$\{post\.frontmatter\.slug\}\/`\}/)
+  assert.match(postTemplate, /<div className="mdx-content">\{children\}<\/div>/)
+})
