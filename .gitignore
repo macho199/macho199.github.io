@@ -1,6 +1,7 @@
 node_modules/
 .cache/
 public/
+.playwright-cli/
 
 .env
 .env.*

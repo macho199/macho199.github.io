@@ -43,18 +43,20 @@ assert.ok(
 )
 assert.match(
   main,
-  /<a\b(?=[^>]*href="\/posts\/mdx-foundation\/")(?=[^>]*class="[^"]*post-card-title-link[^"]*")[^>]*>\s*MDX 콘텐츠 기반 확인\s*<\/a>/,
+  /<a\b(?=[^>]*href="\/posts\/gatsby-blog-1-getting-started\/")(?=[^>]*class="[^"]*post-card-title-link[^"]*")[^>]*>\s*Gatsby로 블로그 사이트 만들기 1편 - 시작하기\s*<\/a>/,
 )
-assert.match(main, /<span class="post-card-tag">Gatsby<\/span>/)
-assert.match(main, /<span class="post-card-tag">MDX<\/span>/)
+for (const tag of ["Gatsby", "GitHub Pages", "React", "Tailwind CSS"]) {
+  assert.match(main, new RegExp(`<span class="post-card-tag">${tag}</span>`))
+}
 assert.match(
   main,
-  /Gatsby가 로컬 MDX 파일을 소싱하고 포스트 페이지를 생성하는지 확인한다\./,
+  /배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다\./,
 )
 assert.match(
   main,
-  /<time\b(?=[^>]*class="[^"]*post-card-date[^"]*")(?=[^>]*datetime="2026-07-17")[^>]*>\s*2026\.07\.17\s*<\/time>/i,
+  /<time\b(?=[^>]*class="[^"]*post-card-date[^"]*")(?=[^>]*datetime="2026-04-18")[^>]*>\s*2026\.04\.18\s*<\/time>/i,
 )
+assert.doesNotMatch(main, /\/posts\/mdx-foundation\//)
 
 assert.equal(countOpeningTags("button"), 0, "home: no inactive controls")
 assert.doesNotMatch(

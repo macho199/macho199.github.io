@@ -19,7 +19,14 @@ const walk = async directory => {
 
 await Promise.all([
   access(path.join(publicDirectory, "index.html")),
-  access(path.join(publicDirectory, "posts", "mdx-foundation", "index.html")),
+  access(
+    path.join(
+      publicDirectory,
+      "posts",
+      "gatsby-blog-1-getting-started",
+      "index.html",
+    ),
+  ),
 ])
 
 const files = await walk(publicDirectory)
