@@ -108,3 +108,18 @@ test("keeps GraphQL in the page and loads scoped home styles", async () => {
     /\.post-list-item\s*\{[^}]*border-bottom: 1px solid var\(--border\)/s,
   )
 })
+
+test("registers the production home verifier", async () => {
+  const [packageSource, verifier] = await Promise.all([
+    readRepositoryFile("package.json"),
+    readRepositoryFile("scripts/verify-home-build.mjs"),
+  ])
+  const packageJson = JSON.parse(packageSource)
+
+  assert.equal(
+    packageJson.scripts["verify:home"],
+    "node scripts/verify-home-build.mjs",
+  )
+  assert.match(verifier, /public\/index\.html/)
+  assert.match(verifier, /mdx-foundation/)
+})

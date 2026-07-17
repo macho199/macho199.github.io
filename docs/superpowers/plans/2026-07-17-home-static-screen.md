@@ -590,9 +590,12 @@ git commit -m "feat: render responsive MDX home list"
 - Modify: `src/components/home-screen-contract.test.mjs`
 - Create: `scripts/verify-home-build.mjs`
 - Modify: `package.json`
+- Modify: `src/styles/theme.css`
+- Modify: `src/styles/style-foundation.test.mjs`
+- Modify: `gatsby-config.mjs`
 
 **Interfaces:**
-- Consumes: Task 2 production HTML at `public/index.html`
+- Consumes: Task 2 production HTML at `public/index.html`, existing `postcss.config.cjs`
 - Produces: npm command `verify:home`; build assertions for hidden headings, actual post data, semantic list, original/display dates, excluded controls
 
 - [ ] **Step 1: Add a failing verifier registration test**
@@ -641,6 +644,12 @@ assert.ok(mainMatch, "home: main landmark")
 
 const main = mainMatch[1]
 
+assert.match(
+  html,
+  /\.sr-only\{(?=[^}]*position:absolute)(?=[^}]*overflow:hidden)(?=[^}]*clip-path:inset\(50%\))[^}]*\}/,
+  "home: generated sr-only utility",
+)
+
 /**
  * @param {string} source
  * @param {string} tag
@@ -676,7 +685,7 @@ assert.match(
 )
 assert.match(
   main,
-  /<time\b(?=[^>]*class="[^"]*post-card-date[^"]*")(?=[^>]*datetime="2026-07-17")[^>]*>\s*2026\.07\.17\s*<\/time>/,
+  /<time\b(?=[^>]*class="[^"]*post-card-date[^"]*")(?=[^>]*datetime="2026-07-17")[^>]*>\s*2026\.07\.17\s*<\/time>/i,
 )
 
 assert.equal(countOpeningTags("button"), 0, "home: no inactive controls")
@@ -695,7 +704,80 @@ Add to the `scripts` object in `package.json` after `verify:layout`:
 "verify:home": "node scripts/verify-home-build.mjs"
 ```
 
-- [ ] **Step 5: Run the complete clean-build verification**
+- [ ] **Step 5: Run a clean build and expose the missing utility generation**
+
+Run:
+
+```bash
+npm test
+npm run typecheck
+npm run clean
+npm run build
+npm run verify:styles
+npm run verify:layout
+npm run verify:home
+```
+
+Expected: test, typecheck, clean build, style verifier, and layout verifier pass. The home verifier fails with `home: generated sr-only utility` because Gatsby's Tailwind processing has not scanned the TSX source boundary.
+
+- [ ] **Step 6: Set the explicit Tailwind source base**
+
+Change the first line of `src/styles/theme.css` to:
+
+```css
+@import "tailwindcss" source("../");
+```
+
+Update the matching assertion in `src/styles/style-foundation.test.mjs`:
+
+```js
+assert.match(themeCss, /@import "tailwindcss" source\("\.\.\/"\);/)
+```
+
+This path is relative to `src/styles/theme.css`, so it scans the static class names under `src/` without widening detection to generated or dependency directories.
+
+Replace the PostCSS string entry in `gatsby-config.mjs` with an explicit config path:
+
+```js
+{
+  resolve: "gatsby-plugin-postcss",
+  options: {
+    postcssOptions: {
+      config: path.join(rootDirectory, "postcss.config.cjs"),
+    },
+  },
+},
+```
+
+Update the opening of the pipeline test in `src/styles/style-foundation.test.mjs`:
+
+```js
+test("registers the local Tailwind PostCSS pipeline", async () => {
+  const plugins = gatsbyConfig.plugins ?? []
+  const postcssPlugin = plugins.find(
+    plugin =>
+      typeof plugin === "object" && plugin.resolve === "gatsby-plugin-postcss",
+  )
+
+  assert.ok(postcssPlugin && typeof postcssPlugin === "object")
+
+  const pluginOptions = Reflect.get(postcssPlugin, "options")
+
+  assert.ok(pluginOptions && typeof pluginOptions === "object")
+
+  const postcssOptions = Reflect.get(pluginOptions, "postcssOptions")
+
+  assert.ok(postcssOptions && typeof postcssOptions === "object")
+
+  const configPath = Reflect.get(postcssOptions, "config")
+
+  assert.ok(typeof configPath === "string")
+  assert.match(configPath, /postcss\.config\.cjs$/)
+```
+
+This removes Gatsby loader auto-discovery from the build boundary while keeping `postcss.config.cjs` as the single plugin definition. CommonJS is used because this Gatsby plugin's bundled `postcss-loader` does not unwrap the default export of an `.mjs` config.
+
+- [ ] **Step 7: Run the complete clean-build verification**
 
 Run:
 
@@ -711,7 +793,7 @@ npm run verify:home
 
 Expected: every command exits 0; the final command prints `home build verified: actual MDX list and static screen contracts passed`.
 
-- [ ] **Step 6: Inspect the three approved viewport widths**
+- [ ] **Step 8: Inspect the three approved viewport widths**
 
 Run the development server:
 
@@ -728,10 +810,10 @@ Open `http://127.0.0.1:8000/` at 1440px, 1020px, and 390px widths and confirm:
 - there are no count, filter, pagination, or reading-time controls;
 - the browser console has no new error from this change.
 
-- [ ] **Step 7: Commit the production verifier**
+- [ ] **Step 9: Commit the production verifier**
 
 ```bash
-git add package.json scripts/verify-home-build.mjs src/components/home-screen-contract.test.mjs
+git add docs/superpowers/plans/2026-07-17-home-static-screen.md gatsby-config.mjs package.json scripts/verify-home-build.mjs src/components/home-screen-contract.test.mjs src/styles/theme.css src/styles/style-foundation.test.mjs
 git commit -m "test: verify generated home screen"
 ```
 
