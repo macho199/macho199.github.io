@@ -9,6 +9,7 @@
     "build": "gatsby build",
     "serve": "gatsby serve --host 127.0.0.1",
     "clean": "gatsby clean",
+    "test": "node --test",
     "typecheck": "tsc --noEmit"
   },
   "engines": {
