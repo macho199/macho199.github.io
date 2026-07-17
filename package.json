@@ -1,0 +1,30 @@
+{
+  "name": "macho199-github-io",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Developer blog built with Gatsby and deployed to GitHub Pages.",
+  "scripts": {
+    "develop": "gatsby develop --host 127.0.0.1",
+    "start": "npm run develop",
+    "build": "gatsby build",
+    "serve": "gatsby serve --host 127.0.0.1",
+    "clean": "gatsby clean",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": "24.14.1",
+    "npm": "11.11.0"
+  },
+  "packageManager": "npm@11.11.0",
+  "dependencies": {
+    "gatsby": "5.16.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "typescript": "5.9.3"
+  }
+}
