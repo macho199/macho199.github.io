@@ -35,7 +35,7 @@ const PostTemplate = ({ data, children }: PostTemplateProps) => {
             ))}
           </ul>
         </header>
-        {children}
+        <div className="mdx-content">{children}</div>
       </article>
       <Link to="/">Back to posts</Link>
     </main>

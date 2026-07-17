@@ -10,7 +10,8 @@
     "serve": "gatsby serve --host 127.0.0.1",
     "clean": "gatsby clean",
     "test": "node --test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:styles": "node scripts/verify-style-build.mjs"
   },
   "engines": {
     "node": "24.14.1",

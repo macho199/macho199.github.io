@@ -47,3 +47,16 @@ test("loads only approved local fonts and light theme tokens", async () => {
   assert.match(themeCss, /color-scheme: light/)
   assert.doesNotMatch(`${browserEntry}\n${themeCss}`, /https?:\/\//)
 })
+
+test("keeps MDX semantic resets inside an explicit boundary", async () => {
+  const [browserEntry, mdxCss, postTemplate] = await Promise.all([
+    readRepositoryFile("gatsby-browser.js"),
+    readRepositoryFile("src/styles/mdx.css"),
+    readRepositoryFile("src/templates/post.tsx"),
+  ])
+
+  assert.match(browserEntry, /\.\/src\/styles\/mdx\.css/)
+  assert.match(mdxCss, /\.mdx-content/)
+  assert.doesNotMatch(mdxCss, /(^|\n)\s*(ul|ol|table)\s*\{/)
+  assert.match(postTemplate, /className="mdx-content"/)
+})
