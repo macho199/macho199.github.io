@@ -12,10 +12,27 @@ const readRepositoryFile = path =>
 
 test("registers the local Tailwind PostCSS pipeline", async () => {
   const plugins = gatsbyConfig.plugins ?? []
+  const postcssPlugin = plugins.find(
+    plugin =>
+      typeof plugin === "object" && plugin.resolve === "gatsby-plugin-postcss",
+  )
 
-  assert.ok(plugins.includes("gatsby-plugin-postcss"))
+  assert.ok(postcssPlugin && typeof postcssPlugin === "object")
 
-  const postcssConfig = await import("../../postcss.config.mjs")
+  const pluginOptions = Reflect.get(postcssPlugin, "options")
+
+  assert.ok(pluginOptions && typeof pluginOptions === "object")
+
+  const postcssOptions = Reflect.get(pluginOptions, "postcssOptions")
+
+  assert.ok(postcssOptions && typeof postcssOptions === "object")
+
+  const configPath = Reflect.get(postcssOptions, "config")
+
+  assert.ok(typeof configPath === "string")
+  assert.match(configPath, /postcss\.config\.cjs$/)
+
+  const postcssConfig = await import("../../postcss.config.cjs")
 
   assert.deepEqual(postcssConfig.default, {
     plugins: {
@@ -40,7 +57,7 @@ test("loads only approved local fonts and light theme tokens", async () => {
   }
 
   assert.match(browserEntry, /\.\/src\/styles\/theme\.css/)
-  assert.match(themeCss, /@import "tailwindcss";/)
+  assert.match(themeCss, /@import "tailwindcss" source\("\.\.\/"\);/)
   assert.match(themeCss, /--font-display: "Noto Serif KR"/)
   assert.match(themeCss, /--font-body: "Noto Sans KR"/)
   assert.match(themeCss, /--color-brand: var\(--accent\)/)

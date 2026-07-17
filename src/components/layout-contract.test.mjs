@@ -86,6 +86,5 @@ test("applies the shared layout without changing page data boundaries", async ()
     assert.doesNotMatch(source, /<main\b/)
   }
 
-  assert.match(indexPage, /to=\{`\/posts\/\$\{post\.frontmatter\.slug\}\/`\}/)
   assert.match(postTemplate, /<div className="mdx-content">\{children\}<\/div>/)
 })

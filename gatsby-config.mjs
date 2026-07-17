@@ -13,7 +13,14 @@ const config = {
     siteUrl: "https://macho199.github.io",
   },
   plugins: [
-    "gatsby-plugin-postcss",
+    {
+      resolve: "gatsby-plugin-postcss",
+      options: {
+        postcssOptions: {
+          config: path.join(rootDirectory, "postcss.config.cjs"),
+        },
+      },
+    },
     {
       resolve: "gatsby-plugin-mdx",
       options: {
