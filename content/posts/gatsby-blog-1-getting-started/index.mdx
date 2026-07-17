@@ -1,8 +1,8 @@
 ---
 title: "Gatsby로 블로그 사이트 만들기 1편 - 시작하기"
 slug: "gatsby-blog-1-getting-started"
-publishedAt: "2025-08-31"
-description: "Gatsby와 GitHub Pages로 개발자 블로그를 시작하며 정적 사이트 생성 방식, 프로젝트 설정, Tailwind CSS 확인, 당시 배포 과정을 정리합니다."
+publishedAt: "2026-04-18"
+description: "배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다."
 tags:
   - Gatsby
   - GitHub Pages
@@ -10,107 +10,67 @@ tags:
   - Tailwind CSS
 ---
 
-> 이 글은 2025년에 작성한 원문을 개발자 블로그의 2026년 재구축 과정에서 다시 검증하고 보수적으로 다듬었습니다. 당시의 시행착오와 흐름은 유지하되, 지금 그대로 따라 하면 오해할 수 있는 명령과 설명은 현재 기준에 맞게 바로잡았습니다.
+개발자 블로그 저장소를 다시 열어 보니 유지보수할 Gatsby 원본은 없고, 브라우저에 배포되는 HTML·CSS·JavaScript 산출물만 남아 있었습니다. 화면은 공개되고 있었지만 글이나 기능을 안전하게 추가할 수 있는 소스 기준선은 없는 상태였습니다.
 
-## 개발자를 위한 블로그 구축
+이번 작업의 목표는 기존 공개 사이트를 바로 덮어쓰는 것이 아니었습니다. 먼저 재현 가능한 Gatsby 5 소스를 만들고, MDX·SEO·스타일·반응형 UI를 작은 단계로 검증한 뒤 GitHub Pages 배포 전환을 준비하는 것이었습니다.
 
-블로그 플랫폼에는 네이버 블로그, 티스토리, 구글 블로거처럼 다양한 선택지가 있습니다. 이런 플랫폼은 빠르게 시작할 수 있고 관리 기능도 편리하지만, 개발자에게는 원하는 기능을 직접 구현하기 어렵고 플랫폼에 종속된다는 한계가 있습니다.
+> 현재 `main`은 기존 공개 사이트를 유지합니다. 새 Gatsby 소스는 `develop`에서 통합하고 있으며 GitHub Actions 배포는 아직 연결하지 않았다.
 
-개발자가 자신만의 블로그를 만드는 가장 큰 이유는 **구조와 기능을 직접 통제할 수 있기 때문**입니다. 다만 개인 서버를 직접 운영하면 비용과 관리 부담이 생깁니다. 이때 정적 파일을 호스팅하는 [GitHub Pages](https://docs.github.com/en/pages)를 활용하면 작은 개발자 블로그를 비교적 단순하게 운영할 수 있습니다.
+## 왜 소스부터 다시 구축했는가
 
-### GitHub Pages의 장점
+빌드 산출물만으로도 화면 문구나 CSS를 직접 고칠 수는 있습니다. 하지만 생성된 파일은 원본 컴포넌트와 데이터 흐름을 잃은 결과물이므로 다음 변경에서 같은 결과를 재현하기 어렵습니다.
 
-GitHub Pages는 HTML, CSS, JavaScript 같은 정적 파일을 GitHub 저장소에서 제공하는 호스팅 서비스입니다.
+재구축을 시작하며 경계를 먼저 정했습니다.
 
-- 개인 또는 오픈소스 프로젝트를 위한 공개 사이트를 시작하기 쉽습니다.
-- 별도의 애플리케이션 서버를 계속 운영하지 않아도 됩니다.
-- 저장소의 변경 이력과 사이트 변경 이력을 함께 관리할 수 있습니다.
+1. 기존 Git 이력과 배포 산출물을 별도 bundle로 보존합니다.
+2. 공개 사이트를 제공하는 `main`은 출시 준비가 끝날 때까지 유지합니다.
+3. 새 Gatsby 소스는 `develop`에서 통합합니다.
+4. 기능은 작은 브랜치와 PR 단위로 검증합니다.
+5. `.cache`, `public`, `node_modules` 같은 생성물은 Git에 넣지 않습니다.
 
-> 요금과 사용 제한은 바뀔 수 있으므로 실제 적용 전에는 [GitHub Pages 공식 문서](https://docs.github.com/en/pages)를 확인하는 편이 안전합니다.
+이 구조를 사용하면 새 빌드가 실패해도 기존 사이트에는 영향을 주지 않습니다. 기능을 하나씩 병합하면서도 출시 시점은 별도로 결정할 수 있습니다.
 
-## 정적 사이트 생성기(SSG) 이해하기
+## 재현 가능한 Gatsby 5 기준선
 
-순수 HTML, CSS, JavaScript만으로도 블로그를 만들 수 있습니다. 하지만 글이 늘어나면 페이지 구성, 목록 생성, 공통 레이아웃과 메타데이터 관리가 반복됩니다. Gatsby 같은 정적 사이트 생성기(SSG)는 이 반복을 빌드 과정으로 옮깁니다.
+먼저 실행 환경과 직접 의존성을 정확한 버전으로 고정했습니다.
 
-- **데이터 레이어:** 파일과 콘텐츠를 일정한 방식으로 조회할 수 있습니다.
-- **컴포넌트 재사용:** 공통 화면을 React 컴포넌트로 나눌 수 있습니다.
-- **유지보수성:** 콘텐츠와 표현 구조를 분리해 장기적으로 관리하기 쉽습니다.
+| 항목 | 버전 |
+| --- | --- |
+| Gatsby | 5.16.1 |
+| Node.js | 24.14.1 |
+| npm | 11.11.0 |
+| React | 18.3.1 |
+| TypeScript | 5.9.3 |
 
-도구를 익히는 비용은 있지만, 한 번 구조를 이해하면 다른 정적 사이트에도 비슷한 방식을 적용할 수 있습니다.
-
-### React 앱과 Gatsby의 차이
-
-React로 만든 일반적인 단일 페이지 애플리케이션(SPA)은 브라우저에서 JavaScript가 실행된 뒤 화면의 많은 부분을 그립니다. Gatsby는 빌드 시점에 페이지별 HTML을 먼저 만들 수 있습니다.
-
-이 차이 덕분에 정적인 글 페이지에서는 다음 이점을 기대할 수 있습니다.
-
-1. 첫 화면에 필요한 HTML을 미리 제공할 수 있습니다.
-2. 검색 엔진이 글의 기본 구조를 읽기 쉽습니다.
-3. 정적 자산 중심으로 배포 구조를 단순화할 수 있습니다.
-
-> 동적인 기능도 추가할 수 있습니다. 다만 기능이 늘수록 클라이언트 JavaScript와 빌드 구조도 함께 복잡해지므로 블로그에 꼭 필요한 기능부터 추가하는 편이 좋습니다.
-
-## Gatsby 프레임워크 소개
-
-[Gatsby](https://www.gatsbyjs.com/)는 React 기반 웹 프레임워크입니다. 콘텐츠를 GraphQL 데이터 레이어로 조회하고, 빌드 시점에 페이지를 생성하며, 플러그인으로 MDX나 sitemap 같은 기능을 연결할 수 있습니다.
-
-### Gatsby를 선택한 이유
-
-1. **정적 페이지 생성:** 글 페이지를 빌드 시점에 만들 수 있습니다.
-2. **React 기반 구성:** 익숙한 컴포넌트 단위로 UI를 나눌 수 있습니다.
-3. **콘텐츠 확장:** Markdown과 MDX를 사용해 글과 컴포넌트를 함께 다룰 수 있습니다.
-4. **플러그인 생태계:** sitemap, 파일 소싱, 이미지 처리 같은 기능을 단계적으로 추가할 수 있습니다.
-5. **정적 호스팅 배포:** GitHub Pages 같은 정적 호스팅과 조합할 수 있습니다.
-
-Gatsby를 사용한다고 SEO와 성능이 자동으로 완성되는 것은 아닙니다. 메타데이터, URL, 이미지, JavaScript 양을 직접 점검해야 합니다.
-
-## Gatsby 프로젝트 생성
-
-현재 기본 시작 방식은 [Gatsby 빠른 시작 문서](https://www.gatsbyjs.com/docs/quick-start/)를 기준으로 확인하는 것이 가장 정확합니다. Node.js 버전도 특정 숫자를 모든 프로젝트의 필수 조건으로 단정하기보다 Gatsby 지원 범위와 저장소의 `engines`, `.nvmrc`를 함께 확인합니다.
-
-프로젝트 생성 명령은 다음과 같습니다.
+Node.js 버전은 `.nvmrc`와 `package.json`의 `engines`에 함께 기록했습니다. npm 버전은 `packageManager`로 고정하고 `package-lock.json`을 소스에 포함했습니다. 깨끗한 환경에서는 다음 명령으로 같은 의존성 트리를 설치합니다.
 
 ```shell
-npm init gatsby
+npm ci
 ```
 
-대화형 설정에서는 프로젝트 이름, JavaScript 또는 TypeScript, 스타일링 방식, 추가 플러그인을 선택합니다. 당시 첫 프로젝트에서는 빠른 시작을 위해 JavaScript, Tailwind CSS, 반응형 이미지, sitemap, MDX 지원을 골랐습니다.
+Gatsby 설정에는 ESM이 필요한 플러그인이 있어 `gatsby-config.mjs`를 사용했습니다. 반면 package 전체에 `"type": "module"`을 선언하면 Gatsby가 생성하는 CommonJS 파일과 충돌했기 때문에 ESM 경계는 설정 파일로 제한했습니다.
 
-설치가 끝나면 생성된 폴더로 이동해 개발 서버를 실행합니다.
+## MDX와 Tailwind를 별도 단계로 나눈 이유
 
-```shell
-cd my-gatsby-site
-npm run develop
-```
+콘텐츠 처리와 화면 스타일은 실패 원인과 검증 방법이 다릅니다. 두 기반을 한 번에 추가하면 빌드가 깨졌을 때 MDX 변환 문제인지 PostCSS 문제인지 구분하기 어렵습니다.
 
-기본 개발 서버는 일반적으로 다음 주소에서 확인합니다.
+- MDX 단계는 파일 소싱, frontmatter 스키마, slug 검증, 페이지 생성을 담당합니다.
+- Tailwind 단계는 PostCSS 연결, 디자인 토큰, 기본 스타일과 폰트 로딩을 담당합니다.
 
-- 사이트: `http://localhost:8000/`
-- GraphiQL: `http://localhost:8000/___graphql`
+MDX 페이지가 먼저 빌드되는 것을 확인한 뒤 Tailwind를 연결했습니다. 덕분에 이후에 나타난 스타일 회귀를 콘텐츠 패키지 버전 문제와 분리해서 판단할 수 있었습니다.
 
-GraphQL 데이터 레이어는 글 생성 구조를 구현할 때 별도로 다루고, 여기서는 프로젝트가 실행되는지만 확인합니다.
+## Tailwind CSS 4와 PostCSS 연결
 
-## 당시 Tailwind CSS 오류와 현재의 판단
+현재 저장소의 스타일 기반은 다음 버전으로 고정했습니다.
 
-2025년 8월에 starter를 생성했을 때 개발 번들을 만드는 과정에서 Tailwind CSS의 PostCSS 플러그인 오류를 만났습니다.
+| 항목 | 버전 |
+| --- | --- |
+| Tailwind CSS | 4.3.3 |
+| @tailwindcss/postcss | 4.3.3 |
+| PostCSS | 8.5.19 |
+| gatsby-plugin-postcss | 6.16.0 |
 
-```text
-ERROR #98123 WEBPACK.DEVELOP
-Generating development JavaScript bundle failed
-Module build failed: TailwindCSS PostCSS plugin error...
-```
-
-당시에는 MDX 패키지 버전도 함께 바꾸며 문제를 해결했습니다. 그러나 특정 `@mdx-js/react` 버전으로 강제 다운그레이드하는 방법을 모든 Gatsby 프로젝트의 해결책으로 권장할 수는 없습니다. 현재는 먼저 Gatsby와 플러그인의 peer dependency, 설치된 Tailwind CSS의 주 버전, 실제 오류 메시지를 함께 확인합니다.
-
-### Tailwind CSS 4와 PostCSS 연결
-
-Tailwind CSS 4를 PostCSS와 연결하는 현재 방식은 [Tailwind CSS 공식 문서](https://tailwindcss.com/docs/installation/using-postcss)를 기준으로 확인합니다. Gatsby에서 사용할 때는 프로젝트 구성에 맞춰 다음 패키지를 설치할 수 있습니다.
-
-```shell
-npm install tailwindcss @tailwindcss/postcss gatsby-plugin-postcss
-```
-
-`postcss.config.cjs`에는 Tailwind의 PostCSS 플러그인을 등록합니다.
+Gatsby에는 `gatsby-plugin-postcss`를 등록하고, 플러그인이 저장소 루트의 `postcss.config.cjs`를 읽도록 경로를 명시했습니다. PostCSS 설정은 Tailwind CSS 4의 전용 플러그인을 사용합니다.
 
 ```javascript
 module.exports = {
@@ -120,73 +80,85 @@ module.exports = {
 }
 ```
 
-전역 스타일 진입점에서는 Tailwind CSS를 불러옵니다.
+전역 스타일 진입점에서는 Tailwind를 한 번 불러오고, 클래스 탐색 기준을 `src`로 제한했습니다.
 
 ```css
-@import "tailwindcss";
+@import "tailwindcss" source("../");
 ```
 
-설정을 바꾼 뒤 개발 서버를 다시 실행해 실제 오류가 사라졌는지 확인합니다.
+색상·폰트 같은 디자인 값은 `:root`의 CSS 변수로 정의하고 `@theme inline`에서 Tailwind 토큰과 연결했습니다. 화면 컴포넌트는 이 토큰과 범위가 제한된 CSS를 함께 사용합니다.
+
+## Preflight 이후 사라진 문서 의미 복원
+
+PostCSS 연결과 프로덕션 빌드는 성공했지만, Tailwind Preflight가 브라우저 기본 스타일을 초기화하면서 문서의 의미가 화면에서 잘 드러나지 않는 문제가 생겼습니다.
+
+- `h1`부터 `h6`까지 제목 크기가 본문과 비슷해졌습니다.
+- `ul`과 `ol`의 목록 마커와 들여쓰기가 사라졌습니다.
+- 링크의 색상과 밑줄이 사라져 일반 텍스트와 구분하기 어려워졌습니다.
+
+이 동작은 Tailwind 오류가 아니라 일관된 스타일링을 위한 초기화입니다. 따라서 Preflight를 제거하는 대신 블로그가 필요한 의미 기본값을 명시적으로 복원했습니다.
+
+### 제목과 목록 기본값
+
+전역 `@layer base`에서 제목별 크기와 목록 마커를 정의했습니다. MDX 본문에는 `.mdx-content` 경계를 두어 수직 간격, 표와 코드 블록의 overflow 규칙이 다른 화면으로 새지 않게 했습니다.
+
+```css
+@layer base {
+  h1 { font-size: var(--text-3xl); }
+  h2 { font-size: var(--text-2xl); }
+  h3 { font-size: var(--text-xl); }
+
+  ul { list-style: disc; }
+  ol { list-style: decimal; }
+}
+```
+
+### 링크 식별성과 색상 대비
+
+처음 사용한 브랜드 강조색은 흰 배경에서 일반 크기 링크 색상으로 쓰기에 대비가 충분하지 않았습니다. 브랜드 색과 링크 색을 분리하고 기본 링크는 `#0a7a5e`, hover는 `#075b47`로 조정했습니다. 밑줄과 키보드 포커스도 함께 복원했습니다.
+
+색상 수정은 눈으로만 판단하지 않았습니다. 테스트가 CSS 변수의 상대 휘도를 계산하고 기본·hover 링크가 흰 배경에서 모두 WCAG AA 기준인 4.5:1 이상인지 확인합니다.
+
+## 로컬 폰트와 외부 요청 경계
+
+제목과 로고에는 Noto Serif KR, 본문과 UI에는 Noto Sans KR를 사용합니다. 외부 폰트 서비스에 의존하지 않도록 두 글꼴을 저장소 패키지로 제공하고 실제 사용하는 굵기만 전역 진입점에서 불러옵니다.
+
+```javascript
+import "@fontsource/noto-serif-kr/400.css"
+import "@fontsource/noto-sans-kr/400.css"
+import "@fontsource/noto-sans-kr/500.css"
+import "@fontsource/noto-sans-kr/600.css"
+```
+
+프로덕션 산출물에는 unicode-range로 나뉜 로컬 `woff2`가 생성됩니다. 브라우저는 현재 글에 필요한 파일만 요청하며 외부 폰트 호스트 요청은 만들지 않습니다.
+
+## 검증과 현재 배포 경계
+
+스타일이 화면에서 한 번 보이는 것만으로 완료하지 않았습니다. 소스 계약, 타입, Gatsby 빌드와 생성된 HTML·CSS를 각각 검증했습니다.
 
 ```shell
-npm run develop
-```
-
-패키지 설치 중 취약점 경고가 보이더라도 자동 수정 명령을 바로 적용하지 않습니다. 어떤 패키지가 런타임이나 빌드 결과에 영향을 주는지, 전이 의존성인지, 업데이트가 빌드를 깨뜨리지 않는지를 먼저 분석하고 별도 이슈로 추적하는 편이 안전합니다.
-
-## 화면에서 Tailwind CSS 확인
-
-Tailwind CSS가 적용되는지 확인하려고 기본 화면의 제목에 유틸리티 클래스를 하나 추가했습니다.
-
-```jsx
-<h1 className="text-red-500">Congratulations</h1>
-```
-
-![Gatsby 시작 화면의 제목에 Tailwind CSS 색상 클래스를 적용한 모습](/images/posts/gatsby-blog-1-getting-started/hello-gatsby-tailwindcss.png)
-
-색상이 바뀌었다면 CSS import와 PostCSS 연결이 실제 개발 번들에 반영된 것입니다. 확인이 끝난 뒤에는 임시 검증용 클래스를 제품 디자인에 맞는 구조로 교체합니다.
-
-## 프로덕션 빌드 확인
-
-개발 서버 확인이 끝나면 프로덕션 빌드를 생성합니다.
-
-```shell
+npm test
+npm run typecheck
 npm run build
+npm run verify:styles
+npm run verify:layout
+npm run verify:home
+npm run verify:post
 ```
 
-빌드 결과는 `public/`에 만들어집니다. 이 HTML을 `file://` 주소로 직접 열면 경로와 JavaScript 로딩 방식이 실제 호스팅 환경과 달라질 수 있습니다. Gatsby의 정적 서버로 확인합니다.
+검증기는 다음 경계를 확인합니다.
 
-```shell
-npm run serve
-```
+- Tailwind PostCSS 플러그인과 명시적인 source 경로
+- 제목 크기, 목록 마커, 링크 식별성 복원
+- 기본·hover 링크 색상의 4.5:1 이상 대비
+- 로컬 폰트 산출물과 외부 리소스 호스트 부재
+- 홈과 포스트의 공통 레이아웃과 반응형 너비
+- MDX 본문 스타일이 `.mdx-content` 밖으로 새지 않는지 여부
 
-캐시 때문에 결과가 이상할 때만 `npm run clean`으로 생성물을 정리한 뒤 다시 빌드합니다. 이 명령은 소스가 아니라 Gatsby의 `.cache/`와 `public/` 생성물을 제거하므로 실행 전 변경 파일과 대상 경로를 확인합니다.
-
-## 당시 GitHub Pages 배포 방식
-
-2025년 원문에서는 `{username}.github.io` 공개 저장소를 만들고, GitHub Pages의 배포 소스를 `main` 브랜치의 루트로 지정한 뒤 Gatsby의 `public/` 내용을 저장소에 복사했습니다.
-
-![GitHub Pages 설정에서 main 브랜치와 루트 폴더를 배포 소스로 선택한 모습](/images/posts/gatsby-blog-1-getting-started/github-pages-setting.png)
-
-당시 흐름은 다음과 같았습니다.
-
-1. Gatsby 프로젝트에서 프로덕션 빌드를 생성합니다.
-2. `{username}.github.io` 저장소에 `public/`의 정적 파일을 반영합니다.
-3. 변경 내용을 `main` 브랜치에 푸시합니다.
-4. `https://{username}.github.io`에서 배포 결과를 확인합니다.
-
-이 방식은 당시 사용한 수동 배포 절차입니다. 저장소 소스와 빌드 산출물을 한 브랜치에서 관리하면 이력이 섞이기 쉽습니다. 이번 재구축에서 사용할 자동 배포 방식은 실제 워크플로우를 구현하고 검증한 뒤 별도의 글로 정리하겠습니다.
-
-GitHub Pages의 화면과 옵션은 바뀔 수 있으므로 배포할 때는 [공식 배포 소스 설정 문서](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)를 다시 확인합니다.
+현재까지 새 Gatsby 소스와 UI 기반은 `develop`에서 검증하고 있습니다. GitHub Actions가 소스를 빌드해 Pages 아티팩트를 배포하는 단계는 아직 적용하지 않았습니다. 자동 배포와 공개 주소 전환은 남은 UI·콘텐츠 수용 검증이 끝난 뒤 별도 단계로 진행합니다.
 
 ## 마치며
 
-이번 글에서는 다음 내용을 다뤘습니다.
+이번 재구축에서 중요한 점은 Tailwind를 설치하는 명령 자체보다 문제의 경계를 나눈 방식이었습니다. MDX와 스타일 기반을 따로 추가했기 때문에 Preflight 회귀를 패키지 충돌로 오인하지 않았고, 의미 스타일과 접근성을 테스트로 고정할 수 있었습니다.
 
-- Gatsby와 정적 사이트 생성 방식의 기본 개념
-- `npm init gatsby`를 이용한 프로젝트 시작
-- Gatsby와 Tailwind CSS 4의 PostCSS 연결
-- 개발 서버와 프로덕션 서버에서의 확인 방법
-- 2025년에 사용했던 GitHub Pages 수동 배포 흐름
-
-첫 글의 목표는 모든 기능을 한 번에 완성하는 것이 아니라, 글을 쓸 수 있는 프로젝트와 배포 가능한 정적 결과물을 만드는 것이었습니다. 다음 구현 기록에서는 MDX 콘텐츠 소싱, 페이지 생성, SEO, UI를 어떤 순서로 나눴는지 이어서 정리할 예정입니다.
+다음 글에서는 MDX frontmatter를 명시적인 스키마로 제한하고, 잘못된 날짜와 중복 slug를 페이지 생성 전에 거부한 과정을 정리할 예정입니다.

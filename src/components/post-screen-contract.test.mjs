@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { access, readFile } from "node:fs/promises"
+import { readFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { test } from "node:test"
 import { fileURLToPath } from "node:url"
@@ -91,7 +91,7 @@ test("loads post styles once and keeps selectors inside post boundaries", async 
   assert.doesNotMatch(postCss, /(^|\n)\s*(?:h[1-6]|p|a|ul|ol|pre|table)\s*\{/)
 })
 
-test("uses the approved real post and local image assets", async () => {
+test("documents the current Gatsby rebuild and Tailwind fixes", async () => {
   const [post, oldSample] = await Promise.all([
     readRepositoryFile("content/posts/gatsby-blog-1-getting-started/index.mdx"),
     readRepositoryFile("content/posts/mdx-foundation/index.mdx"),
@@ -99,36 +99,28 @@ test("uses the approved real post and local image assets", async () => {
 
   assert.match(post, /title: "Gatsby로 블로그 사이트 만들기 1편 - 시작하기"/)
   assert.match(post, /slug: "gatsby-blog-1-getting-started"/)
-  assert.match(post, /publishedAt: "2025-08-31"/)
-  assert.match(post, /2026년 재구축 과정에서 다시 검증하고 보수적으로 다듬었습니다/)
-  assert.match(post, /npm init gatsby/)
-  assert.match(post, /npm run serve/)
+  assert.match(post, /publishedAt: "2026-04-18"/)
   assert.match(
     post,
-    /\/images\/posts\/gatsby-blog-1-getting-started\/hello-gatsby-tailwindcss\.png/,
+    /배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다\./,
   )
-  assert.match(
+  assert.match(post, /Gatsby \| 5\.16\.1/)
+  assert.match(post, /Tailwind CSS \| 4\.3\.3/)
+  assert.match(post, /"@tailwindcss\/postcss": \{\}/)
+  assert.match(post, /@import "tailwindcss" source\("\.\.\/"\);/)
+  assert.match(post, /제목 크기, 목록 마커, 링크 식별성/)
+  assert.match(post, /4\.5:1/)
+  assert.match(post, /npm run typecheck/)
+  assert.match(post, /GitHub Actions 배포는 아직 연결하지 않았다/)
+  assert.doesNotMatch(
     post,
-    /\/images\/posts\/gatsby-blog-1-getting-started\/github-pages-setting\.png/,
+    /2025|ERROR #98123|@mdx-js\/react|text-red-500|당시 GitHub Pages 배포 방식/,
   )
-  assert.doesNotMatch(post, /npm install -g gatsby-cli|npm audit fix/)
-  assert.match(post, /`file:\/\/` 주소로 직접 열면/)
+  assert.doesNotMatch(
+    post,
+    /hello-gatsby-tailwindcss\.png|github-pages-setting\.png/,
+  )
   assert.equal(oldSample, "")
-
-  await Promise.all([
-    access(
-      new URL(
-        "static/images/posts/gatsby-blog-1-getting-started/hello-gatsby-tailwindcss.png",
-        repositoryRoot,
-      ),
-    ),
-    access(
-      new URL(
-        "static/images/posts/gatsby-blog-1-getting-started/github-pages-setting.png",
-        repositoryRoot,
-      ),
-    ),
-  ])
 })
 
 test("registers a production verifier for the approved post", async () => {
