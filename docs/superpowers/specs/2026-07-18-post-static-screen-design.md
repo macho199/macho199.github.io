@@ -82,7 +82,7 @@
 
 - GraphQL 조회와 페이지 조립을 소유한다.
 - 공통 `Layout`과 920px `ContentContainer`를 재사용한다.
-- 목록 복귀 링크를 `<nav aria-label="게시글 탐색">` 안에 렌더링한다.
+- 목록 복귀 링크를 `<article>` 앞의 `<nav aria-label="게시글 탐색">` 안에 렌더링한다.
 - `PostHeader`에 타입이 지정된 frontmatter 표현 데이터를 전달한다.
 - MDX `children`을 `.mdx-content` 안에 배치한다.
 - 전체 게시글을 하나의 `<article className="post-page">`로 표현한다.
@@ -121,6 +121,7 @@ MDX body
 
 - 글 본문은 의미 있는 Markdown과 MDX로 작성하고 Tailwind 클래스를 직접 넣지 않는다.
 - `.post-page .mdx-content` 아래의 의미 요소를 `post.css`에서 스타일링한다.
+- `gatsby-browser.js`에서 `post.css`를 한 번 불러오되 모든 포스트 규칙을 `.post-page` 또는 포스트 전용 내비게이션 클래스 아래로 제한한다.
 - H1은 포스트 헤더 전용이며 MDX 본문은 H2부터 시작한다.
 - fenced code block은 정적 `<pre><code>`로 렌더링하고 긴 내용만 내부에서 가로 스크롤한다.
 - 코드 언어 정보는 Markdown에 남기되 이번 단계에서 토큰 단위 문법 강조는 하지 않는다.
