@@ -18,6 +18,8 @@
   },
   "packageManager": "npm@11.11.0",
   "dependencies": {
+    "@fontsource/noto-sans-kr": "5.2.9",
+    "@fontsource/noto-serif-kr": "5.2.9",
     "@mdx-js/react": "2.3.0",
     "gatsby": "5.16.1",
     "gatsby-plugin-mdx": "5.16.0",
