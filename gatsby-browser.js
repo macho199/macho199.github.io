@@ -5,3 +5,4 @@ import "@fontsource/noto-sans-kr/600.css"
 
 import "./src/styles/theme.css"
 import "./src/styles/mdx.css"
+import "./src/styles/layout.css"
