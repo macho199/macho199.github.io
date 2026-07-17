@@ -48,6 +48,37 @@ test("loads only approved local fonts and light theme tokens", async () => {
   assert.doesNotMatch(`${browserEntry}\n${themeCss}`, /https?:\/\//)
 })
 
+test("restores semantic heading sizes after Tailwind Preflight", async () => {
+  const themeCss = await readRepositoryFile("src/styles/theme.css")
+
+  assert.match(
+    themeCss,
+    /h1,\s*h2,\s*h3\s*\{[^}]*line-height: var\(--leading-tight\)/s,
+  )
+
+  for (const [selector, sizeToken] of [
+    ["h1", "--text-3xl"],
+    ["h2", "--text-2xl"],
+    ["h3", "--text-xl"],
+  ]) {
+    assert.match(
+      themeCss,
+      new RegExp(`${selector}\\s*\\{[^}]*font-size: var\\(${sizeToken}\\)`, "s"),
+    )
+  }
+})
+
+test("restores semantic list markers and indentation after Tailwind Preflight", async () => {
+  const themeCss = await readRepositoryFile("src/styles/theme.css")
+
+  assert.match(
+    themeCss,
+    /:where\(ul, ol\)\s*\{[^}]*padding-inline-start: 1\.5rem/s,
+  )
+  assert.match(themeCss, /(^|\n)\s*ul\s*\{[^}]*list-style: disc/s)
+  assert.match(themeCss, /(^|\n)\s*ol\s*\{[^}]*list-style: decimal/s)
+})
+
 test("keeps MDX semantic resets inside an explicit boundary", async () => {
   const [browserEntry, mdxCss, postTemplate] = await Promise.all([
     readRepositoryFile("gatsby-browser.js"),

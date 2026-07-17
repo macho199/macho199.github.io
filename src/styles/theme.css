@@ -112,12 +112,37 @@
     margin: 0;
     font-family: var(--font-display);
     font-weight: 400;
+    line-height: var(--leading-tight);
     text-wrap: balance;
+  }
+
+  h1 {
+    font-size: var(--text-3xl);
+  }
+
+  h2 {
+    font-size: var(--text-2xl);
+  }
+
+  h3 {
+    font-size: var(--text-xl);
   }
 
   p {
     margin: 0;
     text-wrap: pretty;
+  }
+
+  :where(ul, ol) {
+    padding-inline-start: 1.5rem;
+  }
+
+  ul {
+    list-style: disc;
+  }
+
+  ol {
+    list-style: decimal;
   }
 
   a {
