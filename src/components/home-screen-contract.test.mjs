@@ -126,4 +126,8 @@ test("registers the production home verifier", async () => {
   )
   assert.match(verifier, /public\/index\.html/)
   assert.match(verifier, /mdx-foundation/)
+  assert.match(verifier, /gatsby-blog-3-graphql-page-generation/)
+  assert.match(verifier, /gatsby-blog-2-managing-mdx-posts/)
+  assert.match(verifier, /gatsby-blog-1-getting-started/)
+  assert.match(verifier, /assert\.deepEqual\(postPaths, expectedPostPaths/)
 })
