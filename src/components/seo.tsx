@@ -51,6 +51,7 @@ const Seo = ({
       <title>{pageTitle}</title>
       <meta id="description" name="description" content={pageDescription} />
       <link id="canonical" rel="canonical" href={canonicalUrl} />
+      <link id="favicon" rel="icon" type="image/png" sizes="128x128" href="/favicon.png" />
       <meta id="og-title" property="og:title" content={pageTitle} />
       <meta id="og-description" property="og:description" content={pageDescription} />
       <meta id="og-url" property="og:url" content={canonicalUrl} />
