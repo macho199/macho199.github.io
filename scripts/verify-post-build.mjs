@@ -88,6 +88,19 @@ const postContracts = [
 const countOpeningTags = (source, tag) =>
   source.match(new RegExp(`<${tag}(?:\\s|>)`, "g"))?.length ?? 0
 
+/**
+ * @param {string} html
+ * @param {string} slug
+ */
+const assertLocalFavicon = (html, slug) => {
+  const links = html.match(
+    /<link\b(?=[^>]*rel="icon")(?=[^>]*href="\/favicon\.png")[^>]*>/g,
+  ) ?? []
+
+  assert.equal(links.length, 1, `${slug}: one local favicon link`)
+  assert.doesNotMatch(html, /avatars\.githubusercontent\.com/)
+}
+
 /** @param {string} value */
 const normalizeText = value =>
   value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
@@ -150,6 +163,8 @@ for (const contract of postContracts) {
     "utf8",
   )
   const mainMatch = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)
+
+  assertLocalFavicon(html, contract.slug)
 
   assert.doesNotMatch(
     html,

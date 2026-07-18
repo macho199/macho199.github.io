@@ -165,9 +165,10 @@ test("keeps GraphQL in the page and loads scoped home styles", async () => {
 })
 
 test("registers the production home verifier", async () => {
-  const [packageSource, verifier] = await Promise.all([
+  const [packageSource, verifier, layoutVerifier] = await Promise.all([
     readRepositoryFile("package.json"),
     readRepositoryFile("scripts/verify-home-build.mjs"),
+    readRepositoryFile("scripts/verify-layout-build.mjs"),
   ])
   const packageJson = JSON.parse(packageSource)
 
@@ -184,4 +185,12 @@ test("registers the production home verifier", async () => {
   assert.match(verifier, /const postCard = postCards\[index\]/)
   assert.match(verifier, /assert\.deepEqual\(postCardTags, post\.tags/)
   assert.match(verifier, /assert\.deepEqual\(postPaths, expectedPostPaths/)
+  assert.match(verifier, /expectedFilterTags/)
+  assert.match(verifier, /post-filter-toolbar/)
+  assert.match(verifier, /post-filter-button/)
+  assert.match(verifier, /aria-pressed/)
+  assert.match(verifier, /3 posts/)
+  assert.match(verifier, /Tailwind CSS/)
+  assert.match(layoutVerifier, /favicon\.png/)
+  assert.match(layoutVerifier, /e9d4b8b644138993aaf0d6c9904613a3ae820881bed5d03d07eb1032e549693b/)
 })

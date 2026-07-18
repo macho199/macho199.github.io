@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { createHash } from "node:crypto"
 import { readFile } from "node:fs/promises"
 
 const pages = [
@@ -29,8 +30,23 @@ const countClassedTags = (source, tag, className) =>
 const countOpeningTags = (source, tag) =>
   source.match(new RegExp(`<${tag}(?:\\s|>)`, "g"))?.length ?? 0
 
+/**
+ * @param {string} html
+ * @param {string} name
+ */
+const assertLocalFavicon = (html, name) => {
+  const links = html.match(
+    /<link\b(?=[^>]*rel="icon")(?=[^>]*href="\/favicon\.png")[^>]*>/g,
+  ) ?? []
+
+  assert.equal(links.length, 1, `${name}: one local favicon link`)
+  assert.doesNotMatch(html, /avatars\.githubusercontent\.com/)
+}
+
 for (const [name, url] of pages) {
   const html = await readFile(url, "utf8")
+
+  assertLocalFavicon(html, name)
 
   assert.equal(
     countClassedTags(html, "header", "site-header"),
@@ -60,4 +76,19 @@ for (const [name, url] of pages) {
   )
 }
 
-console.log("layout build verified: home and post shell contracts passed")
+const notFoundHtml = await readFile(
+  new URL("../public/404.html", import.meta.url),
+  "utf8",
+)
+const favicon = await readFile(
+  new URL("../public/favicon.png", import.meta.url),
+)
+
+assertLocalFavicon(notFoundHtml, "not found")
+assert.equal(
+  createHash("sha256").update(favicon).digest("hex"),
+  "e9d4b8b644138993aaf0d6c9904613a3ae820881bed5d03d07eb1032e549693b",
+  "layout: exact local profile favicon asset",
+)
+
+console.log("layout build verified: shell and local favicon contracts passed")
