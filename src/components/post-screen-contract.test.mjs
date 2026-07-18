@@ -147,6 +147,29 @@ test("documents the current Gatsby rebuild and Tailwind fixes", async () => {
   assert.equal(oldSample, "")
 })
 
+test("documents MDX post management as article two", async () => {
+  const post = await readRepositoryFile(
+    "content/posts/gatsby-blog-2-managing-mdx-posts/index.mdx",
+  )
+
+  assert.match(post, /title: "Gatsby로 블로그 만들기 2편 - MDX 포스트 관리"/)
+  assert.match(post, /slug: "gatsby-blog-2-managing-mdx-posts"/)
+  assert.match(post, /publishedAt: "2026-05-16"/)
+  assert.match(post, /## 포스트 파일과 메타데이터를 한 단위로 묶기/)
+  assert.match(post, /## 파일을 Gatsby 데이터 레이어에 연결하기/)
+  assert.match(post, /## frontmatter를 명시적 계약으로 고정하기/)
+  assert.match(post, /## 페이지 생성 전에 작성자 입력 검증하기/)
+  assert.match(post, /## 오류를 모아 빌드를 중단하기/)
+  assert.match(post, /## 새 글을 추가하는 실제 순서/)
+  assert.match(post, /content\/posts\/<slug>\/index\.mdx/)
+  assert.match(post, /createSchemaCustomization/)
+  assert.match(post, /@dontInfer/)
+  assert.match(post, /validatePostNodes/)
+  assert.match(post, /Duplicate post slug/)
+  assert.match(post, /YYYY-MM-DD/)
+  assert.doesNotMatch(post, /2025|React SSR 한글|GitHub Actions 배포 설정 방법/)
+})
+
 test("registers a production verifier for the approved post", async () => {
   const [packageSource, verifier] = await Promise.all([
     readRepositoryFile("package.json"),
