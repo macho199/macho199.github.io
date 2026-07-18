@@ -1,0 +1,921 @@
+
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>포스트 정적 화면 구현 계획</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+ * Active design system: OpenAI — tokens.css :root pasted verbatim.
+ * ───────────────────────────────────────────────────────────────────────── */
+:root {
+  /* ─── Surface ──────────────────────────────────────────────────── */
+  --bg:           #ffffff;
+  --surface:      #f5f5f5;             /* pearl — card surface, elevated panel */
+  --surface-warm: #fafafa;             /* mist — section break, footer */
+
+  /* ─── Foreground ───────────────────────────────────────────────── */
+  --fg:   #0d0d0d;                     /* ink black — primary text, brand mark */
+  --fg-2: #1a1a1a;                     /* soft black — alternative headings */
+  --muted: #6e6e6e;                    /* slate — secondary text, captions */
+  --meta:  #9b9b9b;                    /* ash — tertiary, placeholder */
+
+  /* ─── Border ───────────────────────────────────────────────────── */
+  --border:      #e5e5e5;             /* hairline — standard separator */
+  --border-soft: #ededed;             /* card outline on white surface */
+
+  /* ─── Accent ───────────────────────────────────────────────────── */
+  --accent:        #10a37f;           /* OpenAI Teal — links, highlight, CTA */
+  --accent-on:     #ffffff;
+  --accent-hover:  #0a7a5e;           /* teal deep — hover/pressed */
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+
+  /* ─── Semantic ─────────────────────────────────────────────────── */
+  --success: #10a37f;                 /* teal — success path */
+  --warn:    #f5a623;                 /* amber — advisory */
+  --danger:  #ef4146;                 /* error — validation, destructive */
+
+  /* ─── Typography ───────────────────────────────────────────────── */
+  --font-display: "Signifier", "Source Serif Pro", Georgia, ui-serif, serif;
+  --font-body:    "Söhne", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:    "Söhne Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --text-xs:   12px;
+  --text-sm:   13px;
+  --text-base: 16px;
+  --text-lg:   18px;
+  --text-xl:   20px;
+  --text-2xl:  28px;
+  --text-3xl:  40px;
+  --text-4xl:  56px;
+
+  --leading-body:     1.65;
+  --leading-tight:    1.08;
+  --tracking-display: -0.02em;
+
+  /* ─── Spacing ──────────────────────────────────────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --section-y-desktop: 96px;
+  --section-y-tablet:  64px;
+  --section-y-phone:   48px;
+
+  /* ─── Radius ───────────────────────────────────────────────────── */
+  --radius-sm:   12px;
+  --radius-md:   16px;
+  --radius-lg:   16px;
+  --radius-pill: 9999px;
+
+  /* ─── Elevation ────────────────────────────────────────────────── */
+  --elev-flat:   none;
+  --elev-ring:   0 0 0 1px var(--border);
+  --elev-raised: 0 4px 16px rgba(13, 13, 13, 0.06);
+
+  /* ─── Focus ────────────────────────────────────────────────────── */
+  --focus-ring: 0 0 0 3px rgba(16, 163, 127, 0.12);
+
+  /* ─── Motion ───────────────────────────────────────────────────── */
+  --motion-fast:   150ms;
+  --motion-base:   220ms;
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ─── Layout ───────────────────────────────────────────────────── */
+  --container-max:            1200px;
+  --container-gutter-desktop: 48px;
+  --container-gutter-tablet:  24px;
+  --container-gutter-phone:   24px;
+}
+
+/* ─── reset & base ───────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg-2);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+svg { display: block; max-width: 100%; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+button { font: inherit; cursor: pointer; }
+p { text-wrap: pretty; margin: 0 0 var(--space-4); }
+strong { font-weight: 600; color: var(--fg); }
+
+/* ─── topbar ─────────────────────────────────────────────────────── */
+.topbar {
+  position: sticky; top: 0; z-index: 30;
+  background: color-mix(in oklab, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-inner {
+  /* 900px reading column + 2×48px padding so the brand/actions align with the body column edges */
+  max-width: 996px; margin-inline: auto;
+  padding: 12px clamp(20px, 4vw, 48px);
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+}
+.brand { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.brand-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); flex: none; }
+.brand-name { font-weight: 600; color: var(--fg); font-size: 15px; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.status-pill {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--muted); background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-pill);
+  padding: 2px 9px; flex: none;
+}
+.topbar-actions { display: flex; align-items: center; gap: var(--space-2); }
+.ghost-btn {
+  font-size: 13px; color: var(--muted); background: transparent;
+  border: 1px solid var(--border); border-radius: var(--radius-pill);
+  padding: 6px 14px; transition: color var(--motion-fast), border-color var(--motion-fast);
+}
+.ghost-btn:hover { color: var(--fg); border-color: var(--muted); }
+.progress { height: 2px; width: 0; background: var(--accent); transition: width 80ms linear; }
+.mobile-only { display: none; }
+
+/* ─── layout shell ───────────────────────────────────────────────── */
+.layout {
+  max-width: var(--container-max); margin-inline: auto;
+  padding: clamp(28px, 5vw, 64px) clamp(20px, 4vw, 48px) 96px;
+}
+
+/* ─── table of contents ──────────────────────────────────────────── */
+/* Floats in the left gutter beside the viewport-centered reading column.
+   690px = content half (450) + gap (40) + rail width (200). Clamps to 24px
+   so it never runs off-screen; below 1440px it becomes the slide-in drawer. */
+.toc {
+  position: fixed; top: 92px; left: max(24px, calc(50vw - 690px));
+  width: 200px; max-height: calc(100vh - 120px); overflow: auto;
+}
+.toc-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--meta); margin: 0 0 var(--space-4); padding-left: 14px; }
+#tocList { display: flex; flex-direction: column; }
+.toc-link {
+  display: block; color: var(--muted); font-size: 13.5px; line-height: 1.4;
+  padding: 7px 0 7px 14px; border-left: 2px solid var(--border);
+  transition: color var(--motion-fast), border-color var(--motion-fast);
+}
+.toc-link:hover { color: var(--fg); }
+.toc-link.toc-sub { padding-left: 28px; font-size: 12.5px; color: var(--meta); }
+.toc-link.active { color: var(--accent); border-left-color: var(--accent); }
+.toc-backdrop { display: none; }
+
+/* ─── document column ────────────────────────────────────────────── */
+/* Reading column is centered in the viewport. 900px — a touch wider than the
+   readable prose ideal so tables/code/diagrams breathe, while the rail stays. */
+.doc { max-width: 900px; margin-inline: auto; min-width: 0; }
+/* doc header */
+.doc-head { margin-bottom: var(--space-12); }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent); margin: 0 0 var(--space-4);
+}
+.doc-title {
+  font-family: "Source Serif 4", var(--font-display);
+  font-size: clamp(34px, 5vw, 44px); line-height: 1.1;
+  letter-spacing: var(--tracking-display); color: var(--fg);
+  font-weight: 500; margin: 0 0 var(--space-5);
+}
+.doc-sub { color: var(--muted); font-size: var(--text-lg); margin: 0 0 var(--space-6); }
+.meta-row { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); margin-bottom: var(--space-8); }
+.meta-tag {
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+}
+.meta-tag b { color: var(--fg); font-weight: 600; margin-right: 4px; }
+
+/* ─── section structure ──────────────────────────────────────────── */
+.doc-section { padding-top: var(--space-12); margin-top: var(--space-8); border-top: 1px solid var(--border); }
+.doc-section:first-of-type { border-top: 0; }
+.section-title {
+  font-family: var(--font-body); font-weight: 600;
+  font-size: clamp(23px, 3vw, 28px); line-height: 1.2; letter-spacing: -0.01em;
+  color: var(--fg); margin: 0 0 var(--space-6);
+  display: flex; align-items: baseline; gap: var(--space-3);
+  cursor: pointer; user-select: none;
+}
+.section-title .sec-no {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 500;
+  color: var(--accent); letter-spacing: 0; flex: none;
+}
+.chevron { margin-left: auto; align-self: center; color: var(--meta); transition: transform var(--motion-base) var(--ease-standard); flex: none; }
+.chevron svg { width: 16px; height: 16px; }
+.doc-section.collapsed .chevron { transform: rotate(-90deg); }
+.doc-section.collapsed .section-body { display: none; }
+.section-body > :first-child { margin-top: 0; }
+.sub-title {
+  font-family: var(--font-body); font-weight: 600; font-size: var(--text-xl);
+  line-height: 1.3; color: var(--fg); margin: var(--space-12) 0 var(--space-4);
+  scroll-margin-top: 84px;
+}
+.doc-section { scroll-margin-top: 84px; }
+.lede { color: var(--muted); font-size: var(--text-lg); }
+
+/* ─── callouts ───────────────────────────────────────────────────── */
+.callout {
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--surface-warm); padding: 18px 20px;
+  margin: var(--space-6) 0;
+}
+.callout p:last-child { margin-bottom: 0; }
+.callout-label {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 var(--space-3); display: flex; align-items: center; gap: 8px;
+}
+.callout-label::before { content: ""; width: 14px; height: 2px; background: var(--muted); border-radius: 2px; }
+.callout--key { background: color-mix(in oklab, var(--accent) 6%, var(--bg)); border-color: color-mix(in oklab, var(--accent) 30%, var(--border)); }
+.callout--key .callout-label { color: var(--accent); }
+.callout--key .callout-label::before { background: var(--accent); }
+.callout--key .callout-body { color: var(--fg); font-size: var(--text-lg); line-height: 1.55; }
+.callout--check .callout-label { color: var(--accent); }
+.callout--check .callout-label::before { background: var(--accent); }
+.callout--warn { background: color-mix(in oklab, var(--warn) 7%, var(--bg)); border-color: color-mix(in oklab, var(--warn) 38%, var(--border)); }
+.callout--warn .callout-label { color: color-mix(in oklab, var(--warn) 72%, var(--fg)); }
+.callout--warn .callout-label::before { background: var(--warn); }
+.callout--danger { background: color-mix(in oklab, var(--danger) 6%, var(--bg)); border-color: color-mix(in oklab, var(--danger) 38%, var(--border)); }
+.callout--danger .callout-label { color: var(--danger); }
+.callout--danger .callout-label::before { background: var(--danger); }
+.callout ol, .callout ul { margin: 0; padding-left: 1.2em; }
+.callout li { margin-bottom: 6px; }
+
+/* ─── flow diagram (custom, restrained) ──────────────────────────── */
+.flow { display: flex; align-items: stretch; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-4) 0; }
+.flow-node {
+  flex: 1 1 0; min-width: 140px;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-warm); padding: 14px 16px;
+}
+.flow-node b { display: block; font-size: 15px; color: var(--fg); }
+.flow-node small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+.flow-node.is-legacy { background: var(--bg); border-style: dashed; }
+.flow-node.is-accent { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 5%, var(--bg)); }
+.flow-arrow { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; min-width: 64px; }
+.flow-arrow .lbl { font-family: var(--font-mono); font-size: 10.5px; color: var(--accent); text-align: center; line-height: 1.25; }
+.flow-arrow .gly { color: var(--muted); font-size: 20px; line-height: 1; }
+.flow-caption { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+.flow-pair { display: grid; gap: var(--space-4); margin: var(--space-6) 0; }
+.flow-block .flow-block-tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.flow-block.is-after .flow-block-tag { color: var(--accent); }
+
+/* concept overview */
+.overview { display: grid; grid-template-columns: minmax(0,1.1fr) auto minmax(0,0.8fr) auto minmax(0,0.8fr); align-items: center; gap: var(--space-2); margin: var(--space-6) 0; }
+.ov-stack { display: flex; flex-direction: column; gap: 6px; }
+.ov-chip {
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-warm);
+  padding: 10px 12px; font-size: 13.5px; color: var(--fg);
+}
+.ov-chip span { font-family: var(--font-mono); color: var(--accent); margin-right: 6px; }
+.ov-node { border: 1px solid var(--accent); border-radius: var(--radius-sm); background: color-mix(in oklab, var(--accent) 5%, var(--bg)); padding: 14px 16px; text-align: center; }
+.ov-node b { display: block; color: var(--fg); }
+.ov-node small { color: var(--muted); font-size: 12px; }
+.ov-arrow { color: var(--muted); font-size: 22px; text-align: center; }
+
+/* ─── tables ─────────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: var(--space-6) 0; border: 1px solid var(--border); border-radius: var(--radius-md); }
+table.ds { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
+table.ds th, table.ds td { text-align: left; padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+table.ds tr:last-child td { border-bottom: 0; }
+table.ds th { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--surface-warm); }
+table.ds td:first-child { font-weight: 600; color: var(--fg); }
+/* fixed layout takes the first column width from the header row, so set it on th too */
+table.ds th:first-child, table.ds td:first-child { width: 22%; }
+table.ds tbody tr:hover { background: color-mix(in oklab, var(--fg) 3%, transparent); }
+table.ds .lh { line-height: 1.55; }
+
+/* ─── inline bits: code, tag, link ───────────────────────────────── */
+code, .code {
+  font-family: var(--font-mono); font-size: 0.86em;
+  background: var(--surface); border: 1px solid var(--border-soft);
+  border-radius: 6px; padding: 1px 6px; color: var(--fg); white-space: nowrap;
+}
+.tag-inline {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em;
+  border-radius: var(--radius-pill); padding: 2px 8px; vertical-align: middle;
+}
+.tag-est { color: var(--warn); border: 1px solid color-mix(in oklab, var(--warn) 45%, var(--border)); background: color-mix(in oklab, var(--warn) 8%, var(--bg)); }
+.tag-fix { color: var(--accent); border: 1px solid color-mix(in oklab, var(--accent) 40%, var(--border)); background: color-mix(in oklab, var(--accent) 7%, var(--bg)); }
+.exlink { font-weight: 500; }
+.exlink::after { content: " ↗"; font-size: 0.82em; color: var(--meta); }
+.exlink:hover::after { color: var(--accent-hover); }
+
+/* ─── diagram (mermaid) figure ───────────────────────────────────── */
+.diagram {
+  position: relative; margin: var(--space-6) 0;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: var(--surface-warm); padding: clamp(14px, 2vw, 22px);
+  overflow-x: auto;
+}
+.diagram .mermaid { display: flex; justify-content: center; min-width: 0; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.diagram .mermaid[data-rendered] { font-size: inherit; }
+.zoom-btn {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+  background: color-mix(in oklab, var(--bg) 85%, transparent); backdrop-filter: blur(4px);
+  border: 1px solid var(--border); border-radius: var(--radius-pill);
+  padding: 4px 11px; transition: color var(--motion-fast), border-color var(--motion-fast);
+}
+.zoom-btn:hover { color: var(--accent); border-color: var(--accent); }
+.diagram figcaption { margin-top: 10px; color: var(--muted); font-size: 13px; }
+
+/* ─── foldout (참고) ─────────────────────────────────────────────── */
+.foldout { border: 1px solid var(--border); border-radius: var(--radius-md); margin: var(--space-6) 0; overflow: hidden; }
+.foldout-head {
+  width: 100%; text-align: left; background: var(--surface-warm);
+  border: 0; padding: 14px 18px; color: var(--muted); font-size: 14px; font-weight: 500;
+  display: flex; align-items: center; gap: 10px;
+}
+.foldout-head::before { content: "▾"; color: var(--meta); transition: transform var(--motion-base) var(--ease-standard); }
+.foldout.collapsed .foldout-head::before { transform: rotate(-90deg); }
+.foldout-head:hover { color: var(--fg); }
+.foldout-body { padding: 4px 18px 18px; }
+.foldout.collapsed .foldout-body { display: none; }
+
+/* ─── step checklist ─────────────────────────────────────────────── */
+.step-block { margin: var(--space-6) 0; }
+.step-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: var(--space-3); }
+.step-no { font-family: var(--font-mono); font-size: 12px; color: var(--accent); flex: none; }
+.step-head h4 { margin: 0; font-size: 16px; font-weight: 600; color: var(--fg); }
+.check {
+  display: flex; gap: 12px; width: 100%; text-align: left;
+  background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 12px 14px; margin-bottom: 8px; color: var(--fg-2); font-size: 14.5px; line-height: 1.5;
+  transition: border-color var(--motion-fast), background var(--motion-fast);
+  align-items: flex-start;
+}
+.check:hover { border-color: var(--muted); }
+.check-box {
+  flex: none; width: 18px; height: 18px; margin-top: 1px;
+  border: 1.5px solid var(--border); border-radius: 5px;
+  display: grid; place-items: center; transition: all var(--motion-fast);
+}
+.check-box::after { content: "✓"; font-size: 12px; color: var(--accent-on); opacity: 0; transform: scale(0.6); transition: all var(--motion-fast); }
+.check.done .check-box { background: var(--accent); border-color: var(--accent); }
+.check.done .check-box::after { opacity: 1; transform: scale(1); }
+.check.done .check-text { color: var(--meta); text-decoration: line-through; text-decoration-color: var(--border); }
+.check-count { font-family: var(--font-mono); font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 3px 11px; }
+.section-title .check-count { margin-left: auto; align-self: center; letter-spacing: 0.02em; transition: color var(--motion-fast), background var(--motion-fast), border-color var(--motion-fast); }
+.section-title .check-count + .chevron { margin-left: 0; }
+.check-count.complete { color: var(--accent); background: color-mix(in oklab, var(--accent) 10%, var(--bg)); border-color: color-mix(in oklab, var(--accent) 30%, var(--border)); }
+.ref-line { font-size: 13.5px; color: var(--muted); margin: 4px 0 var(--space-4); padding-left: 2px; }
+.ref-line::before { content: "↳ "; color: var(--meta); }
+
+/* ─── footer ─────────────────────────────────────────────────────── */
+.doc-foot { border-top: 1px solid var(--border); margin-top: var(--space-16); padding-top: var(--space-6); color: var(--meta); font-size: 13px; display: flex; flex-wrap: wrap; gap: var(--space-4); justify-content: space-between; }
+.doc-foot .meta { font-family: var(--font-mono); }
+
+/* ─── zoom overlay ───────────────────────────────────────────────── */
+.zoom-overlay { position: fixed; inset: 0; z-index: 80; background: color-mix(in oklab, var(--fg) 78%, transparent); backdrop-filter: blur(3px); }
+.zoom-stage { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; cursor: grab; touch-action: none; }
+.zoom-stage:active { cursor: grabbing; }
+.zoom-inner { width: min(1080px, 92vw); background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 28px; transform-origin: center center; will-change: transform; box-shadow: var(--elev-raised); }
+.zoom-inner svg { width: 100%; height: auto; }
+.zoom-bar { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 6px; box-shadow: var(--elev-raised); }
+.zoom-ctl { font-family: var(--font-mono); font-size: 13px; color: var(--fg); background: transparent; border: 0; border-radius: var(--radius-pill); padding: 6px 12px; min-width: 38px; }
+.zoom-ctl:hover { background: var(--surface); color: var(--accent); }
+
+/* ─── responsive ─────────────────────────────────────────────────── */
+@media (max-width: 1439px) {
+  .mobile-only { display: inline-flex; }
+  .toc {
+    position: fixed; inset: 0 auto 0 0; width: min(300px, 82vw);
+    background: var(--bg); z-index: 50; transform: translateX(-100%);
+    transition: transform var(--motion-base) var(--ease-standard);
+    padding: 84px 22px 22px; max-height: 100vh; box-shadow: var(--elev-raised);
+    border-right: 1px solid var(--border);
+  }
+  .toc.open { transform: none; }
+  .toc-backdrop.show { display: block; position: fixed; inset: 0; z-index: 40; background: color-mix(in oklab, var(--fg) 35%, transparent); }
+}
+@media (max-width: 640px) {
+  .flow { flex-direction: column; align-items: stretch; }
+  .flow-arrow { flex-direction: row; min-width: 0; padding: 2px 0; }
+  .flow-arrow .gly { transform: rotate(90deg); }
+  .overview { grid-template-columns: 1fr; }
+  .ov-arrow { transform: rotate(90deg); }
+}
+
+/* ─── print ──────────────────────────────────────────────────────── */
+@media print {
+  .topbar, .toc, .toc-backdrop, .zoom-btn, .chevron { display: none !important; }
+  .layout { display: block; padding: 0; max-width: none; }
+  .doc-section.collapsed .section-body, .foldout.collapsed .foldout-body { display: block !important; }
+  .diagram, .callout, .check, .foldout, .table-wrap { break-inside: avoid; }
+  a { color: var(--fg); }
+}
+</style>
+</head>
+<body data-plan-key="developer-blog-post-static-screen-plan">
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span class="brand-name">포스트 정적 화면 구현 계획</span>
+      <span class="status-pill">approved · planning</span>
+    </div>
+    <div class="topbar-actions">
+      <button id="tocToggle" class="ghost-btn mobile-only" aria-label="목차 열기">목차</button>
+      <button id="printBtn" class="ghost-btn">인쇄 · PDF</button>
+    </div>
+  </div>
+  <div class="progress" id="progressBar"></div>
+</header>
+
+<div class="toc-backdrop" id="tocBackdrop"></div>
+
+<div class="layout">
+
+  <!-- ─── TABLE OF CONTENTS (auto-generated) ─────────────────────── -->
+  <aside class="toc" aria-label="목차">
+    <p class="toc-title">목차</p>
+    <nav id="tocList"></nav>
+  </aside>
+
+  <!-- ─── DOCUMENT ────────────────────────────────────────────────── -->
+  <main class="doc">
+    <section class="doc-head">
+      <p class="eyebrow">Implementation Plan · GitHub #18</p>
+      <h1 class="doc-title">포스트 정적 화면 및 기존 Gatsby 글 이전</h1>
+      <p class="doc-sub">승인된 읽기 화면을 Gatsby 템플릿에 적용하고, 기존 공개 글 한 편과 이미지 두 장을 실제 콘텐츠로 이전하는 구현 계획입니다.</p>
+      <div class="meta-row">
+        <span class="meta-tag"><b>작성일</b>2026-07-18</span>
+        <span class="meta-tag"><b>작성자</b>Luna · Codex</span>
+        <span class="meta-tag"><b>범위</b>GitHub #18 · Redmine #26</span>
+      </div>
+      <div class="callout callout--key">
+        <p class="callout-label">한 줄 요약</p>
+        <div class="callout-body">타입이 지정된 포스트 헤더, 범위가 제한된 본문 CSS, 보수적으로 교정한 실제 글, 프로덕션 검증을 다섯 단계로 구현합니다.</div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="sec-why">
+      <h2 class="section-title" data-toc="배경 · 왜" aria-expanded="true">
+        <span class="sec-no">01</span><span class="sec-text">배경 · 왜 지금 하는가</span>
+        <span class="chevron" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+      </h2>
+      <div class="section-body">
+        <p class="lede">홈 정적 화면은 완성됐지만 포스트는 아직 기반 확인용 샘플과 최소 마크업만 사용하고 있습니다.</p>
+        <p>이번 작업의 목적은 UI 모양만 바꾸는 것이 아닙니다. 실제 글 하나를 기준으로 템플릿, 콘텐츠, 자산, SEO와 빌드 검증이 같은 경로를 바라보게 만드는 것입니다.</p>
+        <div class="callout">
+          <p class="callout-label">작업 관리</p>
+          <p><a class="exlink" href="https://github.com/macho199/macho199.github.io/issues/18" target="_blank" rel="noopener">GitHub #18</a>이 현재 구현 단위이며, 전체 UI 재구축 진행 상태는 <a class="exlink" href="http://localhost:8090/issues/26" target="_blank" rel="noopener">Redmine #26</a>이 관리합니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="sec-approach">
+      <h2 class="section-title" data-toc="접근 · 설계 결정" aria-expanded="true">
+        <span class="sec-no">02</span><span class="sec-text">접근 · 설계 결정</span>
+        <span class="chevron" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+      </h2>
+      <div class="section-body">
+        <p class="lede">데이터 조회, 메타데이터 표현, 본문 스타일을 서로 다른 경계에 둡니다.</p>
+        <div class="overview" aria-label="포스트 데이터와 표현 구조">
+          <div class="ov-stack">
+            <div class="ov-chip"><span>①</span>MDX frontmatter</div>
+            <div class="ov-chip"><span>②</span>MDX body</div>
+          </div>
+          <div class="ov-arrow">→</div>
+          <div class="ov-node"><b>post.tsx</b><small>GraphQL · 페이지 조립</small></div>
+          <div class="ov-arrow">→</div>
+          <div class="ov-node"><b>화면</b><small>PostHeader · post.css</small></div>
+        </div>
+        <p class="flow-caption">템플릿은 조회와 조립만 맡고, 표현 컴포넌트와 CSS는 GraphQL을 알지 않습니다.</p>
+
+        <h3 class="sub-title" id="decisions" data-toc="핵심 결정">핵심 결정</h3>
+        <div class="table-wrap">
+          <table class="ds">
+            <thead><tr><th>결정</th><th>이유</th></tr></thead>
+            <tbody>
+              <tr><td>의미 있는 MDX + 범위 제한 CSS</td><td class="lh">본문에 Tailwind 클래스를 섞지 않고 글과 외형을 분리합니다.</td></tr>
+              <tr><td>PostHeader만 분리</td><td class="lh">메타데이터 표현은 재사용하되 단순 전달용 PostBody는 만들지 않습니다.</td></tr>
+              <tr><td>실제 글로 샘플 교체</td><td class="lh">홈과 포스트 검증이 제품에서 사용할 데이터로 동작하게 합니다.</td></tr>
+              <tr><td>이미지 자체 제공</td><td class="lh">예전 사이트 URL을 런타임 의존성으로 남기지 않습니다.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="sub-title" id="alternatives" data-toc="선택하지 않은 대안">선택하지 않은 대안</h3>
+        <div class="table-wrap">
+          <table class="ds">
+            <thead><tr><th>대안</th><th>이번에 선택하지 않은 이유</th></tr></thead>
+            <tbody>
+              <tr><td>MDX 컴포넌트 매핑</td><td class="lh">현재 글 한 편의 기본 의미 요소에는 추가 추상화가 이릅니다.</td></tr>
+              <tr><td>본문에 Tailwind 클래스 직접 작성</td><td class="lh">콘텐츠가 특정 화면 구현에 묶이고 교정하기 어려워집니다.</td></tr>
+              <tr><td>이미지 플러그인 도입</td><td class="lh">이미지 두 장을 옮기는 범위보다 의존성과 설정이 커집니다.</td></tr>
+              <tr><td>예전 URL 리다이렉트</td><td class="lh">종성님이 이번 출시에서는 새 URL만 사용하기로 확정했습니다.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="sec-facts">
+      <h2 class="section-title" data-toc="확정 vs 추정" aria-expanded="true">
+        <span class="sec-no">03</span><span class="sec-text">확정 vs 추정</span>
+        <span class="chevron" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+      </h2>
+      <div class="section-body">
+        <p><span class="tag-inline tag-fix">확정</span> 새 경로, 원본 발행일, 태그 네 개, 이미지 두 장, 제외 기능과 컴포넌트 경계는 종성님이 승인했습니다.</p>
+        <p><span class="tag-inline tag-fix">확정</span> 현재 Gatsby 공식 빠른 시작과 Tailwind PostCSS 문서를 다시 확인했고, 글에는 <span class="code">npm init gatsby</span>와 <span class="code">npm run serve</span>를 사용합니다.</p>
+        <p><span class="tag-inline tag-est">추정</span> 1440px·1020px·390px에서 세부 여백은 초기 CSS만으로 충분할 가능성이 높습니다. 근거는 승인된 HTML 산출물과 기존 920px 컨테이너이며, 최종 값은 실제 브라우저 검증 후에만 확정합니다.</p>
+        <div class="callout callout--warn">
+          <p class="callout-label">실행 중 확인 필요</p>
+          <p>샘플 MDX 삭제와 Gatsby 생성물 정리는 대상 경로를 다시 알리고 승인을 받은 뒤 실행합니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="sec-steps">
+      <h2 class="section-title" data-toc="구현 계획" aria-expanded="true">
+        <span class="sec-no">04</span><span class="sec-text">구현 계획</span>
+        <span class="check-count" id="stepCount">0 / 0</span>
+        <span class="chevron" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+      </h2>
+      <div class="section-body">
+        <p class="lede">각 단계는 실패하는 계약 테스트부터 시작하고, 통과한 뒤 작은 커밋으로 닫습니다.</p>
+
+        <h3 class="sub-title" id="task-1" data-toc="작업 1 · 템플릿">작업 1 · 타입이 지정된 포스트 경계</h3>
+        <div class="step-block">
+          <div class="step-head"><span class="step-no">단계 1</span><h4>PostHeader와 템플릿 조립</h4></div>
+          <button class="check" data-check="post-t1-test"><span class="check-box"></span><span class="check-text">헤더·템플릿 계약 테스트를 먼저 실패시킵니다.</span></button>
+          <button class="check" data-check="post-t1-code"><span class="check-box"></span><span class="check-text"><span class="code">PostHeaderData</span>, 목록 복귀 nav, 두 날짜 GraphQL 필드를 구현합니다.</span></button>
+          <button class="check" data-check="post-t1-verify"><span class="check-box"></span><span class="check-text">집중 테스트, 전체 테스트, 타입 검사를 통과하고 커밋합니다.</span></button>
+        </div>
+
+        <h3 class="sub-title" id="task-2" data-toc="작업 2 · 스타일">작업 2 · 범위가 제한된 읽기 스타일</h3>
+        <div class="step-block">
+          <div class="step-head"><span class="step-no">단계 2</span><h4>post.css와 반응형 규칙</h4></div>
+          <button class="check" data-check="post-t2-test"><span class="check-box"></span><span class="check-text">스타일 등록·스코프 계약 테스트를 실패시킵니다.</span></button>
+          <button class="check" data-check="post-t2-code"><span class="check-box"></span><span class="check-text">헤더, H2–H5, 목록, 인용문, 코드, 이미지, 표 스타일을 구현합니다.</span></button>
+          <button class="check" data-check="post-t2-verify"><span class="check-box"></span><span class="check-text">1020px·720px 경계를 포함한 소스 검증 후 커밋합니다.</span></button>
+        </div>
+
+        <h3 class="sub-title" id="task-3" data-toc="작업 3 · 콘텐츠">작업 3 · 실제 글과 이미지 이전</h3>
+        <div class="step-block">
+          <div class="step-head"><span class="step-no">단계 3</span><h4>샘플을 승인된 글로 교체</h4></div>
+          <button class="check" data-check="post-t3-confirm"><span class="check-box"></span><span class="check-text">샘플 파일 삭제 대상을 알리고 종성님의 승인을 받습니다.</span></button>
+          <button class="check" data-check="post-t3-content"><span class="check-box"></span><span class="check-text">보수적으로 교정한 MDX와 한국어 대체 텍스트를 반영합니다.</span></button>
+          <button class="check" data-check="post-t3-assets"><span class="check-box"></span><span class="check-text">PNG 두 장의 형식, 크기, SHA-256을 확인하고 커밋합니다.</span></button>
+        </div>
+
+        <h3 class="sub-title" id="task-4" data-toc="작업 4 · 검증기">작업 4 · 실제 경로 프로덕션 검증</h3>
+        <div class="step-block">
+          <div class="step-head"><span class="step-no">단계 4</span><h4>홈·레이아웃·스타일·포스트 검증기 정렬</h4></div>
+          <button class="check" data-check="post-t4-update"><span class="check-box"></span><span class="check-text">기존 검증기의 샘플 경로를 새 실제 경로로 교체합니다.</span></button>
+          <button class="check" data-check="post-t4-post"><span class="check-box"></span><span class="check-text">HTML, SEO, 이미지, 제외 기능, 폐기 경로를 확인하는 <span class="code">verify:post</span>를 추가합니다.</span></button>
+          <button class="check" data-check="post-t4-verify"><span class="check-box"></span><span class="check-text">소스 테스트와 타입 검사를 통과하고 커밋합니다.</span></button>
+        </div>
+
+        <h3 class="sub-title" id="task-5" data-toc="작업 5 · 최종 확인">작업 5 · 깨끗한 빌드와 세 화면 검토</h3>
+        <div class="step-block">
+          <div class="step-head"><span class="step-no">단계 5</span><h4>생성물과 실제 브라우저 검증</h4></div>
+          <button class="check" data-check="post-t5-confirm"><span class="check-box"></span><span class="check-text"><span class="code">.cache/</span>와 <span class="code">public/</span> 정리 승인을 받습니다.</span></button>
+          <button class="check" data-check="post-t5-build"><span class="check-box"></span><span class="check-text">전체 테스트, 타입 검사, 빌드와 네 검증기를 실행합니다.</span></button>
+          <button class="check" data-check="post-t5-browser"><span class="check-box"></span><span class="check-text">1440px·1020px·390px, 키보드 포커스, 내부 스크롤, 두 404 경로를 확인합니다.</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="sec-accept">
+      <h2 class="section-title" data-toc="완료 기준" aria-expanded="true">
+        <span class="sec-no">05</span><span class="sec-text">완료 기준</span>
+        <span class="chevron" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+      </h2>
+      <div class="section-body">
+        <div class="callout callout--check">
+          <p class="callout-label">완료 판정</p>
+          <ul>
+            <li>새 URL에 제목, 설명, 날짜, 태그, 본문과 이미지 두 장이 렌더링됩니다.</li>
+            <li>H1 하나, H2부터 시작하는 본문, 날짜 time 요소와 한국어 대체 텍스트를 유지합니다.</li>
+            <li>홈 카드, SEO 메타데이터와 sitemap이 같은 실제 글 경로를 사용합니다.</li>
+            <li>샘플 URL과 예전 공개 URL은 깨끗한 빌드 결과와 sitemap에 존재하지 않습니다.</li>
+            <li>전체 테스트·타입 검사·빌드·네 검증기와 세 화면 확인이 통과합니다.</li>
+            <li>종성님 화면 확인과 Codex 리뷰 후 명시적 승인으로만 병합합니다.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="sec-scope">
+      <h2 class="section-title" data-toc="범위 밖 · 리스크" aria-expanded="true">
+        <span class="sec-no">06</span><span class="sec-text">범위 밖 · 리스크</span>
+        <span class="chevron" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>
+      </h2>
+      <div class="section-body">
+        <div class="callout callout--warn">
+          <p class="callout-label">이번에 하지 않는 것</p>
+          <p>목차, 코드 복사, 읽기 시간, 문법 강조, 이전·다음 글, 관련 글, 예전 URL 리다이렉트, 이미지 플러그인과 배포 자동화 설명은 후속 단계입니다.</p>
+        </div>
+        <p>가장 큰 구현 리스크는 긴 코드와 이미지가 모바일 페이지 전체를 밀어내는 것입니다. <span class="code">pre</span>와 <span class="code">table</span> 내부 스크롤, 이미지 자연 크기, 페이지의 <span class="code">scrollWidth</span>를 실제 브라우저에서 확인합니다.</p>
+        <p>원문을 최신 튜토리얼로 완전히 다시 쓰는 것도 범위 밖입니다. 당시 경험을 보존하면서 공식 문서와 충돌하는 안내만 고칩니다.</p>
+      </div>
+    </section>
+
+    <footer class="doc-foot">
+      <span>포스트 정적 화면 구현 계획 · GitHub #18</span>
+      <span class="meta">docs/superpowers/plans/2026-07-18-post-static-screen.md</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $  = function (s, c) { return (c || document).querySelector(s); };
+  var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+  /* per-doc localStorage namespace — 문서마다 data-plan-key 슬러그로 분리(충돌 방지) */
+  var PK = (document.body.getAttribute("data-plan-key") || "doc").replace(/[^A-Za-z0-9_-]/g, "");
+
+  /* ── build TOC from headings ───────────────────────────────── */
+  var heads = $$(".section-title, .sub-title");
+  var tocList = $("#tocList");
+  var linkFor = {};
+  heads.forEach(function (h) {
+    var isSec = h.classList.contains("section-title");
+    var sec = isSec ? h.closest(".doc-section") : h;
+    var id = sec.id;
+    if (!id) return;
+    var a = document.createElement("a");
+    a.href = "#" + id;
+    a.className = "toc-link" + (isSec ? "" : " toc-sub");
+    a.textContent = h.getAttribute("data-toc") || h.textContent.trim();
+    a.setAttribute("data-target", id);
+    tocList.appendChild(a);
+    linkFor[id] = a;
+  });
+
+  /* ── section collapse + persistence ────────────────────────── */
+  var CKEY = PK + "_collapsed_v1";
+  function saveCollapsed() {
+    var ids = $$(".doc-section.collapsed").map(function (s) { return s.id; });
+    try { localStorage.setItem(CKEY, JSON.stringify(ids)); } catch (e) {}
+  }
+  function loadCollapsed() {
+    var ids = [];
+    try { ids = JSON.parse(localStorage.getItem(CKEY) || "[]"); } catch (e) {}
+    ids.forEach(function (id) {
+      var s = document.getElementById(id);
+      if (s) { s.classList.add("collapsed"); var h = $(".section-title", s); if (h) h.setAttribute("aria-expanded", "false"); }
+    });
+  }
+  $$(".section-title").forEach(function (h) {
+    h.addEventListener("click", function (e) {
+      if (e.target.closest("a")) return;
+      var sec = h.closest(".doc-section");
+      var collapsed = sec.classList.toggle("collapsed");
+      h.setAttribute("aria-expanded", String(!collapsed));
+      saveCollapsed();
+    });
+  });
+
+  /* ── foldout toggles ───────────────────────────────────────── */
+  $$(".foldout-head").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var f = b.closest(".foldout");
+      var c = f.classList.toggle("collapsed");
+      b.setAttribute("aria-expanded", String(!c));
+    });
+  });
+
+  /* ── TOC navigation (no scrollIntoView) ────────────────────── */
+  tocList.addEventListener("click", function (e) {
+    var a = e.target.closest("a.toc-link");
+    if (!a) return;
+    e.preventDefault();
+    var id = a.getAttribute("data-target");
+    var el = document.getElementById(id);
+    if (!el) return;
+    var sec = el.classList.contains("doc-section") ? el : el.closest(".doc-section");
+    if (sec && sec.classList.contains("collapsed")) {
+      sec.classList.remove("collapsed");
+      var h = $(".section-title", sec); if (h) h.setAttribute("aria-expanded", "true");
+      saveCollapsed();
+    }
+    var top = el.getBoundingClientRect().top + window.pageYOffset - 78;
+    window.scrollTo({ top: top, behavior: "smooth" });
+    closeDrawer();
+  });
+
+  /* ── scrollspy ─────────────────────────────────────────────── */
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      var id = en.target.classList.contains("doc-section") ? en.target.id : en.target.id;
+      var l = linkFor[id];
+      if (!l) return;
+      $$(".toc-link.active").forEach(function (x) { x.classList.remove("active"); });
+      l.classList.add("active");
+    });
+  }, { rootMargin: "-12% 0px -78% 0px", threshold: 0 });
+  $$(".sub-title").forEach(function (h) { io.observe(h); });
+  $$(".doc-section").forEach(function (s) {
+    var t = $(".section-title", s);
+    io.observe(t ? t : s);
+    // map section-title intersection back to the section id
+    if (t && !t.id) t.id = s.id + "__h";
+    if (t) linkFor[t.id] = linkFor[s.id];
+  });
+
+  /* ── progress bar + scroll persistence ─────────────────────── */
+  var progressBar = $("#progressBar");
+  var SKEY = PK + "_scroll_v1";
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      var de = document.documentElement;
+      var max = de.scrollHeight - de.clientHeight;
+      var p = max > 0 ? (window.pageYOffset / max) * 100 : 0;
+      progressBar.style.width = p.toFixed(2) + "%";
+      try { localStorage.setItem(SKEY, String(Math.round(window.pageYOffset))); } catch (e) {}
+      ticking = false;
+    });
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  /* ── step checklist persistence ────────────────────────────── */
+  var HKEY = PK + "_checks_v1";
+  var checks = {};
+  try { checks = JSON.parse(localStorage.getItem(HKEY) || "{}"); } catch (e) {}
+  function updateCount() {
+    var all = $$(".check");
+    var done = all.filter(function (b) { return b.classList.contains("done"); }).length;
+    var el = $("#stepCount");
+    if (el) {
+      el.textContent = done + " / " + all.length;
+      el.classList.toggle("complete", all.length > 0 && done === all.length);
+    }
+  }
+  $$(".check").forEach(function (btn) {
+    var id = btn.getAttribute("data-check");
+    if (checks[id]) { btn.classList.add("done"); btn.setAttribute("aria-pressed", "true"); }
+    btn.addEventListener("click", function () {
+      var on = !btn.classList.contains("done");
+      btn.classList.toggle("done", on);
+      btn.setAttribute("aria-pressed", String(on));
+      checks[id] = on;
+      try { localStorage.setItem(HKEY, JSON.stringify(checks)); } catch (e) {}
+      updateCount();
+    });
+  });
+  updateCount();
+
+  /* ── mobile TOC drawer ─────────────────────────────────────── */
+  var drawer = $(".toc");
+  var backdrop = $("#tocBackdrop");
+  var toggle = $("#tocToggle");
+  function openDrawer() { drawer.classList.add("open"); backdrop.classList.add("show"); }
+  function closeDrawer() { drawer.classList.remove("open"); backdrop.classList.remove("show"); }
+  if (toggle) toggle.addEventListener("click", function () {
+    drawer.classList.contains("open") ? closeDrawer() : openDrawer();
+  });
+  if (backdrop) backdrop.addEventListener("click", closeDrawer);
+
+  /* ── print ─────────────────────────────────────────────────── */
+  var printBtn = $("#printBtn");
+  if (printBtn) printBtn.addEventListener("click", function () { window.print(); });
+
+  /* ── diagram zoom modal ────────────────────────────────────── */
+  function openZoom(fig) {
+    var svg = fig.querySelector("svg");
+    if (!svg) return;
+    var overlay = document.createElement("div");
+    overlay.className = "zoom-overlay";
+    overlay.innerHTML =
+      '<div class="zoom-stage"><div class="zoom-inner"></div></div>' +
+      '<div class="zoom-bar">' +
+        '<button class="zoom-ctl" data-z="out" aria-label="축소">−</button>' +
+        '<button class="zoom-ctl" data-z="reset">100%</button>' +
+        '<button class="zoom-ctl" data-z="in" aria-label="확대">+</button>' +
+        '<button class="zoom-ctl" data-z="close">닫기 ✕</button>' +
+      '</div>';
+    var inner = overlay.querySelector(".zoom-inner");
+    var clone = svg.cloneNode(true);
+    clone.removeAttribute("width"); clone.removeAttribute("height");
+    inner.appendChild(clone);
+    document.body.appendChild(overlay);
+    document.body.style.overflow = "hidden";
+
+    var scale = 1, tx = 0, ty = 0, dragging = false, sx = 0, sy = 0;
+    function apply() { inner.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + scale + ")"; }
+    function close() {
+      overlay.remove();
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", onKey);
+    }
+    function onKey(e) { if (e.key === "Escape") close(); }
+    document.addEventListener("keydown", onKey);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) close(); });
+    overlay.querySelector(".zoom-bar").addEventListener("click", function (e) {
+      var z = e.target.getAttribute("data-z");
+      if (!z) return;
+      if (z === "in") scale = Math.min(6, scale * 1.25);
+      else if (z === "out") scale = Math.max(0.35, scale / 1.25);
+      else if (z === "reset") { scale = 1; tx = 0; ty = 0; }
+      else if (z === "close") return close();
+      apply();
+    });
+    var stage = overlay.querySelector(".zoom-stage");
+    stage.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      var f = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+      scale = Math.min(6, Math.max(0.35, scale * f));
+      apply();
+    }, { passive: false });
+    stage.addEventListener("pointerdown", function (e) {
+      dragging = true; sx = e.clientX - tx; sy = e.clientY - ty;
+      try { stage.setPointerCapture(e.pointerId); } catch (er) {}
+    });
+    stage.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      tx = e.clientX - sx; ty = e.clientY - sy; apply();
+    });
+    stage.addEventListener("pointerup", function () { dragging = false; });
+    apply();
+  }
+
+  /* ── mermaid render → then collapse foldout → restore scroll ─ */
+  function wireZoom() {
+    $$(".diagram").forEach(function (fig) {
+      var btn = fig.querySelector(".zoom-btn");
+      if (btn) btn.addEventListener("click", function () { openZoom(fig); });
+      var mm = fig.querySelector(".mermaid");
+      if (mm && mm.querySelector("svg")) mm.setAttribute("data-rendered", "1");
+    });
+  }
+  function finishInit() {
+    wireZoom();
+    // fold any foldout that opted into collapsed-by-default (diagrams now sized)
+    $$(".foldout[data-default='collapsed']").forEach(function (f) {
+      f.classList.add("collapsed");
+      var fh = $(".foldout-head", f); if (fh) fh.setAttribute("aria-expanded", "false");
+    });
+    loadCollapsed();
+    // restore scroll position
+    var y = 0;
+    try { y = parseFloat(localStorage.getItem(SKEY) || "0"); } catch (e) {}
+    if (y > 0) window.scrollTo(0, y);
+    onScroll();
+  }
+
+  function renderDiagrams() {
+    if (!window.mermaid) { finishInit(); return; }
+    var css = getComputedStyle(document.documentElement);
+    var t = function (n) { return css.getPropertyValue(n).trim(); };
+    var FG = t("--fg"), BG = t("--bg"), SURF = t("--surface"), SURFW = t("--surface-warm"),
+        BORD = t("--border"), MUT = t("--muted"), ACC = t("--accent"), ACCON = t("--accent-on");
+    try {
+      window.mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "loose",
+        theme: "base",
+        fontFamily: "Inter, system-ui, sans-serif",
+        themeVariables: {
+          background: BG, primaryColor: SURF, primaryBorderColor: BORD, primaryTextColor: FG,
+          secondaryColor: SURFW, tertiaryColor: BG, lineColor: MUT, textColor: FG,
+          mainBkg: SURF, nodeBorder: BORD, clusterBkg: SURFW, clusterBorder: BORD,
+          edgeLabelBackground: BG, fontSize: "14px",
+          actorBkg: SURF, actorBorder: BORD, actorTextColor: FG, actorLineColor: MUT,
+          signalColor: FG, signalTextColor: FG,
+          labelBoxBkgColor: SURF, labelBoxBorderColor: BORD, labelTextColor: FG, loopTextColor: MUT,
+          noteBkgColor: SURF, noteBorderColor: ACC, noteTextColor: FG,
+          activationBkgColor: BG, activationBorderColor: BORD, sequenceNumberColor: ACCON
+        },
+        sequence: { useMaxWidth: true, wrap: true, actorMargin: 46, noteFontSize: 13, messageFontSize: 13, mirrorActors: false },
+        flowchart: { useMaxWidth: true, htmlLabels: true, curve: "basis" }
+      });
+      var p = window.mermaid.run({ querySelector: ".mermaid" });
+      if (p && typeof p.then === "function") { p.then(finishInit)["catch"](finishInit); }
+      else { finishInit(); }
+    } catch (e) {
+      finishInit();
+    }
+  }
+
+  if (document.readyState === "complete" || document.readyState === "interactive") {
+    setTimeout(renderDiagrams, 0);
+  } else {
+    window.addEventListener("DOMContentLoaded", renderDiagrams);
+  }
+})();
+</script>
+</body>
+</html>

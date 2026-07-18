@@ -1,0 +1,33 @@
+@layer components {
+  .mdx-content {
+    min-width: 0;
+  }
+
+  .mdx-content :where(h1, h2, h3, h4, h5, h6, p, ul, ol, blockquote, pre, table) {
+    margin-block: 1em;
+  }
+
+  .mdx-content :where(ul, ol) {
+    padding-inline-start: 1.5rem;
+  }
+
+  .mdx-content ul {
+    list-style: disc;
+  }
+
+  .mdx-content ol {
+    list-style: decimal;
+  }
+
+  .mdx-content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+
+  .mdx-content pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
