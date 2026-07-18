@@ -101,18 +101,27 @@ test("keeps Korean post title words intact", async () => {
   assert.doesNotMatch(titleRule[1], /overflow-wrap:\s*anywhere/)
 })
 
-test("sets single-line titles above the phone breakpoint and wrapping below it", async () => {
+test("inherits the shared container width and wraps long titles within it", async () => {
   const postCss = await readRepositoryFile("src/styles/post.css")
+  const widthRules = [
+    ["post header", postCss.match(/\.post-header\s*\{([^}]*)\}/s)],
+    ["post description", postCss.match(/\.post-description\s*\{([^}]*)\}/s)],
+    [
+      "MDX content",
+      postCss.match(/\.post-page \.mdx-content\s*\{([^}]*)\}/s),
+    ],
+  ]
   const titleRule = postCss.match(/\.post-title\s*\{([^}]*)\}/s)
-  const phoneRule = postCss.match(
-    /@media \(max-width: 720px\)[\s\S]*?\.post-title\s*\{([^}]*)\}/,
-  )
+
+  for (const [label, rule] of widthRules) {
+    assert.ok(rule, `${label} style rule`)
+    assert.doesNotMatch(rule[1], /max-width:\s*760px/)
+  }
 
   assert.ok(titleRule, "post title style rule")
-  assert.ok(phoneRule, "phone post title style rule")
   assert.match(titleRule[1], /font-size:\s*clamp\(28px, 4vw, 36px\)/)
-  assert.match(titleRule[1], /text-wrap:\s*nowrap/)
-  assert.match(phoneRule[1], /text-wrap:\s*wrap/)
+  assert.match(titleRule[1], /text-wrap:\s*balance/)
+  assert.doesNotMatch(titleRule[1], /text-wrap:\s*nowrap/)
 })
 
 test("documents the current Gatsby rebuild and Tailwind fixes", async () => {
