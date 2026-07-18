@@ -77,7 +77,7 @@ test("queries and composes the normalized TOC beside the MDX body", async () => 
   assert.match(source, /tableOfContents\(maxDepth: 2\)/)
 })
 
-test("keeps the body width and exposes a desktop-only sticky rail", async () => {
+test("keeps the body width and exposes the approved desktop TOC geometry", async () => {
   const css = await readRepositoryFile("src/styles/post.css")
 
   assert.match(
@@ -87,11 +87,15 @@ test("keeps the body width and exposes a desktop-only sticky rail", async () => 
   assert.match(css, /\.post-toc-rail\s*\{[^}]*display:\s*none/s)
   assert.match(
     css,
-    /@media \(min-width: 1321px\)[\s\S]*\.post-toc-rail\s*\{[^}]*display:\s*block[^}]*position:\s*absolute[^}]*top:\s*0[^}]*bottom:\s*0[^}]*left:\s*calc\(100% \+ var\(--space-4\)\)[^}]*width:\s*224px/s,
+    /@media \(min-width: 1321px\)[\s\S]*\.post-toc-rail\s*\{[^}]*display:\s*block[^}]*position:\s*absolute[^}]*top:\s*var\(--space-12\)[^}]*bottom:\s*0[^}]*left:\s*calc\(100% \+ var\(--space-4\)\)[^}]*width:\s*224px/s,
   )
   assert.match(
     css,
     /@media \(min-width: 1321px\)[\s\S]*\.post-toc\s*\{[^}]*position:\s*sticky[^}]*top:\s*var\(--space-6\)/s,
+  )
+  assert.match(
+    css,
+    /@media \(min-width: 1321px\) and \(max-width: 1390px\)[\s\S]*\.post-toc-rail\s*\{[^}]*left:\s*calc\(100% \+ var\(--space-1\)\)[^}]*width:\s*190px[^}]*\}[\s\S]*\.post-toc\s*\{[^}]*padding:\s*var\(--space-3\)/s,
   )
   assert.match(
     css,

@@ -544,7 +544,7 @@
   .post-toc-rail {
     display: block;
     position: absolute;
-    top: 0;
+    top: var(--space-12);
     bottom: 0;
     left: calc(100% + var(--space-4));
     width: 224px;
@@ -553,5 +553,16 @@
   .post-toc {
     position: sticky;
     top: var(--space-6);
+  }
+}
+
+@media (min-width: 1321px) and (max-width: 1390px) {
+  .post-toc-rail {
+    left: calc(100% + var(--space-1));
+    width: 190px;
+  }
+
+  .post-toc {
+    padding: var(--space-3);
   }
 }
