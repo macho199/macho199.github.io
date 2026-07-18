@@ -112,18 +112,23 @@ for (const contract of postContracts) {
     ),
   )
 
-  for (const tag of contract.tags) {
-    assert.match(
-      main,
-      new RegExp(`<span class="post-tag">${escapeRegex(tag)}</span>`),
-    )
-    assert.match(
-      html,
-      new RegExp(
-        `<meta\\b(?=[^>]*property="article:tag")(?=[^>]*content="${escapeRegex(tag)}")[^>]*>`,
-      ),
-    )
-  }
+  const visibleTags = [
+    ...main.matchAll(
+      /<span\b(?=[^>]*class="[^"]*\bpost-tag\b[^"]*")[^>]*>([^<]*)<\/span>/g,
+    ),
+  ].map(match => match[1])
+  const articleTagValues = [
+    ...html.matchAll(
+      /<meta\b(?=[^>]*property="article:tag")(?=[^>]*content="([^"]*)")[^>]*>/g,
+    ),
+  ].map(match => match[1])
+
+  assert.deepEqual(visibleTags, contract.tags, `${contract.slug}: exact visible tags`)
+  assert.deepEqual(
+    articleTagValues,
+    contract.tags,
+    `${contract.slug}: exact article tag metadata`,
+  )
 
   for (const heading of contract.headings) {
     assert.match(main, new RegExp(`<h2[^>]*>${escapeRegex(heading)}</h2>`))

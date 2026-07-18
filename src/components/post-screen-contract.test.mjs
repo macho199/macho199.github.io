@@ -101,7 +101,7 @@ test("keeps Korean post title words intact", async () => {
   assert.doesNotMatch(titleRule[1], /overflow-wrap:\s*anywhere/)
 })
 
-test("keeps the post title on one line without overflow above the phone breakpoint", async () => {
+test("sets single-line titles above the phone breakpoint and wrapping below it", async () => {
   const postCss = await readRepositoryFile("src/styles/post.css")
   const titleRule = postCss.match(/\.post-title\s*\{([^}]*)\}/s)
   const phoneRule = postCss.match(
@@ -209,6 +209,11 @@ test("registers a production verifier for all approved posts", async () => {
   assert.match(verifier, /gatsby-blog-2-managing-mdx-posts/)
   assert.match(verifier, /gatsby-blog-3-graphql-page-generation/)
   assert.match(verifier, /for \(const contract of postContracts\)/)
+  assert.match(verifier, /assert\.deepEqual\(visibleTags, contract\.tags/)
+  assert.match(
+    verifier,
+    /assert\.deepEqual\([\s\S]*?articleTagValues,[\s\S]*?contract\.tags/,
+  )
   assert.match(verifier, /mdx-foundation/)
   assert.match(verifier, /create-a-blog-site-with-gatsby1/)
 })

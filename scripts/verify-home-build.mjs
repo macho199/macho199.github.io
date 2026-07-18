@@ -69,40 +69,50 @@ assert.match(
 )
 
 assert.equal(countClassedTags(main, "ol", "post-list"), 1, "home: one post list")
+const postCards = [
+  ...main.matchAll(
+    /<article\b(?=[^>]*class="[^"]*\bpost-card\b[^"]*")[^>]*>[\s\S]*?<\/article>/g,
+  ),
+].map(match => match[0])
+
 assert.equal(
-  countClassedTags(main, "article", "post-card"),
+  postCards.length,
   postContracts.length,
   "home: exact real post card count",
 )
 
-for (const post of postContracts) {
+for (const [index, post] of postContracts.entries()) {
+  const postCard = postCards[index]
+
   assert.match(
-    main,
+    postCard,
     new RegExp(
       `<a\\b(?=[^>]*href="${escapeRegex(post.path)}")(?=[^>]*class="[^"]*post-card-title-link[^"]*")[^>]*>\\s*${escapeRegex(post.title)}\\s*</a>`,
     ),
   )
-  assert.match(main, new RegExp(escapeRegex(post.description)))
+  assert.match(postCard, new RegExp(escapeRegex(post.description)))
   assert.match(
-    main,
+    postCard,
     new RegExp(
       `<time\\b(?=[^>]*class="[^"]*post-card-date[^"]*")(?=[^>]*datetime="${post.publishedAt}")[^>]*>\\s*${escapeRegex(post.publishedAtDisplay)}\\s*</time>`,
       "i",
     ),
   )
-  for (const tag of post.tags) {
-    assert.match(
-      main,
-      new RegExp(`<span class="post-card-tag">${escapeRegex(tag)}</span>`),
-    )
-  }
+
+  const postCardTags = [
+    ...postCard.matchAll(
+      /<span\b(?=[^>]*class="[^"]*\bpost-card-tag\b[^"]*")[^>]*>([^<]*)<\/span>/g,
+    ),
+  ].map(match => match[1])
+
+  assert.deepEqual(postCardTags, post.tags, `${post.path}: exact tags`)
 }
 
-const postPaths = [
-  ...main.matchAll(
-    /<a\b(?=[^>]*class="[^"]*post-card-title-link[^"]*")(?=[^>]*href="([^"]+)")[^>]*>/g,
-  ),
-].map(match => match[1])
+const postPaths = postCards.map(postCard =>
+  postCard.match(
+    /<a\b(?=[^>]*class="[^"]*post-card-title-link[^"]*")(?=[^>]*href="([^"]+)")[^>]*>/,
+  )?.[1],
+)
 const expectedPostPaths = postContracts.map(post => post.path)
 
 assert.deepEqual(postPaths, expectedPostPaths, "home: newest post first")
