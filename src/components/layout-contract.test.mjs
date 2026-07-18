@@ -81,6 +81,26 @@ test("loads a responsive 920px common container", async () => {
   )
   assert.match(
     layoutCss,
+    /\.site-header-inner\s*\{[^}]*justify-content:\s*space-between[^}]*gap:\s*var\(--space-4\)/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.site-github-link\s*\{[^}]*display:\s*inline-grid[^}]*place-items:\s*center[^}]*flex:\s*none[^}]*width:\s*44px[^}]*min-height:\s*44px[^}]*border-radius:\s*var\(--radius-sm\)[^}]*color:\s*var\(--muted\)[^}]*transition:[^}]*background-color var\(--motion-fast\) var\(--ease-standard\)[^}]*color var\(--motion-fast\) var\(--ease-standard\)[^}]*transform var\(--motion-fast\) var\(--ease-standard\)/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.site-github-icon\s*\{[^}]*width:\s*20px[^}]*height:\s*20px[^}]*pointer-events:\s*none/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.site-github-link:hover\s*\{[^}]*background:\s*var\(--surface\)[^}]*color:\s*var\(--fg\)/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.site-github-link:active\s*\{[^}]*background:\s*var\(--surface\)[^}]*color:\s*var\(--fg\)[^}]*transform:\s*scale\(0\.92\)/s,
+  )
+  assert.match(
+    layoutCss,
     /@media \(max-width: 1020px\)[\s\S]*?\.site-container\s*\{[^}]*padding-inline: var\(--container-gutter-tablet\)/,
   )
   assert.match(
