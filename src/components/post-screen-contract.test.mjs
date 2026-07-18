@@ -101,7 +101,7 @@ test("keeps Korean post title words intact", async () => {
   assert.doesNotMatch(titleRule[1], /overflow-wrap:\s*anywhere/)
 })
 
-test("keeps the post title on one line above the phone breakpoint", async () => {
+test("sets single-line titles above the phone breakpoint and wrapping below it", async () => {
   const postCss = await readRepositoryFile("src/styles/post.css")
   const titleRule = postCss.match(/\.post-title\s*\{([^}]*)\}/s)
   const phoneRule = postCss.match(
@@ -110,7 +110,7 @@ test("keeps the post title on one line above the phone breakpoint", async () => 
 
   assert.ok(titleRule, "post title style rule")
   assert.ok(phoneRule, "phone post title style rule")
-  assert.match(titleRule[1], /font-size:\s*clamp\(30px, 4vw, 36px\)/)
+  assert.match(titleRule[1], /font-size:\s*clamp\(28px, 4vw, 36px\)/)
   assert.match(titleRule[1], /text-wrap:\s*nowrap/)
   assert.match(phoneRule[1], /text-wrap:\s*wrap/)
 })
@@ -147,7 +147,54 @@ test("documents the current Gatsby rebuild and Tailwind fixes", async () => {
   assert.equal(oldSample, "")
 })
 
-test("registers a production verifier for the approved post", async () => {
+test("documents MDX post management as article two", async () => {
+  const post = await readRepositoryFile(
+    "content/posts/gatsby-blog-2-managing-mdx-posts/index.mdx",
+  )
+
+  assert.match(post, /title: "Gatsby로 블로그 만들기 2편 - MDX 포스트 관리"/)
+  assert.match(post, /slug: "gatsby-blog-2-managing-mdx-posts"/)
+  assert.match(post, /publishedAt: "2026-05-16"/)
+  assert.match(post, /## 포스트 파일과 메타데이터를 한 단위로 묶기/)
+  assert.match(post, /## 파일을 Gatsby 데이터 레이어에 연결하기/)
+  assert.match(post, /## frontmatter를 명시적 계약으로 고정하기/)
+  assert.match(post, /## 페이지 생성 전에 작성자 입력 검증하기/)
+  assert.match(post, /## 오류를 모아 빌드를 중단하기/)
+  assert.match(post, /## 새 글을 추가하는 실제 순서/)
+  assert.match(post, /content\/posts\/<slug>\/index\.mdx/)
+  assert.match(post, /createSchemaCustomization/)
+  assert.match(post, /@dontInfer/)
+  assert.match(post, /validatePostNodes/)
+  assert.match(post, /Duplicate post slug/)
+  assert.match(post, /YYYY-MM-DD/)
+  assert.doesNotMatch(post, /2025|React SSR 한글|GitHub Actions 배포 설정 방법/)
+})
+
+test("documents GraphQL page generation as article three", async () => {
+  const post = await readRepositoryFile(
+    "content/posts/gatsby-blog-3-graphql-page-generation/index.mdx",
+  )
+
+  assert.match(post, /title: "Gatsby로 블로그 만들기 3편 - GraphQL 페이지 생성"/)
+  assert.match(post, /slug: "gatsby-blog-3-graphql-page-generation"/)
+  assert.match(post, /publishedAt: "2026-06-27"/)
+  assert.match(post, /## 같은 MDX 노드를 두 경로에서 조회하기/)
+  assert.match(post, /## 홈에서 발행일 역순 목록 만들기/)
+  assert.match(post, /## 블로그 글만 정적 라우트로 생성하기/)
+  assert.match(post, /## id로 상세 데이터와 본문 연결하기/)
+  assert.match(post, /## 표현 컴포넌트와 GraphQL 경계 분리하기/)
+  assert.match(post, /## SEO와 sitemap을 같은 메타데이터에 연결하기/)
+  assert.match(post, /## 빌드 결과로 전체 흐름 검증하기/)
+  assert.match(post, /allMdx\(sort: \{ frontmatter: \{ publishedAt: DESC \} \}\)/)
+  assert.match(post, /sourceInstanceName === "posts"/)
+  assert.match(post, /contentFilePath/)
+  assert.match(post, /context: \{[\s\S]*id: post\.id/)
+  assert.match(post, /mdx\(id: \{ eq: \$id \}\)/)
+  assert.match(post, /gatsby-plugin-sitemap/)
+  assert.doesNotMatch(post, /2025|React SSR 한글|태그 필터 구현/)
+})
+
+test("registers a production verifier for all approved posts", async () => {
   const [packageSource, verifier] = await Promise.all([
     readRepositoryFile("package.json"),
     readRepositoryFile("scripts/verify-post-build.mjs"),
@@ -159,6 +206,14 @@ test("registers a production verifier for the approved post", async () => {
     "node scripts/verify-post-build.mjs",
   )
   assert.match(verifier, /public[\s\S]*gatsby-blog-1-getting-started/)
+  assert.match(verifier, /gatsby-blog-2-managing-mdx-posts/)
+  assert.match(verifier, /gatsby-blog-3-graphql-page-generation/)
+  assert.match(verifier, /for \(const contract of postContracts\)/)
+  assert.match(verifier, /assert\.deepEqual\(visibleTags, contract\.tags/)
+  assert.match(
+    verifier,
+    /assert\.deepEqual\([\s\S]*?articleTagValues,[\s\S]*?contract\.tags/,
+  )
   assert.match(verifier, /mdx-foundation/)
   assert.match(verifier, /create-a-blog-site-with-gatsby1/)
 })

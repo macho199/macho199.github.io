@@ -28,6 +28,38 @@ const countClassedTags = (source, tag, className) =>
 const countOpeningTags = tag =>
   main.match(new RegExp(`<${tag}(?:\\s|>)`, "g"))?.length ?? 0
 
+const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+
+const postContracts = [
+  {
+    path: "/posts/gatsby-blog-3-graphql-page-generation/",
+    title: "Gatsby로 블로그 만들기 3편 - GraphQL 페이지 생성",
+    description:
+      "Gatsby 데이터 레이어에서 MDX 글을 조회해 홈 목록과 정적 상세 페이지, SEO·sitemap까지 연결한 흐름을 정리합니다.",
+    publishedAt: "2026-06-27",
+    publishedAtDisplay: "2026.06.27",
+    tags: ["Gatsby", "GraphQL", "MDX", "SEO"],
+  },
+  {
+    path: "/posts/gatsby-blog-2-managing-mdx-posts/",
+    title: "Gatsby로 블로그 만들기 2편 - MDX 포스트 관리",
+    description:
+      "MDX 글을 디렉터리 단위로 관리하고 frontmatter 스키마와 빌드 전 검증으로 잘못된 날짜·slug·태그를 차단한 과정을 정리합니다.",
+    publishedAt: "2026-05-16",
+    publishedAtDisplay: "2026.05.16",
+    tags: ["Gatsby", "MDX", "GraphQL", "Validation"],
+  },
+  {
+    path: "/posts/gatsby-blog-1-getting-started/",
+    title: "Gatsby로 블로그 사이트 만들기 1편 - 시작하기",
+    description:
+      "배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다.",
+    publishedAt: "2026-04-18",
+    publishedAtDisplay: "2026.04.18",
+    tags: ["Gatsby", "GitHub Pages", "React", "Tailwind CSS"],
+  },
+]
+
 assert.equal(countOpeningTags("h1"), 1, "home: one page heading")
 assert.equal(countClassedTags(main, "h1", "sr-only"), 1, "home: hidden h1")
 assert.match(main, /<h1\b[^>]*>[\s\S]*?개발자 블로그[\s\S]*?<\/h1>/)
@@ -37,25 +69,53 @@ assert.match(
 )
 
 assert.equal(countClassedTags(main, "ol", "post-list"), 1, "home: one post list")
-assert.ok(
-  countClassedTags(main, "article", "post-card") >= 1,
-  "home: real post cards",
+const postCards = [
+  ...main.matchAll(
+    /<article\b(?=[^>]*class="[^"]*\bpost-card\b[^"]*")[^>]*>[\s\S]*?<\/article>/g,
+  ),
+].map(match => match[0])
+
+assert.equal(
+  postCards.length,
+  postContracts.length,
+  "home: exact real post card count",
 )
-assert.match(
-  main,
-  /<a\b(?=[^>]*href="\/posts\/gatsby-blog-1-getting-started\/")(?=[^>]*class="[^"]*post-card-title-link[^"]*")[^>]*>\s*Gatsby로 블로그 사이트 만들기 1편 - 시작하기\s*<\/a>/,
-)
-for (const tag of ["Gatsby", "GitHub Pages", "React", "Tailwind CSS"]) {
-  assert.match(main, new RegExp(`<span class="post-card-tag">${tag}</span>`))
+
+for (const [index, post] of postContracts.entries()) {
+  const postCard = postCards[index]
+
+  assert.match(
+    postCard,
+    new RegExp(
+      `<a\\b(?=[^>]*href="${escapeRegex(post.path)}")(?=[^>]*class="[^"]*post-card-title-link[^"]*")[^>]*>\\s*${escapeRegex(post.title)}\\s*</a>`,
+    ),
+  )
+  assert.match(postCard, new RegExp(escapeRegex(post.description)))
+  assert.match(
+    postCard,
+    new RegExp(
+      `<time\\b(?=[^>]*class="[^"]*post-card-date[^"]*")(?=[^>]*datetime="${post.publishedAt}")[^>]*>\\s*${escapeRegex(post.publishedAtDisplay)}\\s*</time>`,
+      "i",
+    ),
+  )
+
+  const postCardTags = [
+    ...postCard.matchAll(
+      /<span\b(?=[^>]*class="[^"]*\bpost-card-tag\b[^"]*")[^>]*>([^<]*)<\/span>/g,
+    ),
+  ].map(match => match[1])
+
+  assert.deepEqual(postCardTags, post.tags, `${post.path}: exact tags`)
 }
-assert.match(
-  main,
-  /배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다\./,
+
+const postPaths = postCards.map(postCard =>
+  postCard.match(
+    /<a\b(?=[^>]*class="[^"]*post-card-title-link[^"]*")(?=[^>]*href="([^"]+)")[^>]*>/,
+  )?.[1],
 )
-assert.match(
-  main,
-  /<time\b(?=[^>]*class="[^"]*post-card-date[^"]*")(?=[^>]*datetime="2026-04-18")[^>]*>\s*2026\.04\.18\s*<\/time>/i,
-)
+const expectedPostPaths = postContracts.map(post => post.path)
+
+assert.deepEqual(postPaths, expectedPostPaths, "home: newest post first")
 assert.doesNotMatch(main, /\/posts\/mdx-foundation\//)
 
 assert.equal(countOpeningTags("button"), 0, "home: no inactive controls")
