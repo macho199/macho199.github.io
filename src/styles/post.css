@@ -159,23 +159,31 @@
 
   .post-toc {
     max-height: calc(100vh - 48px);
+    min-width: 0;
     padding: var(--space-4);
     overflow-y: auto;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-soft);
     border-radius: var(--radius-sm);
-    background: var(--surface-warm);
+    background: color-mix(in oklch, var(--surface-warm) 78%, var(--bg));
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.45;
   }
 
   .post-toc-title {
-    margin: 0 0 var(--space-3);
-    color: var(--fg);
-    font-size: var(--text-sm);
-    font-weight: 600;
+    margin: 0 0 var(--space-2);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+    color: var(--fg-2);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.35;
   }
 
   .post-toc-list {
     display: grid;
-    gap: var(--space-1);
+    gap: 2px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -184,32 +192,37 @@
   .post-toc-link {
     position: relative;
     display: block;
-    padding: var(--space-2) 0 var(--space-2) var(--space-4);
+    min-width: 0;
+    max-width: 100%;
+    padding: 7px 0 7px 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     color: var(--muted);
     font-size: var(--text-sm);
-    line-height: 1.5;
-    overflow-wrap: anywhere;
+    line-height: 1.45;
     text-decoration: none;
-    word-break: keep-all;
+    transition: color var(--motion-fast) var(--ease-standard);
   }
 
   .post-toc-link::before {
     position: absolute;
-    top: 0.85em;
+    top: 50%;
     left: 0;
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
     border-radius: var(--radius-pill);
     background: transparent;
     content: "";
+    transform: translateY(-50%);
   }
 
   .post-toc-link:hover {
-    color: var(--fg);
+    color: var(--fg-2);
   }
 
   .post-toc-link--active {
-    color: var(--fg);
+    color: var(--fg-2);
     font-weight: 500;
   }
 

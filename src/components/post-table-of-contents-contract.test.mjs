@@ -97,19 +97,47 @@ test("keeps the body width and exposes a desktop-only sticky rail", async () => 
     css,
     /\.post-toc\s*\{[^}]*max-height:\s*calc\(100vh - 48px\)[^}]*overflow-y:\s*auto/s,
   )
-  assert.match(
-    css,
-    /\.post-toc-link--active\s*\{[^}]*color:\s*var\(--fg\)[^}]*font-weight:\s*500/s,
-  )
-  assert.match(
-    css,
-    /\.post-toc-link--active::before\s*\{[^}]*background:\s*var\(--accent\)/s,
-  )
-
   const bodyShellRule = css.match(/\.post-body-shell\s*\{([^}]*)\}/s)
   assert.ok(bodyShellRule)
   assert.doesNotMatch(
     bodyShellRule[1],
     /(?:^|;)\s*(?:width|max-width)\s*:/,
+  )
+})
+
+test("matches the approved TOC card and link presentation", async () => {
+  const css = await readRepositoryFile("src/styles/post.css")
+
+  assert.match(
+    css,
+    /\.post-toc\s*\{[^}]*padding:\s*var\(--space-4\)[^}]*border:\s*1px solid var\(--border-soft\)[^}]*background:\s*color-mix\(in oklch, var\(--surface-warm\) 78%, var\(--bg\)\)[^}]*color:\s*var\(--muted\)[^}]*font-size:\s*var\(--text-sm\)[^}]*line-height:\s*1\.45/s,
+  )
+  assert.match(
+    css,
+    /\.post-toc-title\s*\{[^}]*margin:\s*0 0 var\(--space-2\)[^}]*padding-bottom:\s*var\(--space-2\)[^}]*border-bottom:\s*1px solid var\(--border\)[^}]*color:\s*var\(--fg-2\)[^}]*font-family:\s*var\(--font-body\)[^}]*font-size:\s*14px[^}]*font-weight:\s*500[^}]*line-height:\s*1\.35/s,
+  )
+  assert.match(
+    css,
+    /\.post-toc-link\s*\{[^}]*min-width:\s*0[^}]*max-width:\s*100%[^}]*padding:\s*7px 0 7px 14px[^}]*overflow:\s*hidden[^}]*text-overflow:\s*ellipsis[^}]*white-space:\s*nowrap[^}]*color:\s*var\(--muted\)[^}]*font-size:\s*var\(--text-sm\)[^}]*line-height:\s*1\.45/s,
+  )
+  assert.match(
+    css,
+    /\.post-toc-link::before\s*\{[^}]*top:\s*50%[^}]*width:\s*5px[^}]*height:\s*5px[^}]*transform:\s*translateY\(-50%\)/s,
+  )
+  assert.match(
+    css,
+    /\.post-toc-link:hover\s*\{[^}]*color:\s*var\(--fg-2\)/s,
+  )
+  assert.match(
+    css,
+    /\.post-toc-link--active\s*\{[^}]*color:\s*var\(--fg-2\)[^}]*font-weight:\s*500/s,
+  )
+  assert.match(
+    css,
+    /\.post-toc-link--active::before\s*\{[^}]*background:\s*var\(--accent\)/s,
+  )
+  assert.doesNotMatch(
+    css,
+    /\.post-toc-link\s*\{[^}]*(?:overflow-wrap|word-break):/s,
   )
 })
