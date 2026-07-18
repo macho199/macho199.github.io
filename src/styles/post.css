@@ -148,6 +148,75 @@
     word-break: keep-all;
   }
 
+  .post-body-shell {
+    position: relative;
+    min-width: 0;
+  }
+
+  .post-toc-rail {
+    display: none;
+  }
+
+  .post-toc {
+    max-height: calc(100vh - 48px);
+    padding: var(--space-4);
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-warm);
+  }
+
+  .post-toc-title {
+    margin: 0 0 var(--space-3);
+    color: var(--fg);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .post-toc-list {
+    display: grid;
+    gap: var(--space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .post-toc-link {
+    position: relative;
+    display: block;
+    padding: var(--space-2) 0 var(--space-2) var(--space-4);
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+    word-break: keep-all;
+  }
+
+  .post-toc-link::before {
+    position: absolute;
+    top: 0.85em;
+    left: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    content: "";
+  }
+
+  .post-toc-link:hover {
+    color: var(--fg);
+  }
+
+  .post-toc-link--active {
+    color: var(--fg);
+    font-weight: 500;
+  }
+
+  .post-toc-link--active::before {
+    background: var(--accent);
+  }
+
   .post-page .mdx-content {
     padding-top: var(--space-12);
     color: var(--fg-2);
@@ -455,5 +524,21 @@
 
   .post-page .mdx-content pre {
     padding: var(--space-4);
+  }
+}
+
+@media (min-width: 1321px) {
+  .post-toc-rail {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(100% + var(--space-4));
+    width: 224px;
+  }
+
+  .post-toc {
+    position: sticky;
+    top: var(--space-6);
   }
 }

@@ -70,3 +70,40 @@ test("queries and composes the normalized TOC beside the MDX body", async () => 
   )
   assert.match(source, /tableOfContents\(maxDepth: 2\)/)
 })
+
+test("keeps the body width and exposes a desktop-only sticky rail", async () => {
+  const css = await readRepositoryFile("src/styles/post.css")
+
+  assert.match(
+    css,
+    /\.post-body-shell\s*\{[^}]*position:\s*relative[^}]*min-width:\s*0/s,
+  )
+  assert.match(css, /\.post-toc-rail\s*\{[^}]*display:\s*none/s)
+  assert.match(
+    css,
+    /@media \(min-width: 1321px\)[\s\S]*\.post-toc-rail\s*\{[^}]*display:\s*block[^}]*position:\s*absolute[^}]*top:\s*0[^}]*bottom:\s*0[^}]*left:\s*calc\(100% \+ var\(--space-4\)\)[^}]*width:\s*224px/s,
+  )
+  assert.match(
+    css,
+    /@media \(min-width: 1321px\)[\s\S]*\.post-toc\s*\{[^}]*position:\s*sticky[^}]*top:\s*var\(--space-6\)/s,
+  )
+  assert.match(
+    css,
+    /\.post-toc\s*\{[^}]*max-height:\s*calc\(100vh - 48px\)[^}]*overflow-y:\s*auto/s,
+  )
+  assert.match(
+    css,
+    /\.post-toc-link--active\s*\{[^}]*color:\s*var\(--fg\)[^}]*font-weight:\s*500/s,
+  )
+  assert.match(
+    css,
+    /\.post-toc-link--active::before\s*\{[^}]*background:\s*var\(--accent\)/s,
+  )
+
+  const bodyShellRule = css.match(/\.post-body-shell\s*\{([^}]*)\}/s)
+  assert.ok(bodyShellRule)
+  assert.doesNotMatch(
+    bodyShellRule[1],
+    /(?:^|;)\s*(?:width|max-width)\s*:/,
+  )
+})
