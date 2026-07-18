@@ -86,5 +86,8 @@ test("applies the shared layout without changing page data boundaries", async ()
     assert.doesNotMatch(source, /<main\b/)
   }
 
-  assert.match(postTemplate, /<div className="mdx-content">\{children\}<\/div>/)
+  assert.match(
+    postTemplate,
+    /<div className="mdx-content">[\s\S]*<MDXProvider components=\{mdxComponents\}>[\s\S]*\{children\}[\s\S]*<\/MDXProvider>[\s\S]*<\/div>/,
+  )
 })
