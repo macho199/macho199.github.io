@@ -20,7 +20,7 @@ const postContracts = [
       "Tailwind CSS 4와 PostCSS 연결",
       "Preflight 이후 사라진 문서 의미 복원",
       "로컬 폰트와 외부 요청 경계",
-      "검증과 현재 배포 경계",
+      "검증과 단계별 배포 경계",
       "마치며",
     ],
   },
@@ -192,7 +192,8 @@ assert.match(
 )
 assert.match(firstPost.main, /제목 크기, 목록 마커, 링크 식별성/)
 assert.match(firstPost.main, /4\.5:1/)
-assert.match(firstPost.main, /GitHub Actions 배포는 아직 연결하지 않았다/)
+assert.match(firstPost.main, /GitHub Actions 배포는 이후 출시 단계에서 연결했습니다/)
+assert.doesNotMatch(firstPost.main, /GitHub Actions 배포는 아직 연결하지 않았다/)
 assert.doesNotMatch(
   firstPost.main,
   /2025|ERROR #98123|@mdx-js\/react|text-red-500|hello-gatsby-tailwindcss\.png|github-pages-setting\.png/,

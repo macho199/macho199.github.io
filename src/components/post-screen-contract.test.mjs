@@ -135,7 +135,9 @@ test("documents the current Gatsby rebuild and Tailwind fixes", async () => {
   assert.match(post, /제목 크기, 목록 마커, 링크 식별성/)
   assert.match(post, /4\.5:1/)
   assert.match(post, /npm run typecheck/)
-  assert.match(post, /GitHub Actions 배포는 아직 연결하지 않았다/)
+  assert.match(post, /## 검증과 단계별 배포 경계/)
+  assert.match(post, /GitHub Actions 배포는 이후 출시 단계에서 연결했습니다/)
+  assert.doesNotMatch(post, /GitHub Actions 배포는 아직 연결하지 않았다/)
   assert.doesNotMatch(
     post,
     /2025|ERROR #98123|@mdx-js\/react|text-red-500|당시 GitHub Pages 배포 방식/,
