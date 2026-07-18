@@ -69,15 +69,18 @@ const PostTableOfContents = ({ items }: PostTableOfContentsProps) => {
       rootMargin: OBSERVER_ROOT_MARGIN,
       threshold: 0,
     })
+    const viewportObserver = new window.IntersectionObserver(syncActiveId)
 
     for (const heading of headings) {
       observer.observe(heading)
+      viewportObserver.observe(heading)
     }
 
     syncActiveId()
 
     return () => {
       observer.disconnect()
+      viewportObserver.disconnect()
     }
   }, [items])
 

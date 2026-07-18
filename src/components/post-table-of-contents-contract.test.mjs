@@ -40,6 +40,12 @@ test("enhances active state without rewriting scroll history", async () => {
   assert.match(source, /document\.getElementById\(item\.id\)/)
   assert.match(source, /!\("IntersectionObserver" in window\)/)
   assert.match(source, /new window\.IntersectionObserver/)
+  assert.match(
+    source,
+    /const viewportObserver = new window\.IntersectionObserver\(syncActiveId\)/,
+  )
+  assert.match(source, /viewportObserver\.observe\(heading\)/)
+  assert.match(source, /viewportObserver\.disconnect\(\)/)
   assert.match(source, /getBoundingClientRect\(\)\.top <= ACTIVE_HEADING_OFFSET/)
   assert.match(source, /observer\.disconnect\(\)/)
   assert.doesNotMatch(
