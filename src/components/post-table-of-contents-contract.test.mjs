@@ -87,15 +87,27 @@ test("keeps the body width and exposes the approved desktop TOC geometry", async
   assert.match(css, /\.post-toc-rail\s*\{[^}]*display:\s*none/s)
   assert.match(
     css,
-    /@media \(min-width: 1321px\)[\s\S]*\.post-toc-rail\s*\{[^}]*display:\s*block[^}]*position:\s*absolute[^}]*top:\s*var\(--space-12\)[^}]*bottom:\s*0[^}]*left:\s*calc\(100% \+ var\(--space-4\)\)[^}]*width:\s*224px/s,
+    /@media \(min-width: 1321px\)[\s\S]*\.post-toc-rail\s*\{[^}]*display:\s*block[^}]*position:\s*absolute[^}]*top:\s*var\(--space-12\)[^}]*bottom:\s*0[^}]*left:\s*calc\(100% \+ var\(--space-6\)\)[^}]*width:\s*224px/s,
   )
   assert.match(
     css,
     /@media \(min-width: 1321px\)[\s\S]*\.post-toc\s*\{[^}]*position:\s*sticky[^}]*top:\s*var\(--space-6\)/s,
   )
+  const compactMediaRule = css.match(
+    /@media \(min-width: 1321px\) and \(max-width: 1390px\) \{([\s\S]*?)\n\}/,
+  )
+  assert.ok(compactMediaRule)
   assert.match(
-    css,
-    /@media \(min-width: 1321px\) and \(max-width: 1390px\)[\s\S]*\.post-toc-rail\s*\{[^}]*left:\s*calc\(100% \+ var\(--space-1\)\)[^}]*width:\s*190px[^}]*\}[\s\S]*\.post-toc\s*\{[^}]*padding:\s*var\(--space-3\)/s,
+    compactMediaRule[1],
+    /\.post-toc-rail\s*\{[^}]*width:\s*190px/s,
+  )
+  assert.doesNotMatch(
+    compactMediaRule[1],
+    /\.post-toc-rail\s*\{[^}]*left:/s,
+  )
+  assert.match(
+    compactMediaRule[1],
+    /\.post-toc\s*\{[^}]*padding:\s*var\(--space-3\)/s,
   )
   assert.match(
     css,
@@ -114,6 +126,10 @@ test("matches the approved TOC card and link presentation", async () => {
 
   assert.match(
     css,
+    /\.post-toc-list\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/s,
+  )
+  assert.match(
+    css,
     /\.post-toc\s*\{[^}]*padding:\s*var\(--space-4\)[^}]*border:\s*1px solid var\(--border-soft\)[^}]*background:\s*color-mix\(in oklch, var\(--surface-warm\) 78%, var\(--bg\)\)[^}]*color:\s*var\(--muted\)[^}]*font-size:\s*var\(--text-sm\)[^}]*line-height:\s*1\.45/s,
   )
   assert.match(
@@ -122,7 +138,7 @@ test("matches the approved TOC card and link presentation", async () => {
   )
   assert.match(
     css,
-    /\.post-toc-link\s*\{[^}]*min-width:\s*0[^}]*max-width:\s*100%[^}]*padding:\s*7px 0 7px 14px[^}]*overflow:\s*hidden[^}]*text-overflow:\s*ellipsis[^}]*white-space:\s*nowrap[^}]*color:\s*var\(--muted\)[^}]*font-size:\s*var\(--text-sm\)[^}]*line-height:\s*1\.45/s,
+    /\.post-toc-link\s*\{[^}]*min-width:\s*0[^}]*max-width:\s*100%[^}]*padding:\s*5px 0 5px 14px[^}]*overflow:\s*hidden[^}]*text-overflow:\s*ellipsis[^}]*white-space:\s*nowrap[^}]*color:\s*var\(--muted\)[^}]*font-size:\s*var\(--text-sm\)[^}]*line-height:\s*1\.45/s,
   )
   assert.match(
     css,

@@ -183,6 +183,7 @@
 
   .post-toc-list {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 2px;
     margin: 0;
     padding: 0;
@@ -194,7 +195,7 @@
     display: block;
     min-width: 0;
     max-width: 100%;
-    padding: 7px 0 7px 14px;
+    padding: 5px 0 5px 14px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -546,7 +547,7 @@
     position: absolute;
     top: var(--space-12);
     bottom: 0;
-    left: calc(100% + var(--space-4));
+    left: calc(100% + var(--space-6));
     width: 224px;
   }
 
@@ -558,7 +559,6 @@
 
 @media (min-width: 1321px) and (max-width: 1390px) {
   .post-toc-rail {
-    left: calc(100% + var(--space-1));
     width: 190px;
   }
 
