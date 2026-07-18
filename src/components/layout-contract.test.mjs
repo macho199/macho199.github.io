@@ -29,6 +29,22 @@ test("defines a shared Header, main, and Footer shell", async () => {
   assert.match(header, /<header className="site-header">/)
   assert.match(header, /<Link to="\/" className="site-logo"[^>]*>\s*kjs\.log\s*<\/Link>/)
   assert.equal((header.match(/<Link\b/g) ?? []).length, 1)
+  assert.match(
+    header,
+    /const GITHUB_PROFILE_URL = "https:\/\/github\.com\/macho199"/,
+  )
+  assert.match(header, /const GitHubIcon = \(\) => \(/)
+  assert.match(header, /className="site-github-icon"/)
+  assert.match(header, /viewBox="0 0 24 24"/)
+  assert.match(header, /fill="currentColor"/)
+  assert.match(header, /aria-hidden="true"/)
+  assert.match(header, /focusable="false"/)
+  assert.match(
+    header,
+    /<a[\s\S]*className="site-github-link"[\s\S]*href=\{GITHUB_PROFILE_URL\}[\s\S]*target="_blank"[\s\S]*rel="noopener noreferrer"[\s\S]*aria-label="GitHub 프로필 \(새 탭\)"[\s\S]*<GitHubIcon \/>[\s\S]*<\/a>/,
+  )
+  assert.equal((header.match(/<a\b/g) ?? []).length, 1)
+  assert.doesNotMatch(header, /react-icons|@primer\/octicons/)
   assert.match(footer, /© 2026 kjs\.log/)
   assert.match(
     footer,
