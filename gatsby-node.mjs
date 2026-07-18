@@ -86,6 +86,10 @@ export const createPages = async ({ actions, graphql, reporter }) => {
   const sortedPosts = [...posts].sort((left, right) =>
     left.frontmatter.publishedAt.localeCompare(right.frontmatter.publishedAt),
   )
+  /**
+   * @param {MdxPostNode | undefined} post
+   * @returns {{ title: string, slug: string } | null}
+   */
   const toAdjacentPost = post =>
     post
       ? {

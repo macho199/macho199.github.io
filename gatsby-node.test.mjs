@@ -3,6 +3,18 @@ import { test } from "node:test"
 
 import { createPages } from "./gatsby-node.mjs"
 
+/**
+ * @typedef {object} PostNodeOptions
+ * @property {string} id
+ * @property {string} title
+ * @property {string} slug
+ * @property {string} publishedAt
+ * @property {string} [sourceInstanceName]
+ */
+
+/**
+ * @param {PostNodeOptions} options
+ */
 const postNode = ({
   id,
   title,
@@ -21,6 +33,24 @@ const postNode = ({
     tags: ["Gatsby"],
   },
 })
+
+/**
+ * @typedef {object} CreatedPage
+ * @property {string} path
+ * @property {string} component
+ * @property {Record<string, unknown>} context
+ */
+
+/**
+ * @typedef {object} TestCreatePagesArgs
+ * @property {{ createPage: (page: CreatedPage) => void }} actions
+ * @property {(query: string) => Promise<{ data: { allMdx: { nodes: Array<ReturnType<typeof postNode>> } } }>} graphql
+ * @property {{ panicOnBuild: (message: string | object) => never }} reporter
+ */
+
+const runCreatePages = /** @type {(args: TestCreatePagesArgs) => Promise<void>} */ (
+  /** @type {unknown} */ (createPages)
+)
 
 test("creates post pages with chronological previous and next context", async () => {
   const articleOne = postNode({
@@ -48,9 +78,10 @@ test("creates post pages with chronological previous and next context", async ()
     publishedAt: "2026-01-01",
     sourceInstanceName: "pages",
   })
+  /** @type {Array<CreatedPage>} */
   const createdPages = []
 
-  await createPages({
+  await runCreatePages({
     actions: { createPage: page => createdPages.push(page) },
     graphql: async () => ({
       data: {
@@ -60,7 +91,10 @@ test("creates post pages with chronological previous and next context", async ()
       },
     }),
     reporter: {
-      panicOnBuild: message => assert.fail(message),
+      panicOnBuild: message =>
+        assert.fail(
+          typeof message === "string" ? message : JSON.stringify(message),
+        ),
     },
   })
 
