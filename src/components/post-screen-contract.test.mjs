@@ -194,7 +194,7 @@ test("documents GraphQL page generation as article three", async () => {
   assert.doesNotMatch(post, /2025|React SSR 한글|태그 필터 구현/)
 })
 
-test("registers a production verifier for the approved post", async () => {
+test("registers a production verifier for all approved posts", async () => {
   const [packageSource, verifier] = await Promise.all([
     readRepositoryFile("package.json"),
     readRepositoryFile("scripts/verify-post-build.mjs"),
@@ -206,6 +206,9 @@ test("registers a production verifier for the approved post", async () => {
     "node scripts/verify-post-build.mjs",
   )
   assert.match(verifier, /public[\s\S]*gatsby-blog-1-getting-started/)
+  assert.match(verifier, /gatsby-blog-2-managing-mdx-posts/)
+  assert.match(verifier, /gatsby-blog-3-graphql-page-generation/)
+  assert.match(verifier, /for \(const contract of postContracts\)/)
   assert.match(verifier, /mdx-foundation/)
   assert.match(verifier, /create-a-blog-site-with-gatsby1/)
 })
