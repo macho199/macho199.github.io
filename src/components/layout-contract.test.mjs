@@ -29,6 +29,22 @@ test("defines a shared Header, main, and Footer shell", async () => {
   assert.match(header, /<header className="site-header">/)
   assert.match(header, /<Link to="\/" className="site-logo"[^>]*>\s*kjs\.log\s*<\/Link>/)
   assert.equal((header.match(/<Link\b/g) ?? []).length, 1)
+  assert.match(
+    header,
+    /const GITHUB_PROFILE_URL = "https:\/\/github\.com\/macho199"/,
+  )
+  assert.match(header, /const GitHubIcon = \(\) => \(/)
+  assert.match(header, /className="site-github-icon"/)
+  assert.match(header, /viewBox="0 0 24 24"/)
+  assert.match(header, /fill="currentColor"/)
+  assert.match(header, /aria-hidden="true"/)
+  assert.match(header, /focusable="false"/)
+  assert.match(
+    header,
+    /<a[\s\S]*className="site-github-link"[\s\S]*href=\{GITHUB_PROFILE_URL\}[\s\S]*target="_blank"[\s\S]*rel="noopener noreferrer"[\s\S]*aria-label="GitHub 프로필 \(새 탭\)"[\s\S]*<GitHubIcon \/>[\s\S]*<\/a>/,
+  )
+  assert.equal((header.match(/<a\b/g) ?? []).length, 1)
+  assert.doesNotMatch(header, /react-icons|@primer\/octicons/)
   assert.match(footer, /© 2026 kjs\.log/)
   assert.match(
     footer,
@@ -65,6 +81,26 @@ test("loads a responsive 920px common container", async () => {
   )
   assert.match(
     layoutCss,
+    /\.site-header-inner\s*\{[^}]*justify-content:\s*space-between[^}]*gap:\s*var\(--space-4\)/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.site-github-link\s*\{[^}]*display:\s*inline-grid[^}]*place-items:\s*center[^}]*flex:\s*none[^}]*width:\s*44px[^}]*min-height:\s*44px[^}]*border-radius:\s*var\(--radius-sm\)[^}]*color:\s*var\(--muted\)[^}]*transition:[^}]*background-color var\(--motion-fast\) var\(--ease-standard\)[^}]*color var\(--motion-fast\) var\(--ease-standard\)[^}]*transform var\(--motion-fast\) var\(--ease-standard\)/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.site-github-icon\s*\{[^}]*width:\s*20px[^}]*height:\s*20px[^}]*pointer-events:\s*none/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.site-github-link:hover\s*\{[^}]*background:\s*var\(--surface\)[^}]*color:\s*var\(--fg\)/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.site-github-link:active\s*\{[^}]*background:\s*var\(--surface\)[^}]*color:\s*var\(--fg\)[^}]*transform:\s*scale\(0\.92\)/s,
+  )
+  assert.match(
+    layoutCss,
     /@media \(max-width: 1020px\)[\s\S]*?\.site-container\s*\{[^}]*padding-inline: var\(--container-gutter-tablet\)/,
   )
   assert.match(
@@ -86,5 +122,8 @@ test("applies the shared layout without changing page data boundaries", async ()
     assert.doesNotMatch(source, /<main\b/)
   }
 
-  assert.match(postTemplate, /<div className="mdx-content">\{children\}<\/div>/)
+  assert.match(
+    postTemplate,
+    /<div className="mdx-content">[\s\S]*<MDXProvider components=\{mdxComponents\}>[\s\S]*\{children\}[\s\S]*<\/MDXProvider>[\s\S]*<\/div>/,
+  )
 })

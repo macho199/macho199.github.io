@@ -1,14 +1,22 @@
+import { MDXProvider } from "@mdx-js/react"
 import { graphql, Link, type HeadFC, type PageProps } from "gatsby"
 import * as React from "react"
 import type { ReactNode } from "react"
 
+import CodeBlock from "../components/code-block"
 import ContentContainer from "../components/content-container"
 import Layout from "../components/layout"
 import PostHeader, { type PostHeaderData } from "../components/post-header"
+import PostNavigation, {
+  type AdjacentPost,
+} from "../components/post-navigation"
+import PostTableOfContents from "../components/post-table-of-contents"
 import Seo from "../components/seo"
+import { normalizePostTableOfContents } from "../lib/post-table-of-contents.mjs"
 
 type PostData = Readonly<{
   mdx: Readonly<{
+    tableOfContents: unknown
     frontmatter: PostHeaderData &
       Readonly<{
         slug: string
@@ -16,13 +24,23 @@ type PostData = Readonly<{
   }>
 }>
 
-type PostTemplateProps = PageProps<PostData> &
+type PostPageContext = Readonly<{
+  previousPost: AdjacentPost | null
+  nextPost: AdjacentPost | null
+}>
+
+type PostTemplateProps = PageProps<PostData, PostPageContext> &
   Readonly<{
     children: ReactNode
   }>
 
-const PostTemplate = ({ data, children }: PostTemplateProps) => {
+const mdxComponents = {
+  pre: CodeBlock,
+}
+
+const PostTemplate = ({ data, pageContext, children }: PostTemplateProps) => {
   const { frontmatter } = data.mdx
+  const tocItems = normalizePostTableOfContents(data.mdx.tableOfContents)
 
   return (
     <Layout>
@@ -34,7 +52,16 @@ const PostTemplate = ({ data, children }: PostTemplateProps) => {
         </nav>
         <article className="post-page">
           <PostHeader post={frontmatter} />
-          <div className="mdx-content">{children}</div>
+          <div className="post-body-shell">
+            <div className="mdx-content">
+              <MDXProvider components={mdxComponents}>{children}</MDXProvider>
+            </div>
+            <PostTableOfContents items={tocItems} />
+          </div>
+          <PostNavigation
+            previousPost={pageContext.previousPost}
+            nextPost={pageContext.nextPost}
+          />
         </article>
       </ContentContainer>
     </Layout>
@@ -46,6 +73,7 @@ export default PostTemplate
 export const query = graphql`
   query PostById($id: String!) {
     mdx(id: { eq: $id }) {
+      tableOfContents(maxDepth: 2)
       frontmatter {
         title
         slug

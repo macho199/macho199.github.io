@@ -83,14 +83,30 @@ export const createPages = async ({ actions, graphql, reporter }) => {
     return
   }
 
+  const sortedPosts = [...posts].sort((left, right) =>
+    left.frontmatter.publishedAt.localeCompare(right.frontmatter.publishedAt),
+  )
+  /**
+   * @param {MdxPostNode | undefined} post
+   * @returns {{ title: string, slug: string } | null}
+   */
+  const toAdjacentPost = post =>
+    post
+      ? {
+          title: post.frontmatter.title,
+          slug: post.frontmatter.slug,
+        }
+      : null
   const postTemplate = path.resolve("./src/templates/post.tsx")
 
-  for (const post of posts) {
+  for (const [index, post] of sortedPosts.entries()) {
     actions.createPage({
       path: `/posts/${post.frontmatter.slug}/`,
       component: `${postTemplate}?__contentFilePath=${post.internal.contentFilePath}`,
       context: {
         id: post.id,
+        previousPost: toAdjacentPost(sortedPosts[index - 1]),
+        nextPost: toAdjacentPost(sortedPosts[index + 1]),
       },
     })
   }
