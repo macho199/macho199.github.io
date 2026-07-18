@@ -26,7 +26,6 @@
 
   .post-header {
     display: grid;
-    max-width: 760px;
     gap: var(--space-4);
     padding-block: var(--space-6) var(--space-12);
     border-bottom: 1px solid var(--border);
@@ -59,12 +58,11 @@
     color: var(--fg);
     font-size: clamp(28px, 4vw, 36px);
     overflow-wrap: break-word;
-    text-wrap: nowrap;
+    text-wrap: balance;
     word-break: keep-all;
   }
 
   .post-description {
-    max-width: 760px;
     color: var(--fg-2);
     font-size: var(--text-lg);
     line-height: 1.65;
@@ -79,7 +77,6 @@
   }
 
   .post-page .mdx-content {
-    max-width: 760px;
     padding-top: var(--space-12);
     color: var(--fg-2);
     font-size: var(--text-base);
@@ -267,7 +264,6 @@
 
   .post-title {
     font-size: clamp(30px, 10vw, 36px);
-    text-wrap: wrap;
   }
 
   .post-description {
