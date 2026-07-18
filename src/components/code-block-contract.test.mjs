@@ -44,3 +44,33 @@ test("maps MDX pre elements through a stable provider component map", async () =
     /<div className="mdx-content">[\s\S]*<MDXProvider components=\{mdxComponents\}>[\s\S]*\{children\}[\s\S]*<\/MDXProvider>[\s\S]*<\/div>/,
   )
 })
+
+test("keeps Vesper code-card styles inside the post boundary", async () => {
+  const css = await readRepositoryFile("src/styles/post.css")
+
+  assert.match(
+    css,
+    /\.post-page \.mdx-content \.code-block\s*\{[^}]*max-width:\s*100%[^}]*overflow:\s*hidden/s,
+  )
+  assert.match(
+    css,
+    /\.code-block-toolbar\s*\{[^}]*display:\s*flex[^}]*min-height:\s*44px/s,
+  )
+  assert.match(
+    css,
+    /\.code-block-language\s*\{[^}]*color:\s*#99ffe4[^}]*white-space:\s*nowrap/s,
+  )
+  assert.match(
+    css,
+    /\.code-block-copy\s*\{[^}]*min-height:\s*44px[^}]*color:\s*#99ffe4/s,
+  )
+  assert.match(
+    css,
+    /\.post-page \.mdx-content \.code-block pre\s*\{[^}]*overflow-x:\s*auto[^}]*background:\s*#171717 !important/s,
+  )
+  assert.match(
+    css,
+    /@media \(max-width: 720px\)[\s\S]*\.post-page \.mdx-content \.code-block pre\s*\{[^}]*padding:\s*var\(--space-4\)/,
+  )
+  assert.doesNotMatch(css, /(^|\n)\s*\.code-block(?:-|\s|\{)/)
+})
