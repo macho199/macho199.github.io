@@ -14,23 +14,30 @@ const readRepositoryFile = path =>
     throw error
   })
 
-test("renders a hydrated accessible copy control around the original pre", async () => {
+test("renders a hydration-only accessible copy icon around the original pre", async () => {
   const source = await readRepositoryFile("src/components/code-block.tsx")
 
-  assert.match(source, /type CopyStatus = "idle" \| "copied" \| "failed"/)
-  assert.match(source, /const RESET_DELAY_MS = 1_500/)
+  assert.match(source, /const CopyIcon = \(\) => \(/)
+  assert.match(source, /className="code-block-copy-icon"/)
+  assert.match(source, /viewBox="0 0 24 24"/)
+  assert.match(source, /width="18"/)
+  assert.match(source, /height="18"/)
+  assert.match(source, /stroke="currentColor"/)
+  assert.match(source, /aria-hidden="true"/)
+  assert.match(source, /focusable="false"/)
   assert.match(source, /getCodeLanguageLabel\(language\)/)
   assert.match(source, /React\.useEffect\(\(\) =>/)
   assert.match(source, /navigator\.clipboard\?\.writeText/)
   assert.match(source, /preRef\.current\?\.textContent \?\? ""/)
   assert.match(source, /await navigator\.clipboard\.writeText\(codeText\)/)
-  assert.match(source, /setCopyStatus\("copied"\)/)
-  assert.match(source, /setCopyStatus\("failed"\)/)
-  assert.match(source, /window\.clearTimeout\(resetTimerRef\.current\)/)
+  assert.match(source, /catch \{[\s\S]*?return[\s\S]*?\}/)
   assert.match(source, /aria-label=\{`\$\{languageLabel\} 코드 복사`\}/)
-  assert.match(source, /aria-live="polite"/)
+  assert.match(source, /<CopyIcon \/>/)
   assert.match(source, /<pre \{\.\.\.preProps\} ref=\{preRef\}>/)
-  assert.doesNotMatch(source, /document\.execCommand|dangerouslySetInnerHTML/)
+  assert.doesNotMatch(
+    source,
+    /CopyStatus|RESET_DELAY_MS|COPY_LABELS|setCopyStatus|aria-live|setTimeout|clearTimeout|document\.execCommand|dangerouslySetInnerHTML/,
+  )
 })
 
 test("maps MDX pre elements through a stable provider component map", async () => {
