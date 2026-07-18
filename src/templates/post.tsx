@@ -5,6 +5,9 @@ import type { ReactNode } from "react"
 import ContentContainer from "../components/content-container"
 import Layout from "../components/layout"
 import PostHeader, { type PostHeaderData } from "../components/post-header"
+import PostNavigation, {
+  type AdjacentPost,
+} from "../components/post-navigation"
 import Seo from "../components/seo"
 
 type PostData = Readonly<{
@@ -16,12 +19,17 @@ type PostData = Readonly<{
   }>
 }>
 
-type PostTemplateProps = PageProps<PostData> &
+type PostPageContext = Readonly<{
+  previousPost: AdjacentPost | null
+  nextPost: AdjacentPost | null
+}>
+
+type PostTemplateProps = PageProps<PostData, PostPageContext> &
   Readonly<{
     children: ReactNode
   }>
 
-const PostTemplate = ({ data, children }: PostTemplateProps) => {
+const PostTemplate = ({ data, pageContext, children }: PostTemplateProps) => {
   const { frontmatter } = data.mdx
 
   return (
@@ -35,6 +43,10 @@ const PostTemplate = ({ data, children }: PostTemplateProps) => {
         <article className="post-page">
           <PostHeader post={frontmatter} />
           <div className="mdx-content">{children}</div>
+          <PostNavigation
+            previousPost={pageContext.previousPost}
+            nextPost={pageContext.nextPost}
+          />
         </article>
       </ContentContainer>
     </Layout>

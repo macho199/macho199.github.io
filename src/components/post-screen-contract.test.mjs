@@ -47,7 +47,7 @@ test("keeps GraphQL and page composition in the post template", async () => {
   )
   assert.match(
     postTemplate,
-    /<article className="post-page">[\s\S]*<PostHeader post=\{frontmatter\} \/>[\s\S]*<div className="mdx-content">\{children\}<\/div>[\s\S]*<\/article>/,
+    /<article className="post-page">[\s\S]*<PostHeader post=\{frontmatter\} \/>[\s\S]*<div className="mdx-content">\{children\}<\/div>[\s\S]*<PostNavigation[\s\S]*<\/article>/,
   )
   assert.match(postTemplate, /publishedAt\(formatString: "YYYY-MM-DD"\)/)
   assert.match(
@@ -57,11 +57,62 @@ test("keeps GraphQL and page composition in the post template", async () => {
   assert.doesNotMatch(postTemplate, /<h1\b|<button\b/)
 })
 
+test("renders accessible previous and next post navigation", async () => {
+  const [postNavigation, postTemplate, postCss] = await Promise.all([
+    readRepositoryFile("src/components/post-navigation.tsx"),
+    readRepositoryFile("src/templates/post.tsx"),
+    readRepositoryFile("src/styles/post.css"),
+  ])
+
+  assert.match(postNavigation, /export type AdjacentPost = Readonly<\{/)
+  assert.match(postNavigation, /previousPost: AdjacentPost \| null/)
+  assert.match(postNavigation, /nextPost: AdjacentPost \| null/)
+  assert.match(
+    postNavigation,
+    /if \(!previousPost && !nextPost\) \{[\s\S]*return null/,
+  )
+  assert.match(
+    postNavigation,
+    /<nav className="post-navigation" aria-label="이전·다음 게시글">/,
+  )
+  assert.ok(postNavigation.includes('to={`/posts/${previousPost.slug}/`}'))
+  assert.ok(postNavigation.includes('to={`/posts/${nextPost.slug}/`}'))
+  assert.match(postNavigation, />\s*이전 글\s*</)
+  assert.match(postNavigation, />\s*다음 글\s*</)
+  assert.doesNotMatch(postNavigation, /publishedAt|description|<button\b/)
+
+  assert.match(postTemplate, /PageProps<PostData, PostPageContext>/)
+  assert.match(postTemplate, /pageContext, children/)
+  assert.match(
+    postTemplate,
+    /<PostNavigation[\s\S]*previousPost=\{pageContext\.previousPost\}[\s\S]*nextPost=\{pageContext\.nextPost\}/,
+  )
+
+  assert.match(
+    postCss,
+    /\.post-navigation\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/s,
+  )
+  assert.match(
+    postCss,
+    /\.post-navigation-card--next\s*\{[^}]*grid-column:\s*2/s,
+  )
+  assert.match(
+    postCss,
+    /@media \(max-width: 720px\)[\s\S]*\.post-navigation\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/,
+  )
+  assert.match(
+    postCss,
+    /@media \(max-width: 720px\)[\s\S]*\.post-navigation-card--next\s*\{[^}]*grid-column:\s*1/,
+  )
+})
+
 test("imports the React runtime required by Gatsby SSR", async () => {
   const sources = await Promise.all(
-    ["src/components/post-header.tsx", "src/templates/post.tsx"].map(
-      readRepositoryFile,
-    ),
+    [
+      "src/components/post-header.tsx",
+      "src/components/post-navigation.tsx",
+      "src/templates/post.tsx",
+    ].map(readRepositoryFile),
   )
 
   for (const source of sources) {
@@ -220,6 +271,14 @@ test("registers a production verifier for all approved posts", async () => {
   assert.match(verifier, /gatsby-blog-2-managing-mdx-posts/)
   assert.match(verifier, /gatsby-blog-3-graphql-page-generation/)
   assert.match(verifier, /for \(const contract of postContracts\)/)
+  assert.match(verifier, /previousPost:/)
+  assert.match(verifier, /nextPost:/)
+  assert.match(verifier, /aria-label="이전·다음 게시글"/)
+  assert.match(verifier, /post-navigation-card/)
+  assert.match(
+    verifier,
+    /assert\.deepEqual\([\s\S]*?navigationLinks,[\s\S]*?expectedNavigationLinks/,
+  )
   assert.match(verifier, /assert\.deepEqual\(visibleTags, contract\.tags/)
   assert.match(
     verifier,

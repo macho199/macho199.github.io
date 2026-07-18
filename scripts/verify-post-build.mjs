@@ -13,6 +13,11 @@ const postContracts = [
     publishedAt: "2026-04-18",
     publishedAtDisplay: "2026.04.18",
     tags: ["Gatsby", "GitHub Pages", "React", "Tailwind CSS"],
+    previousPost: null,
+    nextPost: {
+      slug: "gatsby-blog-2-managing-mdx-posts",
+      title: "Gatsby로 블로그 만들기 2편 - MDX 포스트 관리",
+    },
     headings: [
       "왜 소스부터 다시 구축했는가",
       "재현 가능한 Gatsby 5 기준선",
@@ -32,6 +37,14 @@ const postContracts = [
     publishedAt: "2026-05-16",
     publishedAtDisplay: "2026.05.16",
     tags: ["Gatsby", "MDX", "GraphQL", "Validation"],
+    previousPost: {
+      slug: "gatsby-blog-1-getting-started",
+      title: "Gatsby로 블로그 사이트 만들기 1편 - 시작하기",
+    },
+    nextPost: {
+      slug: "gatsby-blog-3-graphql-page-generation",
+      title: "Gatsby로 블로그 만들기 3편 - GraphQL 페이지 생성",
+    },
     headings: [
       "포스트 파일과 메타데이터를 한 단위로 묶기",
       "파일을 Gatsby 데이터 레이어에 연결하기",
@@ -50,6 +63,11 @@ const postContracts = [
     publishedAt: "2026-06-27",
     publishedAtDisplay: "2026.06.27",
     tags: ["Gatsby", "GraphQL", "MDX", "SEO"],
+    previousPost: {
+      slug: "gatsby-blog-2-managing-mdx-posts",
+      title: "Gatsby로 블로그 만들기 2편 - MDX 포스트 관리",
+    },
+    nextPost: null,
     headings: [
       "같은 MDX 노드를 두 경로에서 조회하기",
       "홈에서 발행일 역순 목록 만들기",
@@ -69,6 +87,25 @@ const postContracts = [
  */
 const countOpeningTags = (source, tag) =>
   source.match(new RegExp(`<${tag}(?:\\s|>)`, "g"))?.length ?? 0
+
+/** @param {string} value */
+const normalizeText = value =>
+  value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+
+/**
+ * @param {{ previousPost: { slug: string, title: string } | null, nextPost: { slug: string, title: string } | null }} contract
+ */
+const expectedNavigationLinks = contract =>
+  [
+    contract.previousPost && {
+      href: `/posts/${contract.previousPost.slug}/`,
+      text: `이전 글 ${contract.previousPost.title}`,
+    },
+    contract.nextPost && {
+      href: `/posts/${contract.nextPost.slug}/`,
+      text: `다음 글 ${contract.nextPost.title}`,
+    },
+  ].filter(Boolean)
 
 const sitemap = await readFile(new URL("sitemap-0.xml", publicRoot), "utf8")
 const generatedPosts = new Map()
@@ -130,6 +167,26 @@ for (const contract of postContracts) {
     `${contract.slug}: exact article tag metadata`,
   )
 
+  const navigationMatch = main.match(
+    /<nav\b[^>]*aria-label="이전·다음 게시글"[^>]*>([\s\S]*?)<\/nav>/,
+  )
+  assert.ok(navigationMatch, `${contract.slug}: post navigation landmark`)
+
+  const navigationLinks = [
+    ...navigationMatch[1].matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g),
+  ]
+    .filter(match => /class="[^"]*\bpost-navigation-card\b[^"]*"/.test(match[1]))
+    .map(match => ({
+      href: match[1].match(/\bhref="([^"]*)"/)?.[1],
+      text: normalizeText(match[2]),
+    }))
+
+  assert.deepEqual(
+    navigationLinks,
+    expectedNavigationLinks(contract),
+    `${contract.slug}: exact previous and next post navigation`,
+  )
+
   for (const heading of contract.headings) {
     assert.match(main, new RegExp(`<h2[^>]*>${escapeRegex(heading)}</h2>`))
   }
@@ -167,7 +224,7 @@ for (const contract of postContracts) {
   )
   assert.doesNotMatch(
     main,
-    />\s*(?:이전 글|다음 글|관련 글|\d+\s*분 읽기)\s*</,
+    />\s*(?:관련 글|\d+\s*분 읽기)\s*</,
   )
   assert.match(
     sitemap,
@@ -214,5 +271,5 @@ assert.doesNotMatch(sitemap, /\/posts\/mdx-foundation\//)
 assert.doesNotMatch(sitemap, /\/posts\/create-a-blog-site-with-gatsby1\//)
 
 console.log(
-  "post build verified: three content, metadata, route, and sitemap contracts passed",
+  "post build verified: three content, metadata, navigation, route, and sitemap contracts passed",
 )

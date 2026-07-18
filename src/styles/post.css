@@ -76,6 +76,78 @@
     font-variant-numeric: tabular-nums;
   }
 
+  .post-navigation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+    min-width: 0;
+    margin-top: var(--space-12);
+  }
+
+  .post-navigation-card {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--fg);
+    text-decoration: none;
+    transition:
+      border-color var(--motion-fast) var(--ease-standard),
+      background-color var(--motion-fast) var(--ease-standard);
+  }
+
+  .post-navigation-card--next {
+    grid-column: 2;
+  }
+
+  .post-navigation-card:hover {
+    border-color: var(--muted);
+    background-color: var(--surface-warm);
+    color: var(--fg);
+  }
+
+  .post-navigation-direction {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--muted);
+    font-size: var(--text-sm);
+    font-weight: 500;
+  }
+
+  .post-navigation-direction::before,
+  .post-navigation-direction::after {
+    display: inline-block;
+    color: currentColor;
+    transition: transform var(--motion-fast) var(--ease-standard);
+  }
+
+  .post-navigation-direction--previous::before {
+    content: "←";
+  }
+
+  .post-navigation-direction--next::after {
+    content: "→";
+  }
+
+  .post-navigation-card:hover .post-navigation-direction--previous::before {
+    transform: translateX(calc(-1 * var(--space-1)));
+  }
+
+  .post-navigation-card:hover .post-navigation-direction--next::after {
+    transform: translateX(var(--space-1));
+  }
+
+  .post-navigation-title {
+    color: var(--fg);
+    font-size: var(--text-base);
+    line-height: 1.5;
+    overflow-wrap: break-word;
+    word-break: keep-all;
+  }
+
   .post-page .mdx-content {
     padding-top: var(--space-12);
     color: var(--fg-2);
@@ -268,6 +340,14 @@
 
   .post-description {
     font-size: var(--text-base);
+  }
+
+  .post-navigation {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .post-navigation-card--next {
+    grid-column: 1;
   }
 
   .post-page .mdx-content {
