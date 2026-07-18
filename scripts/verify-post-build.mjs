@@ -92,6 +92,40 @@ const countOpeningTags = (source, tag) =>
 const normalizeText = value =>
   value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
 
+/** @param {string} attributes */
+const readId = attributes => attributes.match(/\bid="([^"]+)"/)?.[1] ?? ""
+
+/** @param {string} source */
+const readH2Outline = source =>
+  [...source.matchAll(/<h2\b([^>]*)>([\s\S]*?)<\/h2>/g)].map(match => ({
+    id: readId(match[1]),
+    text: normalizeText(match[2]),
+  }))
+
+/** @param {string} source */
+const readTocLinks = source => {
+  const tocMatch = source.match(
+    /<nav\b[^>]*aria-label="글 목차"[^>]*>([\s\S]*?)<\/nav>/,
+  )
+
+  assert.ok(tocMatch, "post: table of contents landmark")
+
+  return [...tocMatch[1].matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)]
+    .filter(match => /class="[^"]*\bpost-toc-link\b[^"]*"/.test(match[1]))
+    .map(match => ({
+      href: match[1].match(/\bhref="([^"]+)"/)?.[1] ?? "",
+      text: normalizeText(match[2]),
+      current:
+        match[1].match(/\baria-current="([^"]+)"/)?.[1] ?? "",
+    }))
+}
+
+/** @param {string} href */
+const decodeTocId = href => {
+  assert.match(href, /^#.+/, "post: TOC href is a non-empty fragment")
+  return decodeURIComponent(href.slice(1))
+}
+
 /**
  * @param {{ previousPost: { slug: string, title: string } | null, nextPost: { slug: string, title: string } | null }} contract
  */
@@ -187,9 +221,31 @@ for (const contract of postContracts) {
     `${contract.slug}: exact previous and next post navigation`,
   )
 
-  for (const heading of contract.headings) {
-    assert.match(main, new RegExp(`<h2[^>]*>${escapeRegex(heading)}</h2>`))
-  }
+  const h2Outline = readH2Outline(main)
+  const tocLinks = readTocLinks(main)
+
+  assert.deepEqual(
+    h2Outline.map(heading => heading.text),
+    contract.headings,
+    `${contract.slug}: exact H2 outline`,
+  )
+  assert.ok(
+    h2Outline.every(heading => heading.id.length > 0),
+    `${contract.slug}: every H2 has an id`,
+  )
+  assert.deepEqual(
+    tocLinks.map(({ href, text }) => ({
+      id: decodeTocId(href),
+      text,
+    })),
+    h2Outline.map(({ id, text }) => ({ id, text })),
+    `${contract.slug}: TOC links exactly match H2 ids and order`,
+  )
+  assert.equal(
+    tocLinks.filter(link => link.current === "location").length,
+    1,
+    `${contract.slug}: one initial current TOC link`,
+  )
 
   assert.match(
     html,
@@ -220,7 +276,7 @@ for (const contract of postContracts) {
   )
   assert.doesNotMatch(
     main,
-    /class="[^"]*(?:table-of-contents|code-copy|reading-time|related-posts|post-pagination)[^"]*"/,
+    /class="[^"]*(?:code-copy|reading-time|related-posts|post-pagination)[^"]*"/,
   )
   assert.doesNotMatch(
     main,
@@ -292,5 +348,5 @@ assert.doesNotMatch(sitemap, /\/posts\/mdx-foundation\//)
 assert.doesNotMatch(sitemap, /\/posts\/create-a-blog-site-with-gatsby1\//)
 
 console.log(
-  "post build verified: three content, metadata, navigation, route, and sitemap contracts passed",
+  "post build verified: three content, TOC, metadata, navigation, route, and sitemap contracts passed",
 )

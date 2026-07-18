@@ -2,6 +2,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 import rehypeShiki from "@shikijs/rehype"
+import rehypeSlug from "rehype-slug"
 import remarkGfm from "remark-gfm"
 
 const rootDirectory = path.dirname(fileURLToPath(import.meta.url))
@@ -42,7 +43,10 @@ const config = {
       options: {
         mdxOptions: {
           remarkPlugins: [remarkGfm],
-          rehypePlugins: [[rehypeShiki, codeHighlightingOptions]],
+          rehypePlugins: [
+            rehypeSlug,
+            [rehypeShiki, codeHighlightingOptions],
+          ],
         },
       },
     },

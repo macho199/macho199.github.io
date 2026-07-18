@@ -148,6 +148,89 @@
     word-break: keep-all;
   }
 
+  .post-body-shell {
+    position: relative;
+    min-width: 0;
+  }
+
+  .post-toc-rail {
+    display: none;
+  }
+
+  .post-toc {
+    max-height: calc(100vh - 48px);
+    min-width: 0;
+    padding: var(--space-4);
+    overflow-y: auto;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+  }
+
+  .post-toc-title {
+    margin: 0 0 var(--space-2);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+    color: var(--fg-2);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.35;
+  }
+
+  .post-toc-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .post-toc-link {
+    position: relative;
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    padding: 5px 0 5px 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--muted);
+    font-size: var(--text-sm);
+    line-height: 1.45;
+    text-decoration: none;
+    transition: color var(--motion-fast) var(--ease-standard);
+  }
+
+  .post-toc-link::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 5px;
+    height: 5px;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    content: "";
+    transform: translateY(-50%);
+  }
+
+  .post-toc-link:hover {
+    color: var(--fg-2);
+  }
+
+  .post-toc-link--active {
+    color: var(--fg-2);
+    font-weight: 500;
+  }
+
+  .post-toc-link--active::before {
+    background: var(--accent);
+  }
+
   .post-page .mdx-content {
     padding-top: var(--space-12);
     color: var(--fg-2);
@@ -455,5 +538,31 @@
 
   .post-page .mdx-content pre {
     padding: var(--space-4);
+  }
+}
+
+@media (min-width: 1321px) {
+  .post-toc-rail {
+    display: block;
+    position: absolute;
+    top: var(--space-12);
+    bottom: 0;
+    left: calc(100% + var(--space-12));
+    width: 224px;
+  }
+
+  .post-toc {
+    position: sticky;
+    top: var(--space-6);
+  }
+}
+
+@media (min-width: 1321px) and (max-width: 1390px) {
+  .post-toc-rail {
+    width: 190px;
+  }
+
+  .post-toc {
+    padding: var(--space-3);
   }
 }
