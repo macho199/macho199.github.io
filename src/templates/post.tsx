@@ -1,7 +1,9 @@
+import { MDXProvider } from "@mdx-js/react"
 import { graphql, Link, type HeadFC, type PageProps } from "gatsby"
 import * as React from "react"
 import type { ReactNode } from "react"
 
+import CodeBlock from "../components/code-block"
 import ContentContainer from "../components/content-container"
 import Layout from "../components/layout"
 import PostHeader, { type PostHeaderData } from "../components/post-header"
@@ -29,6 +31,10 @@ type PostTemplateProps = PageProps<PostData, PostPageContext> &
     children: ReactNode
   }>
 
+const mdxComponents = {
+  pre: CodeBlock,
+}
+
 const PostTemplate = ({ data, pageContext, children }: PostTemplateProps) => {
   const { frontmatter } = data.mdx
 
@@ -42,7 +48,9 @@ const PostTemplate = ({ data, pageContext, children }: PostTemplateProps) => {
         </nav>
         <article className="post-page">
           <PostHeader post={frontmatter} />
-          <div className="mdx-content">{children}</div>
+          <div className="mdx-content">
+            <MDXProvider components={mdxComponents}>{children}</MDXProvider>
+          </div>
           <PostNavigation
             previousPost={pageContext.previousPost}
             nextPost={pageContext.nextPost}

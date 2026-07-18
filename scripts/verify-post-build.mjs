@@ -240,12 +240,21 @@ assert.match(firstPost.main, /<blockquote>/)
 assert.match(firstPost.main, /<ol>/)
 assert.match(firstPost.main, /<ul>/)
 assert.match(firstPost.main, /<table>/)
-assert.match(firstPost.main, /<pre><code class="language-shell">/)
-assert.match(firstPost.main, /<pre><code class="language-javascript">/)
-assert.match(firstPost.main, /<pre><code class="language-css">/)
 assert.match(
   firstPost.main,
-  /<pre><code class="language-shell">npm ci\s*<\/code><\/pre>/,
+  /<pre\b(?=[^>]*class="[^"]*\bshiki\b[^"]*")(?=[^>]*data-language="javascript")[^>]*><code><span class="line"><span style="color:[^"]+">/,
+)
+assert.match(
+  firstPost.main,
+  /<span\b[^>]*class="[^"]*\bcode-block-language\b[^"]*"[^>]*>JavaScript<\/span>/,
+)
+assert.match(
+  firstPost.main,
+  /<pre\b(?=[^>]*class="[^"]*\bshiki\b[^"]*")(?=[^>]*data-language="shell")[^>]*>/,
+)
+assert.match(
+  firstPost.main,
+  /<span\b[^>]*class="[^"]*\bcode-block-language\b[^"]*"[^>]*>Shell<\/span>/,
 )
 assert.match(firstPost.main, /제목 크기, 목록 마커, 링크 식별성/)
 assert.match(firstPost.main, /4\.5:1/)
@@ -255,6 +264,18 @@ assert.doesNotMatch(
   firstPost.main,
   /2025|ERROR #98123|@mdx-js\/react|text-red-500|hello-gatsby-tailwindcss\.png|github-pages-setting\.png/,
 )
+
+const secondPost = generatedPosts.get("gatsby-blog-2-managing-mdx-posts")
+assert.ok(secondPost, "article two generated")
+assert.match(
+  secondPost.main,
+  /<pre\b(?=[^>]*class="[^"]*\bshiki\b[^"]*")(?=[^>]*data-language="text")[^>]*>/,
+)
+assert.match(
+  secondPost.main,
+  /<span\b[^>]*class="[^"]*\bcode-block-language\b[^"]*"[^>]*>Text<\/span>/,
+)
+assert.match(secondPost.main, /content\/posts\/&lt;slug&gt;\/index\.mdx/)
 
 for (const retiredPath of [
   "posts/mdx-foundation/index.html",
