@@ -40,6 +40,9 @@ test("renders typed post metadata without inactive controls", async () => {
 test("keeps GraphQL and page composition in the post template", async () => {
   const postTemplate = await readRepositoryFile("src/templates/post.tsx")
 
+  assert.match(postTemplate, /import \{ MDXProvider \} from "@mdx-js\/react"/)
+  assert.match(postTemplate, /import CodeBlock from "\.\.\/components\/code-block"/)
+  assert.match(postTemplate, /const mdxComponents = \{\s*pre: CodeBlock,?\s*\}/)
   assert.match(postTemplate, /import PostHeader, \{ type PostHeaderData \}/)
   assert.match(
     postTemplate,
@@ -47,7 +50,7 @@ test("keeps GraphQL and page composition in the post template", async () => {
   )
   assert.match(
     postTemplate,
-    /<article className="post-page">[\s\S]*<PostHeader post=\{frontmatter\} \/>[\s\S]*<div className="mdx-content">\{children\}<\/div>[\s\S]*<PostNavigation[\s\S]*<\/article>/,
+    /<article className="post-page">[\s\S]*<PostHeader post=\{frontmatter\} \/>[\s\S]*<div className="mdx-content">[\s\S]*<MDXProvider components=\{mdxComponents\}>[\s\S]*\{children\}[\s\S]*<\/MDXProvider>[\s\S]*<\/div>[\s\S]*<PostNavigation[\s\S]*<\/article>/,
   )
   assert.match(postTemplate, /publishedAt\(formatString: "YYYY-MM-DD"\)/)
   assert.match(
@@ -109,6 +112,7 @@ test("renders accessible previous and next post navigation", async () => {
 test("imports the React runtime required by Gatsby SSR", async () => {
   const sources = await Promise.all(
     [
+      "src/components/code-block.tsx",
       "src/components/post-header.tsx",
       "src/components/post-navigation.tsx",
       "src/templates/post.tsx",
