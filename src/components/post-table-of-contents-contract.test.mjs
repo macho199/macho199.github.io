@@ -87,7 +87,7 @@ test("keeps the body width and exposes the approved desktop TOC geometry", async
   assert.match(css, /\.post-toc-rail\s*\{[^}]*display:\s*none/s)
   assert.match(
     css,
-    /@media \(min-width: 1321px\)[\s\S]*\.post-toc-rail\s*\{[^}]*display:\s*block[^}]*position:\s*absolute[^}]*top:\s*var\(--space-12\)[^}]*bottom:\s*0[^}]*left:\s*calc\(100% \+ var\(--space-8\)\)[^}]*width:\s*224px/s,
+    /@media \(min-width: 1321px\)[\s\S]*\.post-toc-rail\s*\{[^}]*display:\s*block[^}]*position:\s*absolute[^}]*top:\s*var\(--space-12\)[^}]*bottom:\s*0[^}]*left:\s*calc\(100% \+ var\(--space-12\)\)[^}]*width:\s*224px/s,
   )
   assert.match(
     css,
