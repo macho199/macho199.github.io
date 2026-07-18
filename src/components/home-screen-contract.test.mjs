@@ -47,6 +47,14 @@ test("renders a typed post card with informational tags and real metadata", asyn
 test("renders an ordered post list or the approved empty state", async () => {
   const postList = await readRepositoryFile("src/components/post-list.tsx")
 
+  assert.match(postList, /import PostFilterBar from "\.\/post-filter-bar"/)
+  assert.match(postList, /ALL_POSTS_FILTER/)
+  assert.match(postList, /collectPostTags/)
+  assert.match(postList, /filterPostsByTag/)
+  assert.match(
+    postList,
+    /React\.useState\(ALL_POSTS_FILTER\)/,
+  )
   assert.match(
     postList,
     /<section className="home-posts" aria-labelledby="home-posts-title">/,
@@ -58,8 +66,29 @@ test("renders an ordered post list or the approved empty state", async () => {
   assert.match(postList, /<ol className="post-list">/)
   assert.match(postList, /<li key=\{post\.id\} className="post-list-item">/)
   assert.match(postList, /<PostCard post=\{post\} \/>/)
+  assert.match(
+    postList,
+    /<PostFilterBar[\s\S]*tags=\{tags\}[\s\S]*selectedTag=\{activeTag\}[\s\S]*resultCount=\{visiblePosts\.length\}[\s\S]*onSelect=\{setSelectedTag\}[\s\S]*\/>/,
+  )
+  assert.match(postList, /visiblePosts\.map\(post =>/)
   assert.match(postList, /아직 게시글이 없습니다\./)
-  assert.doesNotMatch(postList, /<button\b/)
+  assert.match(postList, /선택한 태그에 해당하는 글이 없습니다\./)
+})
+
+test("renders an accessible single-select tag filter and result count", async () => {
+  const filterBar = await readRepositoryFile(
+    "src/components/post-filter-bar.tsx",
+  )
+
+  assert.match(filterBar, /aria-label="글 필터"/)
+  assert.match(filterBar, /role="group" aria-label="태그 필터"/)
+  assert.match(filterBar, /<button/)
+  assert.match(filterBar, /type="button"/)
+  assert.match(filterBar, /aria-pressed=\{isSelected\}/)
+  assert.match(filterBar, /onClick=\{\(\) => onSelect\(tag\)\}/)
+  assert.match(filterBar, /role="status"/)
+  assert.match(filterBar, /aria-live="polite"/)
+  assert.match(filterBar, /count === 1 \? "post" : "posts"/)
 })
 
 test("imports the React runtime required by Gatsby SSR", async () => {
@@ -67,6 +96,7 @@ test("imports the React runtime required by Gatsby SSR", async () => {
     [
       "src/components/home-intro.tsx",
       "src/components/post-card.tsx",
+      "src/components/post-filter-bar.tsx",
       "src/components/post-list.tsx",
     ].map(readRepositoryFile),
   )
