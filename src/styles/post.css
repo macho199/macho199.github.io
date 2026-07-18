@@ -164,7 +164,7 @@
     overflow-y: auto;
     border: 1px solid var(--border-soft);
     border-radius: var(--radius-sm);
-    background: color-mix(in oklch, var(--surface-warm) 78%, var(--bg));
+    background: var(--bg);
     color: var(--muted);
     font-size: var(--text-sm);
     line-height: 1.45;

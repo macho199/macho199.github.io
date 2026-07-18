@@ -130,7 +130,7 @@ test("matches the approved TOC card and link presentation", async () => {
   )
   assert.match(
     css,
-    /\.post-toc\s*\{[^}]*padding:\s*var\(--space-4\)[^}]*border:\s*1px solid var\(--border-soft\)[^}]*background:\s*color-mix\(in oklch, var\(--surface-warm\) 78%, var\(--bg\)\)[^}]*color:\s*var\(--muted\)[^}]*font-size:\s*var\(--text-sm\)[^}]*line-height:\s*1\.45/s,
+    /\.post-toc\s*\{[^}]*padding:\s*var\(--space-4\)[^}]*border:\s*1px solid var\(--border-soft\)[^}]*background:\s*var\(--bg\)[^}]*color:\s*var\(--muted\)[^}]*font-size:\s*var\(--text-sm\)[^}]*line-height:\s*1\.45/s,
   )
   assert.match(
     css,
