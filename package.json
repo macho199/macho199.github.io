@@ -41,6 +41,7 @@
     "@types/react": "18.3.31",
     "@types/react-dom": "18.3.7",
     "postcss": "8.5.19",
+    "rehype-slug": "6.0.0",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3"
   }
