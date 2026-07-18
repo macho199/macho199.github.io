@@ -73,6 +73,22 @@ test("keeps Vesper code-card styles inside the post boundary", async () => {
   )
   assert.match(
     css,
+    /\.code-block-copy\s*\{[^}]*display:\s*inline-grid[^}]*place-items:\s*center[^}]*width:\s*44px[^}]*min-height:\s*44px[^}]*padding:\s*0[^}]*transition:[^}]*background-color var\(--motion-fast\) var\(--ease-standard\)[^}]*transform var\(--motion-fast\) var\(--ease-standard\)/s,
+  )
+  assert.match(
+    css,
+    /\.code-block-copy-icon\s*\{[^}]*width:\s*18px[^}]*height:\s*18px[^}]*pointer-events:\s*none/s,
+  )
+  assert.match(
+    css,
+    /\.code-block-copy:hover\s*\{[^}]*background:\s*rgb\(153 255 228 \/ 10%\)/s,
+  )
+  assert.match(
+    css,
+    /\.code-block-copy:active\s*\{[^}]*background:\s*rgb\(153 255 228 \/ 18%\)[^}]*transform:\s*scale\(0\.9\)/s,
+  )
+  assert.match(
+    css,
     /\.post-page \.mdx-content \.code-block pre\s*\{[^}]*overflow-x:\s*auto[^}]*background:\s*#171717 !important/s,
   )
   assert.match(

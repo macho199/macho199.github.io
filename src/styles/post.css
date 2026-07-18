@@ -294,20 +294,35 @@
   }
 
   .post-page .mdx-content .code-block-copy {
+    display: inline-grid;
+    place-items: center;
     flex: none;
+    width: 44px;
     min-height: 44px;
-    padding-inline: var(--space-3);
+    padding: 0;
     border: 0;
     border-radius: 6px;
     background: transparent;
     color: #99ffe4;
     cursor: pointer;
-    font-size: var(--text-xs);
-    font-weight: 600;
+    transition:
+      background-color var(--motion-fast) var(--ease-standard),
+      transform var(--motion-fast) var(--ease-standard);
+  }
+
+  .post-page .mdx-content .code-block-copy-icon {
+    width: 18px;
+    height: 18px;
+    pointer-events: none;
   }
 
   .post-page .mdx-content .code-block-copy:hover {
     background: rgb(153 255 228 / 10%);
+  }
+
+  .post-page .mdx-content .code-block-copy:active {
+    background: rgb(153 255 228 / 18%);
+    transform: scale(0.9);
   }
 
   .post-page .mdx-content .code-block pre {
