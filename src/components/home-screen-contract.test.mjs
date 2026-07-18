@@ -141,6 +141,27 @@ test("keeps GraphQL in the page and loads scoped home styles", async () => {
     homeCss,
     /\.post-list-item\s*\{[^}]*border-bottom: 1px solid var\(--border\)/s,
   )
+  assert.match(
+    homeCss,
+    /\.post-filter-toolbar\s*\{[^}]*grid-template-columns: minmax\(0, 1fr\) auto/s,
+  )
+  assert.match(
+    homeCss,
+    /\.post-filter-options\s*\{[^}]*flex-wrap: wrap/s,
+  )
+  assert.match(
+    homeCss,
+    /\.post-filter-button\.is-active\s*\{[^}]*text-decoration: underline/s,
+  )
+  assert.match(homeCss, /\.post-filter-button:focus-visible\s*\{/)
+  assert.match(
+    homeCss,
+    /@media \(max-width: 720px\)[\s\S]*\.post-filter-toolbar\s*\{[^}]*grid-template-columns: 1fr/s,
+  )
+  assert.match(
+    homeCss,
+    /@media \(max-width: 720px\)[\s\S]*\.post-filter-count\s*\{[^}]*justify-self: end/s,
+  )
 })
 
 test("registers the production home verifier", async () => {
