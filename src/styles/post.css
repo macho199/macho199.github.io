@@ -57,7 +57,7 @@
 
   .post-title {
     color: var(--fg);
-    font-size: clamp(30px, 4vw, 36px);
+    font-size: clamp(28px, 4vw, 36px);
     overflow-wrap: break-word;
     text-wrap: nowrap;
     word-break: keep-all;

@@ -101,7 +101,7 @@ test("keeps Korean post title words intact", async () => {
   assert.doesNotMatch(titleRule[1], /overflow-wrap:\s*anywhere/)
 })
 
-test("keeps the post title on one line above the phone breakpoint", async () => {
+test("keeps the post title on one line without overflow above the phone breakpoint", async () => {
   const postCss = await readRepositoryFile("src/styles/post.css")
   const titleRule = postCss.match(/\.post-title\s*\{([^}]*)\}/s)
   const phoneRule = postCss.match(
@@ -110,7 +110,7 @@ test("keeps the post title on one line above the phone breakpoint", async () => 
 
   assert.ok(titleRule, "post title style rule")
   assert.ok(phoneRule, "phone post title style rule")
-  assert.match(titleRule[1], /font-size:\s*clamp\(30px, 4vw, 36px\)/)
+  assert.match(titleRule[1], /font-size:\s*clamp\(28px, 4vw, 36px\)/)
   assert.match(titleRule[1], /text-wrap:\s*nowrap/)
   assert.match(phoneRule[1], /text-wrap:\s*wrap/)
 })
