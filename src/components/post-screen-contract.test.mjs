@@ -271,6 +271,14 @@ test("registers a production verifier for all approved posts", async () => {
   assert.match(verifier, /gatsby-blog-2-managing-mdx-posts/)
   assert.match(verifier, /gatsby-blog-3-graphql-page-generation/)
   assert.match(verifier, /for \(const contract of postContracts\)/)
+  assert.match(verifier, /previousPost:/)
+  assert.match(verifier, /nextPost:/)
+  assert.match(verifier, /aria-label="이전·다음 게시글"/)
+  assert.match(verifier, /post-navigation-card/)
+  assert.match(
+    verifier,
+    /assert\.deepEqual\([\s\S]*?navigationLinks,[\s\S]*?expectedNavigationLinks/,
+  )
   assert.match(verifier, /assert\.deepEqual\(visibleTags, contract\.tags/)
   assert.match(
     verifier,
