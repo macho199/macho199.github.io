@@ -125,6 +125,20 @@ test("groups mobile tags under a compact result header", async () => {
   )
 })
 
+test("uses predictable wrapping for home post card titles", async () => {
+  const homeCss = await readRepositoryFile("src/styles/home.css")
+  const titleRule = homeCss.match(/\.post-card-title\s*\{([^}]*)\}/s)
+  const linkRule = homeCss.match(/\.post-card-title-link\s*\{([^}]*)\}/s)
+
+  assert.ok(titleRule)
+  assert.ok(linkRule)
+  assert.match(titleRule[1], /text-wrap:\s*wrap/)
+  assert.doesNotMatch(titleRule[1], /text-wrap:\s*balance/)
+  assert.match(linkRule[1], /word-break:\s*keep-all/)
+  assert.match(linkRule[1], /overflow-wrap:\s*break-word/)
+  assert.doesNotMatch(linkRule[1], /overflow-wrap:\s*anywhere/)
+})
+
 test("imports the React runtime required by Gatsby SSR", async () => {
   const componentSources = await Promise.all(
     [
