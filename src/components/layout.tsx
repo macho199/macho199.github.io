@@ -3,6 +3,7 @@ import type { PropsWithChildren } from "react"
 
 import Footer from "./footer"
 import Header from "./header"
+import ScrollToTopButton from "./scroll-to-top-button"
 
 const Layout = ({ children }: PropsWithChildren) => (
   <div className="site-shell">
@@ -11,6 +12,7 @@ const Layout = ({ children }: PropsWithChildren) => (
       {children}
     </main>
     <Footer />
+    <ScrollToTopButton />
   </div>
 )
 
