@@ -188,7 +188,37 @@ const expectedNavigationLinks = contract =>
     },
   ].filter(Boolean)
 
-const sitemap = await readFile(new URL("sitemap-0.xml", publicRoot), "utf8")
+/**
+ * @param {string} html
+ * @param {string} slug
+ */
+const readBlogPosting = (html, slug) => {
+  const scripts = [
+    ...html.matchAll(
+      /<script\b(?=[^>]*id="blog-posting-json-ld")(?=[^>]*type="application\/ld\+json")[^>]*>([\s\S]*?)<\/script>/g,
+    ),
+  ]
+
+  assert.equal(scripts.length, 1, `${slug}: one BlogPosting JSON-LD script`)
+  return JSON.parse(scripts[0][1])
+}
+
+const [robots, sitemapIndex, sitemap] = await Promise.all([
+  readFile(new URL("robots.txt", publicRoot), "utf8"),
+  readFile(new URL("sitemap-index.xml", publicRoot), "utf8"),
+  readFile(new URL("sitemap-0.xml", publicRoot), "utf8"),
+])
+
+assert.equal(
+  robots,
+  "User-agent: *\nAllow: /\n\nSitemap: https://macho199.github.io/sitemap-index.xml\n",
+)
+assert.match(
+  sitemapIndex,
+  /<loc>https:\/\/macho199\.github\.io\/sitemap-0\.xml<\/loc>/,
+)
+assert.doesNotMatch(sitemap, /https:\/\/macho199\.github\.io\/404(?:\.html)?/)
+
 const generatedPosts = new Map()
 
 for (const contract of postContracts) {
@@ -312,6 +342,28 @@ for (const contract of postContracts) {
       `<link\\b(?=[^>]*rel="canonical")(?=[^>]*href="https:\\/\\/macho199\\.github\\.io\\/posts\\/${escapeRegex(contract.slug)}\\/")[^>]*>`,
     ),
   )
+  const canonicalUrl =
+    `https://macho199.github.io/posts/${contract.slug}/`
+  const blogPosting = readBlogPosting(html, contract.slug)
+
+  assert.deepEqual(blogPosting, {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: contract.title,
+    description: contract.description,
+    datePublished: contract.publishedAt,
+    url: canonicalUrl,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": canonicalUrl,
+    },
+    author: {
+      "@type": "Person",
+      name: "권종성",
+      url: "https://github.com/macho199",
+    },
+    keywords: contract.tags,
+  })
   assert.match(
     html,
     new RegExp(

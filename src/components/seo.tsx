@@ -1,6 +1,11 @@
 import { graphql, useStaticQuery } from "gatsby"
 import * as React from "react"
 
+import {
+  createBlogPosting,
+  serializeJsonLd,
+} from "../lib/blog-posting.mjs"
+
 type SeoProps = {
   title?: string
   description?: string
@@ -16,6 +21,9 @@ type SiteMetadataQuery = {
       title: string
       description: string
       siteUrl: string
+      authorName: string
+      authorUrl: string
+      googleSiteVerification: string
     }
   }
 }
@@ -37,6 +45,9 @@ const Seo = ({
           title
           description
           siteUrl
+          authorName
+          authorUrl
+          googleSiteVerification
         }
       }
     }
@@ -45,11 +56,28 @@ const Seo = ({
   const pageDescription = description ?? siteMetadata.description
   const canonicalPath = pathname.endsWith("/") ? pathname : `${pathname}/`
   const canonicalUrl = new URL(canonicalPath, siteMetadata.siteUrl).toString()
+  const blogPosting =
+    type === "article" && title && publishedAt
+      ? createBlogPosting({
+          title,
+          description: pageDescription,
+          publishedAt,
+          tags,
+          canonicalUrl,
+          authorName: siteMetadata.authorName,
+          authorUrl: siteMetadata.authorUrl,
+        })
+      : null
 
   return (
     <>
       <title>{pageTitle}</title>
       <meta id="description" name="description" content={pageDescription} />
+      <meta
+        id="google-site-verification"
+        name="google-site-verification"
+        content={siteMetadata.googleSiteVerification}
+      />
       <link id="canonical" rel="canonical" href={canonicalUrl} />
       <link id="favicon" rel="icon" type="image/png" sizes="128x128" href="/favicon.png" />
       <meta id="og-title" property="og:title" content={pageTitle} />
@@ -66,6 +94,13 @@ const Seo = ({
       {type === "article"
         ? tags.map(tag => <meta property="article:tag" content={tag} key={tag} />)
         : null}
+      {blogPosting ? (
+        <script
+          id="blog-posting-json-ld"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(blogPosting) }}
+        />
+      ) : null}
     </>
   )
 }
