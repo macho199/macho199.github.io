@@ -100,7 +100,10 @@ const postContracts = [
       slug: "custom-developer-blog-with-tailwind-css",
       title: "Tailwind CSS로 내 디자인의 개발자 블로그 완성하기",
     },
-    nextPost: null,
+    nextPost: {
+      slug: "gatsby-google-search-console-seo",
+      title: "Gatsby 블로그를 Google 검색에 연결하기: Search Console·sitemap·구조화 데이터",
+    },
     headings: [
       "긴 기술 글에서 발견한 세 가지 불편",
       "Vesper로 코드가 읽히게 만들기",
@@ -111,6 +114,31 @@ const postContracts = [
       "홈과 포스트에서 맨 위로 버튼 공유하기",
       "1초 상단 이동을 안전하게 다루기",
       "검증하고 내 블로그에 적용하기",
+    ],
+  },
+  {
+    slug: "gatsby-google-search-console-seo",
+    title: "Gatsby 블로그를 Google 검색에 연결하기: Search Console·sitemap·구조화 데이터",
+    description:
+      "Gatsby 블로그의 Google Search Console 소유권을 확인하고 robots.txt·sitemap·BlogPosting 구조화 데이터를 연결한 뒤, 가져오기 오류를 진단해 성공 상태까지 확인한 과정을 설명합니다.",
+    publishedAt: "2026-07-20",
+    publishedAtDisplay: "2026.07.20",
+    tags: ["Gatsby", "Google Search Console", "SEO", "Sitemap"],
+    previousPost: {
+      slug: "gatsby-blog-reading-experience",
+      title: "긴 기술 글을 읽기 쉽게: Gatsby 블로그 읽기 경험 개선기",
+    },
+    nextPost: null,
+    headings: [
+      "배포한 블로그는 자동으로 검색될까",
+      "현재 블로그의 검색 노출 기반 점검하기",
+      "Search Console에 블로그 소유권 확인하기",
+      "robots.txt에서 sitemap 안내하기",
+      "포스트를 BlogPosting으로 설명하기",
+      "빌드 결과에서 SEO 설정 검증하기",
+      "Search Console에 sitemap 제출하기",
+      "‘가져올 수 없음’을 만났을 때 진단하기",
+      "내 Gatsby 블로그에 적용하는 체크리스트",
     ],
   },
 ]
@@ -414,6 +442,16 @@ assert.match(fourthPost.main, /SCROLL_DURATION_MS = 1000/)
 assert.match(fourthPost.main, /48px/)
 assert.match(fourthPost.main, /text-overflow: ellipsis/)
 
+const fifthPost = generatedPosts.get("gatsby-google-search-console-seo")
+assert.ok(fifthPost, "Google Search Console article generated")
+assert.match(fifthPost.main, /YOUR_GOOGLE_SITE_VERIFICATION/)
+assert.match(fifthPost.main, /sitemap-index\.xml/)
+assert.match(fifthPost.main, /BlogPosting/)
+assert.ok(fifthPost.main.includes("application/xml"))
+assert.match(fifthPost.main, /Googlebot/)
+assert.match(fifthPost.main, /최종적으로/)
+assert.match(fifthPost.main, />성공<\/code>/)
+
 const retiredSlugs = [
   "mdx-foundation",
   "create-a-blog-site-with-gatsby1",
@@ -432,5 +470,5 @@ for (const slug of retiredSlugs) {
 }
 
 console.log(
-  "post build verified: four content, TOC, metadata, navigation, route, and sitemap contracts passed",
+  "post build verified: five content, TOC, metadata, navigation, route, and sitemap contracts passed",
 )
