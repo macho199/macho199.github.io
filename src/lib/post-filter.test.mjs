@@ -40,3 +40,18 @@ test("matches one tag exactly without reordering posts", () => {
 test("falls back to all posts when the selected tag no longer exists", () => {
   assert.deepEqual(filterPostsByTag(posts, "Missing"), posts)
 })
+
+test("treats sentinel-like frontmatter text as a normal tag", () => {
+  const sentinelLikeTag = "__all_posts__"
+  const taggedPosts = [
+    { id: "reserved-text", tags: [sentinelLikeTag] },
+    { id: "other", tags: ["Gatsby"] },
+  ]
+
+  assert.notEqual(ALL_POSTS_FILTER, sentinelLikeTag)
+  assert.deepEqual(collectPostTags(taggedPosts), [sentinelLikeTag, "Gatsby"])
+  assert.deepEqual(
+    filterPostsByTag(taggedPosts, sentinelLikeTag).map(post => post.id),
+    ["reserved-text"],
+  )
+})

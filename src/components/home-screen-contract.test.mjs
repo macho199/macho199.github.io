@@ -53,7 +53,7 @@ test("renders an ordered post list or the approved empty state", async () => {
   assert.match(postList, /filterPostsByTag/)
   assert.match(
     postList,
-    /React\.useState\(ALL_POSTS_FILTER\)/,
+    /React\.useState<string \| null>\([\s\S]*ALL_POSTS_FILTER,[\s\S]*\)/,
   )
   assert.match(
     postList,
@@ -85,6 +85,7 @@ test("renders an accessible single-select tag filter and result count", async ()
   assert.match(filterBar, /<button/)
   assert.match(filterBar, /type="button"/)
   assert.match(filterBar, /aria-pressed=\{isSelected\}/)
+  assert.match(filterBar, /key=\{isAll \? "filter:all" : `filter:tag:\$\{tag\}`\}/)
   assert.match(filterBar, /onClick=\{\(\) => onSelect\(tag\)\}/)
   assert.match(filterBar, /role="status"/)
   assert.match(filterBar, /aria-live="polite"/)

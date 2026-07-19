@@ -1,6 +1,6 @@
 /** @typedef {Readonly<{ tags: readonly string[] }>} TaggedPost */
 
-export const ALL_POSTS_FILTER = "__all_posts__"
+export const ALL_POSTS_FILTER = null
 
 /**
  * @param {readonly TaggedPost[]} posts
@@ -27,7 +27,7 @@ export const collectPostTags = posts => {
 /**
  * @template {TaggedPost} T
  * @param {readonly T[]} posts
- * @param {string} selectedTag
+ * @param {string | null} selectedTag
  * @returns {T[]}
  */
 export const filterPostsByTag = (posts, selectedTag) => {

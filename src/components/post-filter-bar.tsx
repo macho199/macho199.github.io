@@ -4,9 +4,9 @@ import { ALL_POSTS_FILTER } from "../lib/post-filter.mjs"
 
 type PostFilterBarProps = Readonly<{
   tags: readonly string[]
-  selectedTag: string
+  selectedTag: string | null
   resultCount: number
-  onSelect: (tag: string) => void
+  onSelect: (tag: string | null) => void
 }>
 
 const formatPostCount = (count: number) =>
@@ -30,7 +30,7 @@ const PostFilterBar = ({
 
             return (
               <button
-                key={tag}
+                key={isAll ? "filter:all" : `filter:tag:${tag}`}
                 className={`post-filter-button${isSelected ? " is-active" : ""}`}
                 type="button"
                 data-filter-kind={isAll ? "all" : "tag"}

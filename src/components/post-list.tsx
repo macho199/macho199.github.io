@@ -13,7 +13,9 @@ type PostListProps = Readonly<{
 }>
 
 const PostList = ({ posts }: PostListProps) => {
-  const [selectedTag, setSelectedTag] = React.useState(ALL_POSTS_FILTER)
+  const [selectedTag, setSelectedTag] = React.useState<string | null>(
+    ALL_POSTS_FILTER,
+  )
   const tags = React.useMemo(() => collectPostTags(posts), [posts])
   const activeTag =
     selectedTag === ALL_POSTS_FILTER || tags.includes(selectedTag)
