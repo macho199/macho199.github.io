@@ -217,6 +217,7 @@ test("registers the production home verifier", async () => {
     "node scripts/verify-home-build.mjs",
   )
   assert.match(verifier, /public\/index\.html/)
+  assert.match(verifier, /gatsby-blog-reading-experience/)
   assert.match(verifier, /custom-developer-blog-with-tailwind-css/)
   assert.match(verifier, /gatsby-mdx-graphql-post-system/)
   assert.match(verifier, /why-github-pages-and-gatsby/)
@@ -231,7 +232,7 @@ test("registers the production home verifier", async () => {
   assert.match(verifier, /post-filter-toolbar/)
   assert.match(verifier, /post-filter-button/)
   assert.match(verifier, /aria-pressed/)
-  assert.match(verifier, /3 posts/)
+  assert.match(verifier, /4 posts/)
   assert.match(verifier, /Tailwind CSS/)
   assert.match(layoutVerifier, /favicon\.png/)
   assert.match(layoutVerifier, /dde3fd00fdda954cef45373e2dc0467cde694d66e8c626749edeceed15359c7c/)
