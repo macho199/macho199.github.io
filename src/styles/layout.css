@@ -93,15 +93,17 @@
   .scroll-to-top-button {
     position: fixed;
     right: max(
-      var(--container-gutter-desktop),
-      calc((100vw - 920px) / 2 + var(--container-gutter-desktop))
+      calc(var(--container-gutter-desktop) + var(--space-3)),
+      calc(
+        (100vw - 920px) / 2 + var(--container-gutter-desktop) + var(--space-3)
+      )
     );
-    bottom: var(--space-6);
+    bottom: calc(var(--space-6) + var(--space-3));
     z-index: 30;
     display: inline-grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     padding: 0;
     border: 1px solid var(--border);
     border-radius: var(--radius-pill);
@@ -129,8 +131,8 @@
   }
 
   .scroll-to-top-icon {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     pointer-events: none;
   }
 
@@ -173,8 +175,10 @@
 
   .scroll-to-top-button {
     right: max(
-      var(--container-gutter-tablet),
-      calc((100vw - 920px) / 2 + var(--container-gutter-tablet))
+      calc(var(--container-gutter-tablet) + var(--space-3)),
+      calc(
+        (100vw - 920px) / 2 + var(--container-gutter-tablet) + var(--space-3)
+      )
     );
   }
 }
@@ -186,8 +190,12 @@
 
   .scroll-to-top-button {
     right: calc(
-      var(--container-gutter-phone) + env(safe-area-inset-right, 0px)
+      var(--container-gutter-phone) + var(--space-3) +
+        env(safe-area-inset-right, 0px)
     );
-    bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+    bottom: calc(
+      var(--space-4) + var(--space-3) +
+        env(safe-area-inset-bottom, 0px)
+    );
   }
 }
