@@ -1,0 +1,190 @@
+---
+title: "Gatsby 블로그를 Google 검색에 연결하기: Search Console·sitemap·구조화 데이터"
+slug: "gatsby-google-search-console-seo"
+publishedAt: "2026-07-20"
+description: "Gatsby 블로그의 Google Search Console 소유권을 확인하고 robots.txt·sitemap·BlogPosting 구조화 데이터를 연결한 뒤, 가져오기 오류를 진단해 성공 상태까지 확인한 과정을 설명합니다."
+tags:
+  - Gatsby
+  - Google Search Console
+  - SEO
+  - Sitemap
+---
+
+앞선 글들에서는 GitHub Pages와 Gatsby를 선택한 이유부터 MDX 포스트 관리, Tailwind CSS 디자인, 긴 글의 읽기 경험까지 정리했습니다. 이제 브라우저에서 블로그를 여는 데는 문제가 없었지만 한 가지 단계가 더 남았습니다. Google이 사이트의 존재와 공개된 글의 의미를 안정적으로 확인할 수 있게 만드는 일이었습니다.
+
+이 글에서는 Search Console 설정 화면만 따라가지 않습니다. 왜 이 설정이 필요한지부터 소유권 확인, `robots.txt`, sitemap, `BlogPosting` 구조화 데이터를 어떻게 연결했는지 설명합니다. sitemap을 제출한 뒤 `가져올 수 없음` 상태가 나타났을 때 무엇을 확인했고, 최종적으로 `성공` 상태를 어떻게 판단했는지도 함께 정리합니다.
+
+## 배포한 블로그는 자동으로 검색될까
+
+GitHub Pages에 블로그를 배포하면 주소를 아는 사람은 곧바로 접속할 수 있습니다. 하지만 배포와 Google 검색 반영은 같은 과정이 아닙니다.
+
+검색엔진은 먼저 페이지 주소를 발견하고, 내용을 가져오고, 어떤 페이지인지 이해한 다음 색인 대상으로 판단합니다. Search Console은 이 과정에서 사이트 소유권을 확인하고 Google이 페이지를 가져갈 수 있는지 운영자가 살펴보는 도구입니다.
+
+이번 블로그에서 Search Console을 설정한 이유는 네 가지였습니다.
+
+1. `macho199.github.io`의 운영자가 본인임을 확인합니다.
+2. sitemap으로 공개된 페이지 주소를 알려줍니다.
+3. `robots.txt`로 크롤링 허용 범위와 sitemap 위치를 안내합니다.
+4. `BlogPosting` 구조화 데이터로 제목·작성일·작성자·태그의 의미를 전달합니다.
+
+Search Console이나 구조화 데이터를 추가한다고 검색 순위가 올라가거나 노출 시점이 보장되지는 않습니다. 목표는 Google이 사이트를 발견하고 이해할 기반을 만들고, 문제가 생겼을 때 확인할 수 있는 통로를 확보하는 것입니다.
+
+## 현재 블로그의 검색 노출 기반 점검하기
+
+새 기능을 추가하기 전에 Gatsby의 빌드 결과부터 확인했습니다. 공통 `Seo` 컴포넌트는 이미 페이지별 title, description, canonical, Open Graph 정보를 출력하고 있었습니다. `gatsby-plugin-sitemap`도 설치되어 있어 빌드하면 sitemap 파일이 생성됐습니다.
+
+여기서 중요한 점은 sitemap을 새로 직접 만드는 것이 아니었습니다. 기존 플러그인이 만든 산출물을 운영 URL과 연결하고, 검색 로봇과 Search Console이 찾을 수 있는지 검증하는 일이었습니다.
+
+구조는 다음과 같습니다.
+
+`페이지 frontmatter → Gatsby 정적 HTML과 canonical → sitemap index와 URL 목록 → Search Console 제출`
+
+사이트 URL은 `gatsby-config.mjs`의 `siteMetadata.siteUrl`을 단일 기준으로 사용했습니다. canonical과 sitemap이 서로 다른 도메인을 가리키면 검색엔진에 일관된 주소를 전달할 수 없기 때문입니다.
+
+## Search Console에 블로그 소유권 확인하기
+
+Search Console 속성은 Domain과 URL-prefix 중에서 선택할 수 있습니다. `github.io`의 DNS를 직접 관리하지 않는 GitHub Pages 블로그이므로 `https://macho199.github.io/` URL-prefix 속성을 선택했습니다.
+
+소유권 확인은 HTML 메타 태그 방식을 사용했습니다. Gatsby의 모든 공개 페이지가 공통 `Seo`를 사용하므로 인증 태그를 한곳에서 관리할 수 있기 때문입니다.
+
+```tsx
+// gatsby-config.mjs
+siteMetadata: {
+  siteUrl: "https://macho199.github.io",
+  authorName: "권종성",
+  authorUrl: "https://github.com/macho199",
+  googleSiteVerification: "YOUR_GOOGLE_SITE_VERIFICATION",
+}
+
+// src/components/seo.tsx
+<meta
+  id="google-site-verification"
+  name="google-site-verification"
+  content={siteMetadata.googleSiteVerification}
+/>
+```
+
+`YOUR_GOOGLE_SITE_VERIFICATION`에는 Search Console이 HTML 태그 방식으로 발급한 `content` 값만 넣습니다. 이 예제 값 자체를 복사하면 소유권을 확인할 수 없습니다.
+
+배포 후 홈페이지 원본 HTML에서 `google-site-verification` 태그가 정확히 한 번 출력되는지 확인하고 Search Console의 확인 버튼을 눌렀습니다. 인증 상태를 유지하려면 확인이 끝난 뒤에도 태그를 제거하지 않습니다.
+
+## robots.txt에서 sitemap 안내하기
+
+`robots.txt`는 검색 로봇이 접근할 수 있는 범위와 sitemap 위치를 알려주는 텍스트 파일입니다. 공개 블로그이므로 별도 경로를 막지 않고 전체 접근을 허용했습니다.
+
+```text
+User-agent: *
+Allow: /
+
+Sitemap: https://macho199.github.io/sitemap-index.xml
+```
+
+Gatsby가 생성한 sitemap은 두 단계입니다.
+
+`robots.txt → sitemap-index.xml → sitemap-0.xml → 홈과 포스트 URL`
+
+`sitemap-index.xml`은 URL 목록을 직접 모두 담는 파일이 아니라 하위 sitemap 위치를 알려주는 index입니다. 실제 홈과 포스트 주소는 `sitemap-0.xml`에 들어갑니다. 따라서 Search Console에는 하위 파일을 각각 제출하지 않고 `/sitemap-index.xml` 하나만 제출했습니다.
+
+## 포스트를 BlogPosting으로 설명하기
+
+검색엔진은 화면의 글도 읽을 수 있지만 구조화 데이터가 있으면 각 값의 의미를 더 명확하게 구분할 수 있습니다. 포스트에는 Schema.org의 `BlogPosting` JSON-LD를 추가했습니다.
+
+새로운 데이터를 따로 관리하지 않고 기존 frontmatter와 canonical을 재사용했습니다.
+
+```javascript
+export const createBlogPosting = ({
+  title,
+  description,
+  publishedAt,
+  tags,
+  canonicalUrl,
+  authorName,
+  authorUrl,
+}) => ({
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: title,
+  description,
+  datePublished: publishedAt,
+  url: canonicalUrl,
+  mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
+  author: { "@type": "Person", name: authorName, url: authorUrl },
+  keywords: [...tags],
+})
+
+export const serializeJsonLd = value =>
+  JSON.stringify(value).replaceAll("<", "\\u003c")
+```
+
+JSON을 문자열 템플릿으로 이어 붙이지 않고 객체를 `JSON.stringify`합니다. `<`를 `\u003c`로 바꾸는 이유는 제목이나 설명에 특수한 문자열이 들어와도 script 문맥을 벗어나지 않게 하기 위해서입니다.
+
+홈과 404는 블로그 글이 아니므로 `BlogPosting`을 출력하지 않습니다. 포스트에서만 정확히 하나를 출력합니다. 실제 원본이 없는 수정일, 대표 이미지, publisher도 검색용으로 만들어 넣지 않았습니다. 구조화 데이터는 화면의 실제 정보와 일치해야 합니다.
+
+## 빌드 결과에서 SEO 설정 검증하기
+
+React 컴포넌트에 코드가 있다는 사실만으로 운영 HTML이 맞다고 단정하지 않았습니다. Gatsby 프로덕션 빌드를 만든 뒤 생성된 파일을 직접 검사했습니다.
+
+- 홈, 404, 모든 포스트에 인증 태그가 정확히 하나 있는지 확인했습니다.
+- 각 포스트의 JSON-LD가 JSON으로 파싱되는지 확인했습니다.
+- 제목·설명·작성일·태그·canonical이 frontmatter와 일치하는지 비교했습니다.
+- 홈과 404에는 `BlogPosting`이 없는지 확인했습니다.
+- `robots.txt`가 sitemap index를 가리키는지 확인했습니다.
+- sitemap에서 404를 제외하고 홈과 공개 포스트를 모두 찾았습니다.
+
+Search Console 기능을 처음 구성했을 때는 포스트가 네 개였습니다. 이 글을 추가하면 Gatsby가 다섯 번째 포스트 URL도 sitemap과 홈 목록에 자동으로 포함합니다. 글을 추가할 때마다 sitemap 파일을 수동 편집하지 않아도 되는 것이 정적 생성 파이프라인의 장점입니다.
+
+자동 검증은 `npm test`, `npm run typecheck`, `npm run build`, `npm run verify:layout`, `npm run verify:home`, `npm run verify:post` 순서로 실행했습니다.
+
+## Search Console에 sitemap 제출하기
+
+소유권 확인이 끝난 뒤 Search Console의 Sitemaps 메뉴에서 다음 주소를 제출했습니다.
+
+`https://macho199.github.io/sitemap-index.xml`
+
+속성 주소가 이미 `https://macho199.github.io/`라면 입력 영역에는 `sitemap-index.xml`만 넣어도 같은 전체 URL이 됩니다. 제출 후에는 유형, 마지막으로 읽은 날짜, 상태, 발견된 페이지 수를 확인할 수 있습니다.
+
+과거에 등록했던 `/sitemap.xml` 항목이 남아 있다면 신규 `/sitemap-index.xml`과 구분해야 합니다. 현재 Gatsby 빌드는 index와 하위 sitemap 구조를 사용하므로 오래된 항목의 실패가 신규 파일까지 잘못됐다는 뜻은 아닙니다.
+
+## ‘가져올 수 없음’을 만났을 때 진단하기
+
+새 sitemap을 제출하자 처음에는 유형이 `알 수 없음`, 마지막으로 읽은 날짜는 비어 있고 상태는 `가져올 수 없음`으로 표시됐습니다. 이 문구만 보고 Gatsby 설정을 다시 바꾸기보다 운영 사이트를 계층별로 확인했습니다.
+
+```bash
+curl -I https://macho199.github.io/robots.txt
+curl -I https://macho199.github.io/sitemap-index.xml
+curl -I https://macho199.github.io/sitemap-0.xml
+
+curl -A "Googlebot/2.1 (+http://www.google.com/bot.html)" \
+  -I https://macho199.github.io/sitemap-index.xml
+
+curl -fsS https://macho199.github.io/sitemap-index.xml \
+  -o /tmp/developer-blog-sitemap-index.xml
+curl -fsS https://macho199.github.io/sitemap-0.xml \
+  -o /tmp/developer-blog-sitemap-0.xml
+xmllint --noout /tmp/developer-blog-sitemap-index.xml
+xmllint --noout /tmp/developer-blog-sitemap-0.xml
+```
+
+확인 결과 세 운영 URL은 HTTP 200을 반환했습니다. sitemap은 `application/xml`이었고 XML 파싱도 통과했습니다. 데스크톱·스마트폰 Googlebot 요청에서도 같은 URL을 정상적으로 가져왔으며, `robots.txt`는 크롤링을 허용하고 sitemap index를 정확히 안내했습니다.
+
+사이트 쪽에서 재현되는 오류가 없었기 때문에 코드 수정이나 재배포는 하지 않았습니다. Google 내부의 정확한 원인은 확인할 수 없었지만 신규 sitemap의 첫 처리 또는 상태 반영이 지연된 상황으로 판단했습니다. 일정 시간이 지난 뒤 다시 확인하자 신규 `/sitemap-index.xml`은 최종적으로 `성공` 상태로 바뀌었습니다.
+
+여기서 얻은 기준은 간단합니다. Search Console의 상태만 보지 말고 실제 URL, HTTP 응답, Content-Type, XML, robots, Googlebot 접근을 먼저 확인합니다. 모두 정상이라면 근거 없이 코드를 바꾸기보다 재처리 결과를 기다리는 편이 안전합니다.
+
+## 내 Gatsby 블로그에 적용하는 체크리스트
+
+다른 Gatsby 블로그에 적용할 때는 아래 순서로 확인할 수 있습니다.
+
+- Search Console 속성 URL과 실제 운영 URL이 같습니다.
+- 운영 홈페이지 원본 HTML에 소유권 확인 태그가 있습니다.
+- 페이지별 canonical이 운영 주소를 가리킵니다.
+- `robots.txt`가 sitemap index의 절대 URL을 안내합니다.
+- sitemap index와 하위 sitemap이 HTTP 200을 반환합니다.
+- sitemap의 URL이 브라우저에서 실제로 열립니다.
+- 포스트의 `BlogPosting`이 화면의 제목·설명·작성일·태그와 일치합니다.
+- 홈과 404에는 `BlogPosting`이 없습니다.
+- Search Console에서 sitemap 상태와 발견된 페이지 수를 확인합니다.
+
+검색 노출 준비의 핵심은 설정을 많이 넣는 것이 아닙니다. 운영 페이지에 있는 사실을 canonical, sitemap, 구조화 데이터에서 같은 값으로 전달하고, 빌드와 실제 URL에서 그 관계를 검증하는 것입니다.
+
+Search Console에 데이터가 쌓이면 어떤 검색어로 노출되는지와 색인 문제를 확인할 수 있습니다. 방문자가 들어온 뒤 어떤 글을 읽는지 분석하는 Google Analytics는 역할이 다르므로 다음 작업으로 분리하는 편이 좋습니다.

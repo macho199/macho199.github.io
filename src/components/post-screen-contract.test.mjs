@@ -333,6 +333,48 @@ test("explains how the blog improves long-form reading experience", async () => 
   )
 })
 
+test("explains how the Gatsby blog connects to Google Search", async () => {
+  const post = await readRepositoryFile(
+    "content/posts/gatsby-google-search-console-seo/index.mdx",
+  )
+
+  assert.match(
+    post,
+    /title: "Gatsby 블로그를 Google 검색에 연결하기: Search Console·sitemap·구조화 데이터"/,
+  )
+  assert.match(post, /slug: "gatsby-google-search-console-seo"/)
+  assert.match(post, /publishedAt: "2026-07-20"/)
+  assert.match(post, /- Gatsby/)
+  assert.match(post, /- Google Search Console/)
+  assert.match(post, /- SEO/)
+  assert.match(post, /- Sitemap/)
+  assert.match(post, /## 배포한 블로그는 자동으로 검색될까/)
+  assert.match(post, /## 현재 블로그의 검색 노출 기반 점검하기/)
+  assert.match(post, /## Search Console에 블로그 소유권 확인하기/)
+  assert.match(post, /## robots\.txt에서 sitemap 안내하기/)
+  assert.match(post, /## 포스트를 BlogPosting으로 설명하기/)
+  assert.match(post, /## 빌드 결과에서 SEO 설정 검증하기/)
+  assert.match(post, /## Search Console에 sitemap 제출하기/)
+  assert.match(post, /## ‘가져올 수 없음’을 만났을 때 진단하기/)
+  assert.match(post, /## 내 Gatsby 블로그에 적용하는 체크리스트/)
+  assert.match(post, /URL-prefix/)
+  assert.match(post, /YOUR_GOOGLE_SITE_VERIFICATION/)
+  assert.match(post, /sitemap-index\.xml/)
+  assert.match(post, /sitemap-0\.xml/)
+  assert.match(post, /BlogPosting/)
+  assert.match(post, /serializeJsonLd/)
+  assert.match(post, /application\/xml/)
+  assert.match(post, /Googlebot/)
+  assert.match(post, /가져올 수 없음/)
+  assert.match(post, /최종적으로 `성공`/)
+  assert.match(post, /검색 순위.*보장되지는/)
+  assert.equal(
+    (post.match(/^```(?:tsx|text|javascript|bash)$/gm) ?? []).length,
+    4,
+  )
+  assert.doesNotMatch(post, /GA4|Google Tag Manager|쿠키 동의/)
+})
+
 test("registers a production verifier for all approved posts", async () => {
   const [packageSource, verifier, styleVerifier] = await Promise.all([
     readRepositoryFile("package.json"),
