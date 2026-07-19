@@ -6,77 +6,83 @@ const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 const postContracts = [
   {
-    slug: "gatsby-blog-1-getting-started",
-    title: "Gatsby로 블로그 사이트 만들기 1편 - 시작하기",
+    slug: "why-github-pages-and-gatsby",
+    title: "왜 GitHub Pages와 Gatsby였을까: 개발자 블로그 다시 만들기",
     description:
-      "배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다.",
+      "무료 정적 호스팅과 React 기반 UI라는 요구사항에서 GitHub Pages와 Gatsby를 선택하고, 배포 파일만 남은 블로그를 소스 프로젝트로 재구축한 과정을 설명합니다.",
     publishedAt: "2026-04-18",
     publishedAtDisplay: "2026.04.18",
-    tags: ["Gatsby", "GitHub Pages", "React", "Tailwind CSS"],
+    tags: ["Gatsby", "GitHub Pages", "React", "SSG"],
     previousPost: null,
     nextPost: {
-      slug: "gatsby-blog-2-managing-mdx-posts",
-      title: "Gatsby로 블로그 만들기 2편 - MDX 포스트 관리",
+      slug: "gatsby-mdx-graphql-post-system",
+      title: "MDX와 GraphQL로 관리 가능한 Gatsby 블로그 만들기",
     },
     headings: [
-      "왜 소스부터 다시 구축했는가",
-      "재현 가능한 Gatsby 5 기준선",
-      "MDX와 Tailwind를 별도 단계로 나눈 이유",
-      "Tailwind CSS 4와 PostCSS 연결",
-      "Preflight 이후 사라진 문서 의미 복원",
-      "로컬 폰트와 외부 요청 경계",
-      "검증과 단계별 배포 경계",
-      "마치며",
+      "블로그를 다시 만들게 된 배경",
+      "먼저 요구사항 정하기",
+      "GitHub Pages를 선택한 이유",
+      "Gatsby를 선택한 이유",
+      "배포 산출물을 소스 프로젝트로 재구축하기",
+      "최소 프로젝트 구조 만들기",
+      "처음부터 디자인 변경 지점 분리하기",
+      "빌드와 GitHub Pages 배포 확인하기",
+      "다음 글",
     ],
   },
   {
-    slug: "gatsby-blog-2-managing-mdx-posts",
-    title: "Gatsby로 블로그 만들기 2편 - MDX 포스트 관리",
+    slug: "gatsby-mdx-graphql-post-system",
+    title: "MDX와 GraphQL로 관리 가능한 Gatsby 블로그 만들기",
     description:
-      "MDX 글을 디렉터리 단위로 관리하고 frontmatter 스키마와 빌드 전 검증으로 잘못된 날짜·slug·태그를 차단한 과정을 정리합니다.",
+      "MDX 파일 구조와 frontmatter 계약을 정의하고 Gatsby GraphQL로 목록과 상세 페이지를 생성하는 콘텐츠 파이프라인을 설명합니다.",
     publishedAt: "2026-05-16",
     publishedAtDisplay: "2026.05.16",
     tags: ["Gatsby", "MDX", "GraphQL", "Validation"],
     previousPost: {
-      slug: "gatsby-blog-1-getting-started",
-      title: "Gatsby로 블로그 사이트 만들기 1편 - 시작하기",
+      slug: "why-github-pages-and-gatsby",
+      title: "왜 GitHub Pages와 Gatsby였을까: 개발자 블로그 다시 만들기",
     },
     nextPost: {
-      slug: "gatsby-blog-3-graphql-page-generation",
-      title: "Gatsby로 블로그 만들기 3편 - GraphQL 페이지 생성",
+      slug: "custom-developer-blog-with-tailwind-css",
+      title: "Tailwind CSS로 내 디자인의 개발자 블로그 완성하기",
     },
     headings: [
-      "포스트 파일과 메타데이터를 한 단위로 묶기",
-      "파일을 Gatsby 데이터 레이어에 연결하기",
-      "frontmatter를 명시적 계약으로 고정하기",
-      "페이지 생성 전에 작성자 입력 검증하기",
-      "오류를 모아 빌드를 중단하기",
-      "새 글을 추가하는 실제 순서",
-      "마치며",
+      "글을 코드에 직접 작성하면 생기는 문제",
+      "포스트 저장 구조 정하기",
+      "frontmatter를 글의 계약으로 사용하기",
+      "잘못된 글을 빌드 전에 발견하기",
+      "Gatsby가 MDX를 데이터로 바꾸는 과정",
+      "GraphQL로 포스트 목록 조회하기",
+      "홈 목록과 상세 페이지 연결하기",
+      "slug로 글 URL 만들기",
+      "콘텐츠와 디자인을 분리하기",
+      "새 글 등록 체크리스트",
     ],
   },
   {
-    slug: "gatsby-blog-3-graphql-page-generation",
-    title: "Gatsby로 블로그 만들기 3편 - GraphQL 페이지 생성",
+    slug: "custom-developer-blog-with-tailwind-css",
+    title: "Tailwind CSS로 내 디자인의 개발자 블로그 완성하기",
     description:
-      "Gatsby 데이터 레이어에서 MDX 글을 조회해 홈 목록과 정적 상세 페이지, SEO·sitemap까지 연결한 흐름을 정리합니다.",
+      "Tailwind CSS 디자인 토큰, 로컬 폰트, 824px 레이아웃과 반응형 규칙을 적용해 자신만의 개발자 블로그 UI를 만드는 과정을 설명합니다.",
     publishedAt: "2026-06-27",
     publishedAtDisplay: "2026.06.27",
-    tags: ["Gatsby", "GraphQL", "MDX", "SEO"],
+    tags: ["Tailwind CSS", "React", "Responsive Web", "Accessibility"],
     previousPost: {
-      slug: "gatsby-blog-2-managing-mdx-posts",
-      title: "Gatsby로 블로그 만들기 2편 - MDX 포스트 관리",
+      slug: "gatsby-mdx-graphql-post-system",
+      title: "MDX와 GraphQL로 관리 가능한 Gatsby 블로그 만들기",
     },
     nextPost: null,
     headings: [
-      "같은 MDX 노드를 두 경로에서 조회하기",
-      "홈에서 발행일 역순 목록 만들기",
-      "블로그 글만 정적 라우트로 생성하기",
-      "id로 상세 데이터와 본문 연결하기",
-      "표현 컴포넌트와 GraphQL 경계 분리하기",
-      "SEO와 sitemap을 같은 메타데이터에 연결하기",
-      "빌드 결과로 전체 흐름 검증하기",
-      "마치며",
+      "화면을 만들기 전에 디자인 규칙 정하기",
+      "UI 시안을 컴포넌트로 나누기",
+      "Tailwind CSS에 디자인 토큰 정의하기",
+      "로컬 폰트 적용하기",
+      "824px 콘텐츠 레이아웃 통일하기",
+      "홈 목록과 포스트 화면 스타일링하기",
+      "모바일 레이아웃 설계하기",
+      "Tailwind Preflight와 브라우저 기본 스타일 확인하기",
+      "내 디자인으로 바꾸는 체크포인트",
+      "여러 화면 크기에서 검증하기",
     ],
   },
 ]
@@ -305,62 +311,36 @@ for (const contract of postContracts) {
   )
 }
 
-const firstPost = generatedPosts.get("gatsby-blog-1-getting-started")
-assert.ok(firstPost, "article one generated")
-assert.match(firstPost.main, /<blockquote>/)
-assert.match(firstPost.main, /<ol>/)
-assert.match(firstPost.main, /<ul>/)
-assert.match(firstPost.main, /<table>/)
-assert.match(
-  firstPost.main,
-  /<pre\b(?=[^>]*class="[^"]*\bshiki\b[^"]*")(?=[^>]*data-language="javascript")[^>]*><code><span class="line"><span style="color:[^"]+">/,
-)
-assert.match(
-  firstPost.main,
-  /<span\b[^>]*class="[^"]*\bcode-block-language\b[^"]*"[^>]*>JavaScript<\/span>/,
-)
-assert.match(
-  firstPost.main,
-  /<pre\b(?=[^>]*class="[^"]*\bshiki\b[^"]*")(?=[^>]*data-language="shell")[^>]*>/,
-)
-assert.match(
-  firstPost.main,
-  /<span\b[^>]*class="[^"]*\bcode-block-language\b[^"]*"[^>]*>Shell<\/span>/,
-)
-assert.match(firstPost.main, /제목 크기, 목록 마커, 링크 식별성/)
-assert.match(firstPost.main, /4\.5:1/)
-assert.match(firstPost.main, /GitHub Actions 배포는 이후 출시 단계에서 연결했습니다/)
-assert.doesNotMatch(firstPost.main, /GitHub Actions 배포는 아직 연결하지 않았다/)
-assert.doesNotMatch(
-  firstPost.main,
-  /2025|ERROR #98123|@mdx-js\/react|text-red-500|hello-gatsby-tailwindcss\.png|github-pages-setting\.png/,
-)
+const firstPost = generatedPosts.get("why-github-pages-and-gatsby")
+assert.ok(firstPost, "GitHub Pages and Gatsby article generated")
+assert.match(firstPost.main, /GitHub Pages를 선택한 이유/)
+assert.match(firstPost.main, /Gatsby를 선택한 이유/)
 
-const secondPost = generatedPosts.get("gatsby-blog-2-managing-mdx-posts")
-assert.ok(secondPost, "article two generated")
-assert.match(
-  secondPost.main,
-  /<pre\b(?=[^>]*class="[^"]*\bshiki\b[^"]*")(?=[^>]*data-language="text")[^>]*>/,
-)
-assert.match(
-  secondPost.main,
-  /<span\b[^>]*class="[^"]*\bcode-block-language\b[^"]*"[^>]*>Text<\/span>/,
-)
+const secondPost = generatedPosts.get("gatsby-mdx-graphql-post-system")
+assert.ok(secondPost, "MDX and GraphQL article generated")
 assert.match(secondPost.main, /content\/posts\/&lt;slug&gt;\/index\.mdx/)
 
-for (const retiredPath of [
-  "posts/mdx-foundation/index.html",
-  "posts/create-a-blog-site-with-gatsby1/index.html",
-]) {
-  await assert.rejects(
-    access(new URL(retiredPath, publicRoot)),
-    error => error?.code === "ENOENT",
-    `post: retired route must not be generated: ${retiredPath}`,
-  )
-}
+const thirdPost = generatedPosts.get("custom-developer-blog-with-tailwind-css")
+assert.ok(thirdPost, "Tailwind customization article generated")
+assert.match(thirdPost.main, /920px - 48px - 48px = 824px/)
+assert.match(thirdPost.main, /4\.5:1/)
 
-assert.doesNotMatch(sitemap, /\/posts\/mdx-foundation\//)
-assert.doesNotMatch(sitemap, /\/posts\/create-a-blog-site-with-gatsby1\//)
+const retiredSlugs = [
+  "mdx-foundation",
+  "create-a-blog-site-with-gatsby1",
+  "gatsby-blog-1-getting-started",
+  "gatsby-blog-2-managing-mdx-posts",
+  "gatsby-blog-3-graphql-page-generation",
+]
+
+for (const slug of retiredSlugs) {
+  await assert.rejects(
+    access(new URL(`posts/${slug}/index.html`, publicRoot)),
+    error => error?.code === "ENOENT",
+    `post: retired route must not be generated: ${slug}`,
+  )
+  assert.doesNotMatch(sitemap, new RegExp(`/posts/${slug}/`))
+}
 
 console.log(
   "post build verified: three content, TOC, metadata, navigation, route, and sitemap contracts passed",

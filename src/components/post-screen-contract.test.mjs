@@ -192,91 +192,105 @@ test("uses predictable paragraph wrapping inside post content", async () => {
   )
 })
 
-test("documents the current Gatsby rebuild and Tailwind fixes", async () => {
-  const [post, oldSample] = await Promise.all([
-    readRepositoryFile("content/posts/gatsby-blog-1-getting-started/index.mdx"),
-    readRepositoryFile("content/posts/mdx-foundation/index.mdx"),
-  ])
+test("explains why the blog uses GitHub Pages and Gatsby", async () => {
+  const post = await readRepositoryFile(
+    "content/posts/why-github-pages-and-gatsby/index.mdx",
+  )
 
-  assert.match(post, /title: "Gatsby로 블로그 사이트 만들기 1편 - 시작하기"/)
-  assert.match(post, /slug: "gatsby-blog-1-getting-started"/)
-  assert.match(post, /publishedAt: "2026-04-18"/)
   assert.match(
     post,
-    /배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다\./,
+    /title: "왜 GitHub Pages와 Gatsby였을까: 개발자 블로그 다시 만들기"/,
   )
-  assert.match(post, /Gatsby \| 5\.16\.1/)
-  assert.match(post, /Tailwind CSS \| 4\.3\.3/)
-  assert.match(post, /"@tailwindcss\/postcss": \{\}/)
-  assert.match(post, /@import "tailwindcss" source\("\.\.\/"\);/)
-  assert.match(post, /제목 크기, 목록 마커, 링크 식별성/)
-  assert.match(post, /4\.5:1/)
-  assert.match(post, /npm run typecheck/)
-  assert.match(post, /## 검증과 단계별 배포 경계/)
-  assert.match(post, /GitHub Actions 배포는 이후 출시 단계에서 연결했습니다/)
-  assert.doesNotMatch(post, /GitHub Actions 배포는 아직 연결하지 않았다/)
-  assert.doesNotMatch(
-    post,
-    /2025|ERROR #98123|@mdx-js\/react|text-red-500|당시 GitHub Pages 배포 방식/,
-  )
-  assert.doesNotMatch(
-    post,
-    /hello-gatsby-tailwindcss\.png|github-pages-setting\.png/,
-  )
-  assert.equal(oldSample, "")
+  assert.match(post, /slug: "why-github-pages-and-gatsby"/)
+  assert.match(post, /publishedAt: "2026-04-18"/)
+  assert.match(post, /- GitHub Pages/)
+  assert.match(post, /- SSG/)
+  assert.match(post, /## 블로그를 다시 만들게 된 배경/)
+  assert.match(post, /## 먼저 요구사항 정하기/)
+  assert.match(post, /## GitHub Pages를 선택한 이유/)
+  assert.match(post, /## Gatsby를 선택한 이유/)
+  assert.match(post, /## 배포 산출물을 소스 프로젝트로 재구축하기/)
+  assert.match(post, /## 최소 프로젝트 구조 만들기/)
+  assert.match(post, /## 처음부터 디자인 변경 지점 분리하기/)
+  assert.match(post, /## 빌드와 GitHub Pages 배포 확인하기/)
+  assert.match(post, /## 다음 글/)
+  assert.match(post, /gatsby-config\.mjs/)
+  assert.match(post, /deploy-pages\.yml/)
+  assert.match(post, /npm run build/)
+  assert.doesNotMatch(post, /(?:제목|Gatsby로 블로그[^\n]*)\s*[123]편/)
+  assert.doesNotMatch(post, /2025|ERROR #98123|text-red-500/)
 })
 
-test("documents MDX post management as article two", async () => {
+test("explains the MDX and GraphQL post system", async () => {
   const post = await readRepositoryFile(
-    "content/posts/gatsby-blog-2-managing-mdx-posts/index.mdx",
+    "content/posts/gatsby-mdx-graphql-post-system/index.mdx",
   )
 
-  assert.match(post, /title: "Gatsby로 블로그 만들기 2편 - MDX 포스트 관리"/)
-  assert.match(post, /slug: "gatsby-blog-2-managing-mdx-posts"/)
+  assert.match(
+    post,
+    /title: "MDX와 GraphQL로 관리 가능한 Gatsby 블로그 만들기"/,
+  )
+  assert.match(post, /slug: "gatsby-mdx-graphql-post-system"/)
   assert.match(post, /publishedAt: "2026-05-16"/)
-  assert.match(post, /## 포스트 파일과 메타데이터를 한 단위로 묶기/)
-  assert.match(post, /## 파일을 Gatsby 데이터 레이어에 연결하기/)
-  assert.match(post, /## frontmatter를 명시적 계약으로 고정하기/)
-  assert.match(post, /## 페이지 생성 전에 작성자 입력 검증하기/)
-  assert.match(post, /## 오류를 모아 빌드를 중단하기/)
-  assert.match(post, /## 새 글을 추가하는 실제 순서/)
+  assert.match(post, /## 글을 코드에 직접 작성하면 생기는 문제/)
+  assert.match(post, /## 포스트 저장 구조 정하기/)
+  assert.match(post, /## frontmatter를 글의 계약으로 사용하기/)
+  assert.match(post, /## 잘못된 글을 빌드 전에 발견하기/)
+  assert.match(post, /## Gatsby가 MDX를 데이터로 바꾸는 과정/)
+  assert.match(post, /## GraphQL로 포스트 목록 조회하기/)
+  assert.match(post, /## 홈 목록과 상세 페이지 연결하기/)
+  assert.match(post, /## slug로 글 URL 만들기/)
+  assert.match(post, /## 콘텐츠와 디자인을 분리하기/)
+  assert.match(post, /## 새 글 등록 체크리스트/)
   assert.match(post, /content\/posts\/<slug>\/index\.mdx/)
-  assert.match(post, /createSchemaCustomization/)
-  assert.match(post, /@dontInfer/)
+  assert.match(post, /MdxFrontmatter @dontInfer/)
   assert.match(post, /validatePostNodes/)
-  assert.match(post, /Duplicate post slug/)
-  assert.match(post, /YYYY-MM-DD/)
-  assert.doesNotMatch(post, /2025|React SSR 한글|GitHub Actions 배포 설정 방법/)
+  assert.match(
+    post,
+    /allMdx\(sort: \{ frontmatter: \{ publishedAt: DESC \} \}\)/,
+  )
+  assert.match(post, /sourceInstanceName === "posts"/)
+  assert.match(post, /mdx\(id: \{ eq: \$id \}\)/)
+  assert.doesNotMatch(post, /(?:제목|Gatsby로 블로그[^\n]*)\s*[123]편/)
 })
 
-test("documents GraphQL page generation as article three", async () => {
+test("explains how to customize the blog with Tailwind CSS", async () => {
   const post = await readRepositoryFile(
-    "content/posts/gatsby-blog-3-graphql-page-generation/index.mdx",
+    "content/posts/custom-developer-blog-with-tailwind-css/index.mdx",
   )
 
-  assert.match(post, /title: "Gatsby로 블로그 만들기 3편 - GraphQL 페이지 생성"/)
-  assert.match(post, /slug: "gatsby-blog-3-graphql-page-generation"/)
+  assert.match(
+    post,
+    /title: "Tailwind CSS로 내 디자인의 개발자 블로그 완성하기"/,
+  )
+  assert.match(post, /slug: "custom-developer-blog-with-tailwind-css"/)
   assert.match(post, /publishedAt: "2026-06-27"/)
-  assert.match(post, /## 같은 MDX 노드를 두 경로에서 조회하기/)
-  assert.match(post, /## 홈에서 발행일 역순 목록 만들기/)
-  assert.match(post, /## 블로그 글만 정적 라우트로 생성하기/)
-  assert.match(post, /## id로 상세 데이터와 본문 연결하기/)
-  assert.match(post, /## 표현 컴포넌트와 GraphQL 경계 분리하기/)
-  assert.match(post, /## SEO와 sitemap을 같은 메타데이터에 연결하기/)
-  assert.match(post, /## 빌드 결과로 전체 흐름 검증하기/)
-  assert.match(post, /allMdx\(sort: \{ frontmatter: \{ publishedAt: DESC \} \}\)/)
-  assert.match(post, /sourceInstanceName === "posts"/)
-  assert.match(post, /contentFilePath/)
-  assert.match(post, /context: \{[\s\S]*id: post\.id/)
-  assert.match(post, /mdx\(id: \{ eq: \$id \}\)/)
-  assert.match(post, /gatsby-plugin-sitemap/)
-  assert.doesNotMatch(post, /2025|React SSR 한글|태그 필터 구현/)
+  assert.match(post, /## 화면을 만들기 전에 디자인 규칙 정하기/)
+  assert.match(post, /## UI 시안을 컴포넌트로 나누기/)
+  assert.match(post, /## Tailwind CSS에 디자인 토큰 정의하기/)
+  assert.match(post, /## 로컬 폰트 적용하기/)
+  assert.match(post, /## 824px 콘텐츠 레이아웃 통일하기/)
+  assert.match(post, /## 홈 목록과 포스트 화면 스타일링하기/)
+  assert.match(post, /## 모바일 레이아웃 설계하기/)
+  assert.match(
+    post,
+    /## Tailwind Preflight와 브라우저 기본 스타일 확인하기/,
+  )
+  assert.match(post, /## 내 디자인으로 바꾸는 체크포인트/)
+  assert.match(post, /## 여러 화면 크기에서 검증하기/)
+  assert.match(post, /@theme inline/)
+  assert.match(post, /Noto Serif KR/)
+  assert.match(post, /max-width: 920px/)
+  assert.match(post, /920px - 48px - 48px = 824px/)
+  assert.match(post, /4\.5:1/)
+  assert.doesNotMatch(post, /(?:제목|Gatsby로 블로그[^\n]*)\s*[123]편/)
 })
 
 test("registers a production verifier for all approved posts", async () => {
-  const [packageSource, verifier] = await Promise.all([
+  const [packageSource, verifier, styleVerifier] = await Promise.all([
     readRepositoryFile("package.json"),
     readRepositoryFile("scripts/verify-post-build.mjs"),
+    readRepositoryFile("scripts/verify-style-build.mjs"),
   ])
   const packageJson = JSON.parse(packageSource)
 
@@ -284,9 +298,10 @@ test("registers a production verifier for all approved posts", async () => {
     packageJson.scripts["verify:post"],
     "node scripts/verify-post-build.mjs",
   )
-  assert.match(verifier, /public[\s\S]*gatsby-blog-1-getting-started/)
-  assert.match(verifier, /gatsby-blog-2-managing-mdx-posts/)
-  assert.match(verifier, /gatsby-blog-3-graphql-page-generation/)
+  assert.match(verifier, /why-github-pages-and-gatsby/)
+  assert.match(verifier, /gatsby-mdx-graphql-post-system/)
+  assert.match(verifier, /custom-developer-blog-with-tailwind-css/)
+  assert.match(styleVerifier, /why-github-pages-and-gatsby/)
   assert.match(verifier, /for \(const contract of postContracts\)/)
   assert.match(verifier, /previousPost:/)
   assert.match(verifier, /nextPost:/)
