@@ -158,8 +158,9 @@ test("keeps Korean post title words intact", async () => {
 
 test("inherits the shared container width and wraps long titles within it", async () => {
   const postCss = await readRepositoryFile("src/styles/post.css")
+  const headerRule = postCss.match(/\.post-header\s*\{([^}]*)\}/s)
   const widthRules = [
-    ["post header", postCss.match(/\.post-header\s*\{([^}]*)\}/s)],
+    ["post header", headerRule],
     ["post description", postCss.match(/\.post-description\s*\{([^}]*)\}/s)],
     [
       "MDX content",
@@ -173,6 +174,8 @@ test("inherits the shared container width and wraps long titles within it", asyn
     assert.doesNotMatch(rule[1], /max-width:\s*760px/)
   }
 
+  assert.ok(headerRule, "post header style rule")
+  assert.match(headerRule[1], /grid-template-columns:\s*minmax\(0, 1fr\)/)
   assert.ok(titleRule, "post title style rule")
   assert.match(titleRule[1], /font-size:\s*clamp\(28px, 4vw, 36px\)/)
   assert.match(titleRule[1], /text-wrap:\s*balance/)
