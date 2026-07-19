@@ -287,9 +287,10 @@ test("explains how to customize the blog with Tailwind CSS", async () => {
 })
 
 test("registers a production verifier for all approved posts", async () => {
-  const [packageSource, verifier] = await Promise.all([
+  const [packageSource, verifier, styleVerifier] = await Promise.all([
     readRepositoryFile("package.json"),
     readRepositoryFile("scripts/verify-post-build.mjs"),
+    readRepositoryFile("scripts/verify-style-build.mjs"),
   ])
   const packageJson = JSON.parse(packageSource)
 
@@ -297,9 +298,10 @@ test("registers a production verifier for all approved posts", async () => {
     packageJson.scripts["verify:post"],
     "node scripts/verify-post-build.mjs",
   )
-  assert.match(verifier, /public[\s\S]*gatsby-blog-1-getting-started/)
-  assert.match(verifier, /gatsby-blog-2-managing-mdx-posts/)
-  assert.match(verifier, /gatsby-blog-3-graphql-page-generation/)
+  assert.match(verifier, /why-github-pages-and-gatsby/)
+  assert.match(verifier, /gatsby-mdx-graphql-post-system/)
+  assert.match(verifier, /custom-developer-blog-with-tailwind-css/)
+  assert.match(styleVerifier, /why-github-pages-and-gatsby/)
   assert.match(verifier, /for \(const contract of postContracts\)/)
   assert.match(verifier, /previousPost:/)
   assert.match(verifier, /nextPost:/)

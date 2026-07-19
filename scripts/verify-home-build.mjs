@@ -32,43 +32,45 @@ const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 const postContracts = [
   {
-    path: "/posts/gatsby-blog-3-graphql-page-generation/",
-    title: "Gatsby로 블로그 만들기 3편 - GraphQL 페이지 생성",
+    path: "/posts/custom-developer-blog-with-tailwind-css/",
+    title: "Tailwind CSS로 내 디자인의 개발자 블로그 완성하기",
     description:
-      "Gatsby 데이터 레이어에서 MDX 글을 조회해 홈 목록과 정적 상세 페이지, SEO·sitemap까지 연결한 흐름을 정리합니다.",
+      "Tailwind CSS 디자인 토큰, 로컬 폰트, 824px 레이아웃과 반응형 규칙을 적용해 자신만의 개발자 블로그 UI를 만드는 과정을 설명합니다.",
     publishedAt: "2026-06-27",
     publishedAtDisplay: "2026.06.27",
-    tags: ["Gatsby", "GraphQL", "MDX", "SEO"],
+    tags: ["Tailwind CSS", "React", "Responsive Web", "Accessibility"],
   },
   {
-    path: "/posts/gatsby-blog-2-managing-mdx-posts/",
-    title: "Gatsby로 블로그 만들기 2편 - MDX 포스트 관리",
+    path: "/posts/gatsby-mdx-graphql-post-system/",
+    title: "MDX와 GraphQL로 관리 가능한 Gatsby 블로그 만들기",
     description:
-      "MDX 글을 디렉터리 단위로 관리하고 frontmatter 스키마와 빌드 전 검증으로 잘못된 날짜·slug·태그를 차단한 과정을 정리합니다.",
+      "MDX 파일 구조와 frontmatter 계약을 정의하고 Gatsby GraphQL로 목록과 상세 페이지를 생성하는 콘텐츠 파이프라인을 설명합니다.",
     publishedAt: "2026-05-16",
     publishedAtDisplay: "2026.05.16",
     tags: ["Gatsby", "MDX", "GraphQL", "Validation"],
   },
   {
-    path: "/posts/gatsby-blog-1-getting-started/",
-    title: "Gatsby로 블로그 사이트 만들기 1편 - 시작하기",
+    path: "/posts/why-github-pages-and-gatsby/",
+    title: "왜 GitHub Pages와 Gatsby였을까: 개발자 블로그 다시 만들기",
     description:
-      "배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다.",
+      "무료 정적 호스팅과 React 기반 UI라는 요구사항에서 GitHub Pages와 Gatsby를 선택하고, 배포 파일만 남은 블로그를 소스 프로젝트로 재구축한 과정을 설명합니다.",
     publishedAt: "2026-04-18",
     publishedAtDisplay: "2026.04.18",
-    tags: ["Gatsby", "GitHub Pages", "React", "Tailwind CSS"],
+    tags: ["Gatsby", "GitHub Pages", "React", "SSG"],
   },
 ]
 
 const expectedFilterTags = [
+  "Tailwind CSS",
+  "React",
+  "Responsive Web",
+  "Accessibility",
   "Gatsby",
-  "GraphQL",
   "MDX",
-  "SEO",
+  "GraphQL",
   "Validation",
   "GitHub Pages",
-  "React",
-  "Tailwind CSS",
+  "SSG",
 ]
 
 assert.equal(countOpeningTags("h1"), 1, "home: one page heading")
