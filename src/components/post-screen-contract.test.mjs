@@ -340,6 +340,7 @@ test("registers a production verifier for all approved posts", async () => {
   assert.match(verifier, /why-github-pages-and-gatsby/)
   assert.match(verifier, /gatsby-mdx-graphql-post-system/)
   assert.match(verifier, /custom-developer-blog-with-tailwind-css/)
+  assert.match(verifier, /gatsby-blog-reading-experience/)
   assert.match(styleVerifier, /why-github-pages-and-gatsby/)
   assert.match(verifier, /for \(const contract of postContracts\)/)
   assert.match(verifier, /previousPost:/)
