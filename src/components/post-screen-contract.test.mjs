@@ -221,27 +221,37 @@ test("explains why the blog uses GitHub Pages and Gatsby", async () => {
   assert.doesNotMatch(post, /2025|ERROR #98123|text-red-500/)
 })
 
-test("documents MDX post management as article two", async () => {
+test("explains the MDX and GraphQL post system", async () => {
   const post = await readRepositoryFile(
-    "content/posts/gatsby-blog-2-managing-mdx-posts/index.mdx",
+    "content/posts/gatsby-mdx-graphql-post-system/index.mdx",
   )
 
-  assert.match(post, /title: "Gatsby로 블로그 만들기 2편 - MDX 포스트 관리"/)
-  assert.match(post, /slug: "gatsby-blog-2-managing-mdx-posts"/)
+  assert.match(
+    post,
+    /title: "MDX와 GraphQL로 관리 가능한 Gatsby 블로그 만들기"/,
+  )
+  assert.match(post, /slug: "gatsby-mdx-graphql-post-system"/)
   assert.match(post, /publishedAt: "2026-05-16"/)
-  assert.match(post, /## 포스트 파일과 메타데이터를 한 단위로 묶기/)
-  assert.match(post, /## 파일을 Gatsby 데이터 레이어에 연결하기/)
-  assert.match(post, /## frontmatter를 명시적 계약으로 고정하기/)
-  assert.match(post, /## 페이지 생성 전에 작성자 입력 검증하기/)
-  assert.match(post, /## 오류를 모아 빌드를 중단하기/)
-  assert.match(post, /## 새 글을 추가하는 실제 순서/)
+  assert.match(post, /## 글을 코드에 직접 작성하면 생기는 문제/)
+  assert.match(post, /## 포스트 저장 구조 정하기/)
+  assert.match(post, /## frontmatter를 글의 계약으로 사용하기/)
+  assert.match(post, /## 잘못된 글을 빌드 전에 발견하기/)
+  assert.match(post, /## Gatsby가 MDX를 데이터로 바꾸는 과정/)
+  assert.match(post, /## GraphQL로 포스트 목록 조회하기/)
+  assert.match(post, /## 홈 목록과 상세 페이지 연결하기/)
+  assert.match(post, /## slug로 글 URL 만들기/)
+  assert.match(post, /## 콘텐츠와 디자인을 분리하기/)
+  assert.match(post, /## 새 글 등록 체크리스트/)
   assert.match(post, /content\/posts\/<slug>\/index\.mdx/)
-  assert.match(post, /createSchemaCustomization/)
-  assert.match(post, /@dontInfer/)
+  assert.match(post, /MdxFrontmatter @dontInfer/)
   assert.match(post, /validatePostNodes/)
-  assert.match(post, /Duplicate post slug/)
-  assert.match(post, /YYYY-MM-DD/)
-  assert.doesNotMatch(post, /2025|React SSR 한글|GitHub Actions 배포 설정 방법/)
+  assert.match(
+    post,
+    /allMdx\(sort: \{ frontmatter: \{ publishedAt: DESC \} \}\)/,
+  )
+  assert.match(post, /sourceInstanceName === "posts"/)
+  assert.match(post, /mdx\(id: \{ eq: \$id \}\)/)
+  assert.doesNotMatch(post, /(?:제목|Gatsby로 블로그[^\n]*)\s*[123]편/)
 })
 
 test("documents GraphQL page generation as article three", async () => {
