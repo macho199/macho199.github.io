@@ -179,6 +179,19 @@ test("inherits the shared container width and wraps long titles within it", asyn
   assert.doesNotMatch(titleRule[1], /text-wrap:\s*nowrap/)
 })
 
+test("uses predictable paragraph wrapping inside post content", async () => {
+  const [postCss, themeCss] = await Promise.all([
+    readRepositoryFile("src/styles/post.css"),
+    readRepositoryFile("src/styles/theme.css"),
+  ])
+
+  assert.match(themeCss, /p\s*\{[^}]*text-wrap:\s*pretty/s)
+  assert.match(
+    postCss,
+    /\.post-page \.mdx-content p\s*\{[^}]*text-wrap:\s*wrap/s,
+  )
+})
+
 test("documents the current Gatsby rebuild and Tailwind fixes", async () => {
   const [post, oldSample] = await Promise.all([
     readRepositoryFile("content/posts/gatsby-blog-1-getting-started/index.mdx"),
