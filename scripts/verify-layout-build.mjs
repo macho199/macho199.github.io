@@ -87,8 +87,8 @@ const favicon = await readFile(
 assertLocalFavicon(notFoundHtml, "not found")
 assert.equal(
   createHash("sha256").update(favicon).digest("hex"),
-  "e9d4b8b644138993aaf0d6c9904613a3ae820881bed5d03d07eb1032e549693b",
-  "layout: exact local profile favicon asset",
+  "dde3fd00fdda954cef45373e2dc0467cde694d66e8c626749edeceed15359c7c",
+  "layout: exact transparent local profile favicon asset",
 )
 
 console.log("layout build verified: shell and local favicon contracts passed")

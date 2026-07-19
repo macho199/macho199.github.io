@@ -192,5 +192,5 @@ test("registers the production home verifier", async () => {
   assert.match(verifier, /3 posts/)
   assert.match(verifier, /Tailwind CSS/)
   assert.match(layoutVerifier, /favicon\.png/)
-  assert.match(layoutVerifier, /e9d4b8b644138993aaf0d6c9904613a3ae820881bed5d03d07eb1032e549693b/)
+  assert.match(layoutVerifier, /dde3fd00fdda954cef45373e2dc0467cde694d66e8c626749edeceed15359c7c/)
 })
