@@ -28,6 +28,9 @@ const config = {
     title: "Developer Blog",
     description: "Notes from building and operating software.",
     siteUrl: "https://macho199.github.io",
+    authorName: "권종성",
+    authorUrl: "https://github.com/macho199",
+    googleSiteVerification: "Qc0uPvGHZc2Dcu86DYX9L0aep1Ma6b9NdH1wgseonkk",
   },
   plugins: [
     {

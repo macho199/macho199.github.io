@@ -59,3 +59,35 @@ test("uses one local profile favicon from every page Head", async () => {
     "favicon interior artwork must remain unchanged",
   )
 })
+
+test("configures verified site identity and article structured data", async () => {
+  const [{ default: config }, seo] = await Promise.all([
+    import(new URL("../../gatsby-config.mjs", import.meta.url).href),
+    readFile(new URL("src/components/seo.tsx", repositoryRoot), "utf8"),
+  ])
+  const metadata = config.siteMetadata
+
+  assert.equal(metadata.authorName, "권종성")
+  assert.equal(metadata.authorUrl, "https://github.com/macho199")
+  assert.equal(typeof metadata.googleSiteVerification, "string")
+  assert.equal(
+    metadata.googleSiteVerification,
+    metadata.googleSiteVerification.trim(),
+  )
+  assert.ok(metadata.googleSiteVerification.length > 0)
+  assert.doesNotMatch(
+    metadata.googleSiteVerification,
+    /example|todo|placeholder|발급값/i,
+  )
+
+  assert.match(seo, /authorName: string/)
+  assert.match(seo, /authorUrl: string/)
+  assert.match(seo, /googleSiteVerification: string/)
+  assert.match(
+    seo,
+    /<meta\s+id="google-site-verification"\s+name="google-site-verification"\s+content=\{siteMetadata\.googleSiteVerification\}\s+\/>/,
+  )
+  assert.match(seo, /createBlogPosting\(/)
+  assert.match(seo, /serializeJsonLd\(blogPosting\)/)
+  assert.match(seo, /type="application\/ld\+json"/)
+})
