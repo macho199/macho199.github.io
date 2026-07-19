@@ -23,25 +23,30 @@ const PostFilterBar = ({
   return (
     <section className="post-filter-toolbar" aria-label="글 필터">
       {tags.length > 0 ? (
-        <div className="post-filter-options" role="group" aria-label="태그 필터">
-          {options.map(tag => {
-            const isSelected = selectedTag === tag
-            const isAll = tag === ALL_POSTS_FILTER
+        <>
+          <span className="post-filter-label" aria-hidden="true">
+            태그 필터
+          </span>
+          <div className="post-filter-options" role="group" aria-label="태그 필터">
+            {options.map(tag => {
+              const isSelected = selectedTag === tag
+              const isAll = tag === ALL_POSTS_FILTER
 
-            return (
-              <button
-                key={isAll ? "filter:all" : `filter:tag:${tag}`}
-                className={`post-filter-button${isSelected ? " is-active" : ""}`}
-                type="button"
-                data-filter-kind={isAll ? "all" : "tag"}
-                aria-pressed={isSelected}
-                onClick={() => onSelect(tag)}
-              >
-                {isAll ? "전체" : tag}
-              </button>
-            )
-          })}
-        </div>
+              return (
+                <button
+                  key={isAll ? "filter:all" : `filter:tag:${tag}`}
+                  className={`post-filter-button${isSelected ? " is-active" : ""}`}
+                  type="button"
+                  data-filter-kind={isAll ? "all" : "tag"}
+                  aria-pressed={isSelected}
+                  onClick={() => onSelect(tag)}
+                >
+                  {isAll ? "전체" : tag}
+                </button>
+              )
+            })}
+          </div>
+        </>
       ) : null}
       <p className="post-filter-count" role="status" aria-live="polite">
         {formatPostCount(resultCount)}

@@ -92,6 +92,39 @@ test("renders an accessible single-select tag filter and result count", async ()
   assert.match(filterBar, /count === 1 \? "post" : "posts"/)
 })
 
+test("groups mobile tags under a compact result header", async () => {
+  const [filterBar, homeCss] = await Promise.all([
+    readRepositoryFile("src/components/post-filter-bar.tsx"),
+    readRepositoryFile("src/styles/home.css"),
+  ])
+
+  assert.match(
+    filterBar,
+    /{tags\.length > 0 \? \([\s\S]*<span className="post-filter-label" aria-hidden="true">[\s\S]*태그 필터[\s\S]*<\/span>[\s\S]*<div className="post-filter-options"/,
+  )
+  assert.match(homeCss, /\.post-filter-label\s*\{[^}]*display:\s*none/s)
+  assert.match(
+    homeCss,
+    /@media \(max-width: 720px\)[\s\S]*\.post-filter-toolbar\s*\{(?=[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto)(?=[^}]*column-gap:\s*var\(--space-3\))(?=[^}]*row-gap:\s*var\(--space-2\))(?=[^}]*margin-bottom:\s*var\(--space-3\))[^}]*\}/s,
+  )
+  assert.match(
+    homeCss,
+    /@media \(max-width: 720px\)[\s\S]*\.post-filter-label\s*\{(?=[^}]*display:\s*block)(?=[^}]*grid-column:\s*1)(?=[^}]*grid-row:\s*1)[^}]*\}/s,
+  )
+  assert.match(
+    homeCss,
+    /@media \(max-width: 720px\)[\s\S]*\.post-filter-options\s*\{(?=[^}]*grid-column:\s*1\s*\/\s*-1)(?=[^}]*grid-row:\s*2)[^}]*\}/s,
+  )
+  assert.match(
+    homeCss,
+    /@media \(max-width: 720px\)[\s\S]*\.post-filter-count\s*\{(?=[^}]*grid-column:\s*2)(?=[^}]*grid-row:\s*1)(?=[^}]*justify-self:\s*end)[^}]*\}/s,
+  )
+  assert.match(
+    homeCss,
+    /@media \(max-width: 720px\)[\s\S]*\.post-filter-count:only-child\s*\{[^}]*grid-column:\s*1\s*\/\s*-1/s,
+  )
+})
+
 test("imports the React runtime required by Gatsby SSR", async () => {
   const componentSources = await Promise.all(
     [
@@ -155,14 +188,6 @@ test("keeps GraphQL in the page and loads scoped home styles", async () => {
     /\.post-filter-button\.is-active\s*\{[^}]*text-decoration: underline/s,
   )
   assert.match(homeCss, /\.post-filter-button:focus-visible\s*\{/)
-  assert.match(
-    homeCss,
-    /@media \(max-width: 720px\)[\s\S]*\.post-filter-toolbar\s*\{[^}]*grid-template-columns: 1fr/s,
-  )
-  assert.match(
-    homeCss,
-    /@media \(max-width: 720px\)[\s\S]*\.post-filter-count\s*\{[^}]*justify-self: end/s,
-  )
 })
 
 test("registers the production home verifier", async () => {

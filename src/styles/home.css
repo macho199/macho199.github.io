@@ -34,6 +34,10 @@
     gap: var(--space-2) var(--space-4);
   }
 
+  .post-filter-label {
+    display: none;
+  }
+
   .post-filter-button {
     padding: 0 0 2px;
     border: 0;
@@ -190,12 +194,36 @@
   }
 
   .post-filter-toolbar {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-3);
+    row-gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .post-filter-label {
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    color: var(--fg-2);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: 1.55;
+  }
+
+  .post-filter-options {
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .post-filter-count {
-    grid-column: 1;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
     justify-self: end;
+  }
+
+  .post-filter-count:only-child {
+    grid-column: 1 / -1;
   }
 }
