@@ -147,12 +147,14 @@
     font-size: clamp(18px, 1.7vw, 19px);
     font-weight: 600;
     line-height: 1.42;
+    text-wrap: wrap;
   }
 
   .post-card-title-link {
     color: var(--fg);
     text-decoration: none;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: keep-all;
   }
 
   .post-card-title-link:hover {
