@@ -1,0 +1,222 @@
+---
+title: "긴 기술 글을 읽기 쉽게: Gatsby 블로그 읽기 경험 개선기"
+slug: "gatsby-blog-reading-experience"
+publishedAt: "2026-07-19"
+description: "코드 구문 강조, 복사 인터랙션, MDX 목차와 맨 위로 이동 기능을 연결해 긴 기술 글의 읽기 경험을 개선한 과정을 설명합니다."
+tags:
+  - Gatsby
+  - MDX
+  - React
+  - Accessibility
+---
+
+앞선 글에서는 MDX와 GraphQL로 포스트를 관리하고, Tailwind CSS로 블로그의 색상·폰트·레이아웃을 바꾸는 과정을 정리했습니다. 화면의 형태가 갖춰진 뒤에는 다른 문제가 보였습니다. 짧은 글에서는 괜찮았던 읽기 방식이 코드와 제목이 많은 긴 기술 글에서는 자주 끊겼습니다.
+
+이 글에서는 코드 구문 강조, 복사 버튼, 목차, 맨 위로 이동 버튼을 각각의 기능으로 나열하지 않습니다. 독자가 코드를 읽고, 현재 위치를 확인하고, 원하는 위치로 이동하는 하나의 흐름으로 연결합니다.
+
+## 긴 기술 글에서 발견한 세 가지 불편
+
+긴 포스트를 직접 읽어보니 불편은 세 단계에서 나타났습니다.
+
+| 읽는 단계 | 불편 | 개선 방향 |
+| --- | --- | --- |
+| 코드 이해 | 모든 코드가 같은 색으로 보여 구조 파악이 느림 | 언어별 구문 강조와 언어 이름 제공 |
+| 위치 파악 | 글이 길어질수록 현재 위치와 남은 구성을 놓침 | H2 목차와 현재 항목 표시 |
+| 다시 이동 | 아래까지 읽은 뒤 위로 돌아가기 번거로움 | 읽는 흐름을 방해하지 않는 상단 버튼 |
+
+중요한 기준은 기능의 개수가 아니었습니다. 기능이 보이는 시점과 실패했을 때의 기본 동작까지 읽는 흐름 안에서 결정해야 했습니다.
+
+## Vesper로 코드가 읽히게 만들기
+
+코드 색상은 브라우저에서 다시 계산하지 않고 Gatsby가 MDX를 빌드할 때 만듭니다. `gatsby-config.mjs`에서 `rehype-slug`와 `@shikijs/rehype`를 함께 연결했습니다.
+
+```javascript
+import rehypeShiki from "@shikijs/rehype"
+import rehypeSlug from "rehype-slug"
+
+export const codeHighlightingOptions = {
+  theme: "vesper",
+  defaultLanguage: "text",
+  inline: false,
+  transformers: [
+    {
+      name: "developer-blog:code-language-metadata",
+      pre(node) {
+        node.properties["data-language"] = this.options.lang
+      },
+    },
+  ],
+}
+
+mdxOptions: {
+  rehypePlugins: [
+    rehypeSlug,
+    [rehypeShiki, codeHighlightingOptions],
+  ],
+}
+```
+
+Vesper는 어두운 배경과 밝은 민트 계열 강조색을 사용합니다. 블로그의 연초록 포인트와 대비되면서도 코드 영역이 본문과 분리되어 보여 선택했습니다. `defaultLanguage: "text"`를 두어 언어가 없는 코드도 같은 카드 안에서 읽을 수 있게 했습니다.
+
+transformer가 남기는 `data-language`는 다음 단계의 React 컴포넌트가 언어 이름을 표시할 때 사용합니다. 다른 테마를 쓰고 싶다면 이 파일의 `theme`만 먼저 바꾸고, 본문 대비와 토큰 색상을 다시 확인하면 됩니다.
+
+## MDX 코드 블록에 복사 기능 연결하기
+
+Shiki는 빌드 시점의 HTML을 만들지만 복사는 브라우저 상호작용입니다. `src/templates/post.tsx`에서 MDX의 `pre`를 `CodeBlock`에 매핑해 두 책임을 연결했습니다.
+
+```tsx
+const mdxComponents = {
+  pre: CodeBlock,
+}
+
+<MDXProvider components={mdxComponents}>
+  {children}
+</MDXProvider>
+
+export const query = graphql`
+  query PostById($id: String!) {
+    mdx(id: { eq: $id }) {
+      tableOfContents(maxDepth: 2)
+    }
+  }
+`
+```
+
+`CodeBlock`은 Shiki가 만든 `pre`의 속성과 자식 노드를 그대로 유지하고, 위에 언어 이름과 복사 버튼이 있는 도구 영역만 추가합니다.
+
+```tsx
+const preRef = React.useRef<HTMLPreElement>(null)
+const [canCopy, setCanCopy] = React.useState(false)
+
+React.useEffect(() => {
+  const supportsClipboard =
+    typeof navigator !== "undefined" &&
+    typeof navigator.clipboard?.writeText === "function"
+
+  setCanCopy(supportsClipboard && Boolean(preRef.current?.textContent))
+}, [])
+
+const copyCode = async () => {
+  const codeText = preRef.current?.textContent ?? ""
+  if (!codeText) return
+
+  try {
+    await navigator.clipboard.writeText(codeText)
+  } catch {
+    return
+  }
+}
+```
+
+서버 렌더링에서는 원래 코드만 출력됩니다. 브라우저가 Clipboard API를 지원하고 복사할 텍스트가 있을 때만 버튼을 보여줍니다. 실패해도 코드 선택과 읽기는 그대로 가능합니다.
+
+복사 성공 문구나 실패 토스트는 만들지 않았습니다. 아이콘을 누르는 동안 배경색을 바꾸고 `transform: scale(0.9)`를 적용해 눌림만 전달합니다. 버튼의 접근 이름은 `JavaScript 코드 복사`처럼 언어 이름을 포함합니다.
+
+## MDX 제목을 목차 데이터로 연결하기
+
+목차 링크와 본문 제목은 같은 id를 사용해야 합니다. 앞에서 연결한 `rehype-slug`가 H2에 id를 만들고, GraphQL의 `tableOfContents(maxDepth: 2)`가 같은 제목의 URL과 텍스트를 제공합니다.
+
+전체 흐름은 다음과 같습니다.
+
+`MDX H2 → rehype-slug의 heading id → Gatsby tableOfContents → 정규화 → 목차 링크 → 같은 id의 본문 heading`
+
+`src/lib/post-table-of-contents.mjs`의 정규화 함수는 제목이 비었거나 `#`으로 시작하지 않는 URL, 디코딩할 수 없는 id를 제외합니다. 결과는 `id`, `href`, `title` 세 값만 가진 단순한 배열입니다.
+
+목차 데이터가 없으면 `PostTableOfContents`는 아무것도 렌더링하지 않습니다. 데이터가 있어도 링크는 기본 fragment anchor이므로 JavaScript 보조 기능이 실패해도 제목 이동은 유지됩니다.
+
+## 본문 옆에서 방해되지 않는 목차 UI 만들기
+
+목차는 화면이 넓은 PC에서만 본문 오른쪽에 표시합니다. 모바일에서는 별도 패널보다 본문 폭을 우선합니다.
+
+처음에는 목차와 본문이 너무 붙어 보였습니다. 최종 구현은 `left: calc(100% + var(--space-12))`를 사용하며 `--space-12`는 48px입니다. 브라우저 오른쪽 끝이 아니라 824px 본문을 기준으로 간격을 잡아 화면이 넓어져도 관계가 유지됩니다.
+
+긴 제목은 여러 줄로 늘리지 않고 `white-space: nowrap`과 `text-overflow: ellipsis`로 한 줄 말줄임 처리합니다. `grid-template-columns: minmax(0, 1fr)`와 `overflow: hidden`을 함께 사용해 목차 아래에 가로 스크롤이 생기지 않게 했습니다. 화면에서 줄어든 텍스트와 달리 DOM의 전체 제목과 링크의 접근 이름은 유지됩니다.
+
+색이 섞인 카드 배경도 제거했습니다. 현재 목차의 배경은 페이지와 같은 흰색 `var(--bg)`이고, 얇은 테두리와 제목 구분선만 남습니다. 이 단계에서 결정한 핵심은 48px 간격, 한 줄 말줄임, 흰 배경 세 가지입니다.
+
+## 스크롤 위치에 따라 현재 목차 표시하기
+
+목차가 있어도 현재 읽는 항목을 알 수 없다면 긴 글에서 다시 위치를 찾아야 합니다. `PostTableOfContents`는 실제 H2 요소를 찾고 `IntersectionObserver`로 위치 변화를 감지합니다.
+
+```tsx
+const ACTIVE_HEADING_OFFSET = 120
+
+const syncActiveId = () => {
+  const activeHeading = headings.reduce<HTMLElement | null>(
+    (current, heading) =>
+      heading.getBoundingClientRect().top <= ACTIVE_HEADING_OFFSET
+        ? heading
+        : current,
+    null,
+  )
+
+  setActiveId(activeHeading?.id ?? headings[0].id)
+}
+
+const observer = new window.IntersectionObserver(syncActiveId, {
+  rootMargin: "-120px 0px -60% 0px",
+  threshold: 0,
+})
+```
+
+화면 위에서 120px 떨어진 기준선보다 위에 있는 마지막 H2를 현재 항목으로 선택합니다. 활성 링크는 색상만 바꾸지 않고 글자 굵기와 왼쪽 점을 함께 사용하며 `aria-current="location"`을 제공합니다.
+
+`IntersectionObserver`를 지원하지 않는 환경에서는 활성 상태 갱신만 생략됩니다. 기본 목차 링크와 fragment 이동은 계속 작동합니다.
+
+## 홈과 포스트에서 맨 위로 버튼 공유하기
+
+글이 길어지면 상세 화면뿐 아니라 포스트가 쌓인 홈에서도 위로 돌아갈 필요가 생깁니다. 그래서 버튼을 포스트 템플릿에 넣지 않고 공통 `Layout`에서 한 번 렌더링했습니다.
+
+버튼은 페이지를 조금 내렸다고 바로 나타나지 않습니다. 현재 위치가 첫 화면 높이보다 아래에 있고, 사용자가 위로 16px 이상 움직였을 때만 표시됩니다. 아래로 읽는 동안에는 숨고 위로 돌아가려는 의도가 보일 때만 나타나 본문을 가리지 않습니다.
+
+위치는 브라우저 우측 끝이 아니라 920px 공통 컨테이너의 오른쪽 안쪽을 기준으로 계산합니다. 모바일에서는 safe area를 더해 기기 가장자리와 겹치지 않게 합니다.
+
+## 1초 상단 이동을 안전하게 다루기
+
+브라우저의 기본 smooth scroll만 사용하면 정확한 이동 시간과 중간 취소를 제어하기 어렵습니다. 현재 컴포넌트는 1초 동안 ease-out 방식으로 이동합니다.
+
+```tsx
+const SCROLL_DURATION_MS = 1000
+
+if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  window.scrollTo(0, 0)
+  return
+}
+
+const animate = (timestamp: number) => {
+  const elapsed = Math.max(0, timestamp - startedAt)
+  const progress = Math.min(elapsed / SCROLL_DURATION_MS, 1)
+  const easedProgress = 1 - (1 - progress) ** 3
+  const nextScrollY = Math.max(
+    1,
+    Math.round(startScrollY * (1 - easedProgress)),
+  )
+
+  window.scrollTo(0, progress < 1 ? nextScrollY : 0)
+}
+```
+
+이동 시간은 상수 `SCROLL_DURATION_MS = 1000`으로 고정했습니다. 1초라는 기준을 코드와 글에서 같은 값으로 설명합니다.
+
+이동 중에 휠, 터치, 포인터, 방향키, Page Up·Down 같은 입력이 들어오면 애니메이션을 취소합니다. 자동 이동보다 사용자의 새 입력을 우선하기 위한 결정입니다.
+
+`prefers-reduced-motion`이 설정된 환경에서는 애니메이션 없이 즉시 이동합니다. 키보드로 버튼을 실행했다면 이동 후 사이트 로고에 포커스를 돌려 현재 위치를 알 수 있게 합니다. 숨겨진 버튼은 `aria-hidden`과 `tabIndex=-1`로 탐색 대상에서도 제외합니다.
+
+## 검증하고 내 블로그에 적용하기
+
+기능이 각각 작동하는지만 보지 않고 함께 있을 때 읽는 흐름을 방해하지 않는지 확인했습니다.
+
+| 확인 대상 | 확인할 내용 |
+| --- | --- |
+| 코드 블록 | 언어 이름, 토큰 색상, 긴 코드의 내부 가로 스크롤 |
+| 복사 버튼 | Clipboard API 지원 시 노출, 44px 터치 영역, 접근 이름 |
+| 목차 | H2 순서와 링크 id 일치, 한 줄 말줄임, 전체 접근 이름 |
+| 활성 위치 | 스크롤·해시 이동 뒤 `aria-current`가 한 항목에만 존재 |
+| 상단 버튼 | 노출 조건, 1초 이동, 사용자 입력 취소, 모션 감소 |
+| 반응형 | PC 목차 노출, 모바일 목차 숨김, 페이지 가로 overflow 없음 |
+
+자동 검증은 `npm test`, `npm run typecheck`, `npm run build`와 정적 산출물 검증을 사용합니다. 브라우저에서는 Chromium과 WebKit의 데스크톱·모바일 화면을 확인합니다.
+
+자신의 블로그에 적용할 때는 모든 값을 그대로 복사할 필요가 없습니다. 먼저 코드 테마, 목차를 보여줄 화면 폭, 본문과 목차의 간격, 상단 버튼 노출 기준을 자신의 글 길이와 디자인에 맞춰 정하면 됩니다.
+
+보조 기능이 실패해도 본문 읽기와 기본 링크 탐색은 남아 있어야 합니다. 이것이 기능을 많이 추가하는 것보다 먼저 지킨 기준입니다.
