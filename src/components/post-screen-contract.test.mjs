@@ -254,28 +254,36 @@ test("explains the MDX and GraphQL post system", async () => {
   assert.doesNotMatch(post, /(?:제목|Gatsby로 블로그[^\n]*)\s*[123]편/)
 })
 
-test("documents GraphQL page generation as article three", async () => {
+test("explains how to customize the blog with Tailwind CSS", async () => {
   const post = await readRepositoryFile(
-    "content/posts/gatsby-blog-3-graphql-page-generation/index.mdx",
+    "content/posts/custom-developer-blog-with-tailwind-css/index.mdx",
   )
 
-  assert.match(post, /title: "Gatsby로 블로그 만들기 3편 - GraphQL 페이지 생성"/)
-  assert.match(post, /slug: "gatsby-blog-3-graphql-page-generation"/)
+  assert.match(
+    post,
+    /title: "Tailwind CSS로 내 디자인의 개발자 블로그 완성하기"/,
+  )
+  assert.match(post, /slug: "custom-developer-blog-with-tailwind-css"/)
   assert.match(post, /publishedAt: "2026-06-27"/)
-  assert.match(post, /## 같은 MDX 노드를 두 경로에서 조회하기/)
-  assert.match(post, /## 홈에서 발행일 역순 목록 만들기/)
-  assert.match(post, /## 블로그 글만 정적 라우트로 생성하기/)
-  assert.match(post, /## id로 상세 데이터와 본문 연결하기/)
-  assert.match(post, /## 표현 컴포넌트와 GraphQL 경계 분리하기/)
-  assert.match(post, /## SEO와 sitemap을 같은 메타데이터에 연결하기/)
-  assert.match(post, /## 빌드 결과로 전체 흐름 검증하기/)
-  assert.match(post, /allMdx\(sort: \{ frontmatter: \{ publishedAt: DESC \} \}\)/)
-  assert.match(post, /sourceInstanceName === "posts"/)
-  assert.match(post, /contentFilePath/)
-  assert.match(post, /context: \{[\s\S]*id: post\.id/)
-  assert.match(post, /mdx\(id: \{ eq: \$id \}\)/)
-  assert.match(post, /gatsby-plugin-sitemap/)
-  assert.doesNotMatch(post, /2025|React SSR 한글|태그 필터 구현/)
+  assert.match(post, /## 화면을 만들기 전에 디자인 규칙 정하기/)
+  assert.match(post, /## UI 시안을 컴포넌트로 나누기/)
+  assert.match(post, /## Tailwind CSS에 디자인 토큰 정의하기/)
+  assert.match(post, /## 로컬 폰트 적용하기/)
+  assert.match(post, /## 824px 콘텐츠 레이아웃 통일하기/)
+  assert.match(post, /## 홈 목록과 포스트 화면 스타일링하기/)
+  assert.match(post, /## 모바일 레이아웃 설계하기/)
+  assert.match(
+    post,
+    /## Tailwind Preflight와 브라우저 기본 스타일 확인하기/,
+  )
+  assert.match(post, /## 내 디자인으로 바꾸는 체크포인트/)
+  assert.match(post, /## 여러 화면 크기에서 검증하기/)
+  assert.match(post, /@theme inline/)
+  assert.match(post, /Noto Serif KR/)
+  assert.match(post, /max-width: 920px/)
+  assert.match(post, /920px - 48px - 48px = 824px/)
+  assert.match(post, /4\.5:1/)
+  assert.doesNotMatch(post, /(?:제목|Gatsby로 블로그[^\n]*)\s*[123]편/)
 })
 
 test("registers a production verifier for all approved posts", async () => {
