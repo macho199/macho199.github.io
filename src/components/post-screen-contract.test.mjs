@@ -312,13 +312,21 @@ test("explains how the blog improves long-form reading experience", async () => 
   assert.match(post, /## 검증하고 내 블로그에 적용하기/)
   assert.match(post, /@shikijs\/rehype/)
   assert.match(post, /MDXProvider/)
+  assert.match(
+    post,
+    /서버 렌더링에서는 코드 카드와 언어 이름, 원래 `pre`가 출력되고 복사 버튼은 아직 나타나지 않습니다/,
+  )
+  assert.doesNotMatch(post, /서버 렌더링에서는 원래 코드만 출력됩니다/)
   assert.match(post, /tableOfContents\(maxDepth: 2\)/)
   assert.match(post, /IntersectionObserver/)
+  assert.match(post, /스크롤에 따른 활성 상태 자동 갱신만 생략됩니다/)
+  assert.doesNotMatch(post, /환경에서는 활성 상태 갱신만 생략됩니다/)
   assert.match(post, /aria-current/)
   assert.match(post, /SCROLL_DURATION_MS = 1000/)
   assert.match(post, /prefers-reduced-motion/)
   assert.match(post, /48px/)
   assert.match(post, /text-overflow: ellipsis/)
+  assert.equal((post.match(/^```(?:javascript|tsx)$/gm) ?? []).length, 5)
   assert.doesNotMatch(
     post,
     /text-wrap: pretty|모바일 Safari|카드 제목 조기 줄바꿈/,
