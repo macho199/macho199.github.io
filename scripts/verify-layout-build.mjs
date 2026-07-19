@@ -1,16 +1,18 @@
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
-import { readFile } from "node:fs/promises"
+import { readFile, readdir } from "node:fs/promises"
+
+const postsDirectory = new URL("../public/posts/", import.meta.url)
+const postDirectories = (await readdir(postsDirectory, { withFileTypes: true }))
+  .filter(entry => entry.isDirectory())
+  .sort((left, right) => left.name.localeCompare(right.name))
 
 const pages = [
   ["home", new URL("../public/index.html", import.meta.url)],
-  [
-    "post",
-    new URL(
-      "../public/posts/gatsby-blog-1-getting-started/index.html",
-      import.meta.url,
-    ),
-  ],
+  ...postDirectories.map(entry => [
+    `post:${entry.name}`,
+    new URL(`../public/posts/${entry.name}/index.html`, import.meta.url),
+  ]),
 ]
 
 /**
@@ -49,6 +51,16 @@ for (const [name, url] of pages) {
   assertLocalFavicon(html, name)
 
   assert.equal(
+    countClassedTags(html, "button", "scroll-to-top-button"),
+    1,
+    `${name}: one scroll to top button`,
+  )
+  assert.match(
+    html,
+    /<button\b(?=[^>]*class="[^"]*scroll-to-top-button[^"]*")(?=[^>]*aria-label="페이지 맨 위로 이동")(?=[^>]*aria-hidden="true")(?=[^>]*tabindex="-1")[^>]*>/,
+    `${name}: initially hidden accessible scroll control`,
+  )
+  assert.equal(
     countClassedTags(html, "header", "site-header"),
     1,
     `${name}: one site header`,
@@ -86,9 +98,16 @@ const favicon = await readFile(
 
 assertLocalFavicon(notFoundHtml, "not found")
 assert.equal(
+  countClassedTags(notFoundHtml, "button", "scroll-to-top-button"),
+  0,
+  "not found: no scroll to top button outside Layout",
+)
+assert.equal(
   createHash("sha256").update(favicon).digest("hex"),
   "dde3fd00fdda954cef45373e2dc0467cde694d66e8c626749edeceed15359c7c",
   "layout: exact transparent local profile favicon asset",
 )
 
-console.log("layout build verified: shell and local favicon contracts passed")
+console.log(
+  "layout build verified: shell, favicon, and scroll control contracts passed",
+)

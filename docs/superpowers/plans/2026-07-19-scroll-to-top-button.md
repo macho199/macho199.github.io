@@ -82,7 +82,7 @@ test("keeps the scroll button accessible and cancels owned resources", async () 
   assert.match(button, /aria-hidden=\{!isVisible\}/)
   assert.match(button, /tabIndex=\{isVisible \? 0 : -1\}/)
   assert.match(button, /<svg[\s\S]*aria-hidden="true"[\s\S]*focusable="false"/)
-  assert.match(button, /document\.querySelector<HTMLElement>\("\.site-logo"\)/)
+  assert.match(button, /document[\s\S]*\.querySelector<HTMLElement>\("\.site-logo"\)/)
   assert.match(button, /focus\(\{ preventScroll: true \}\)/)
   assert.match(button, /CANCEL_SCROLL_KEYS\.has\(event\.code\)/)
 
@@ -102,6 +102,21 @@ test("keeps the scroll button accessible and cancels owned resources", async () 
   assert.match(button, /window\.removeEventListener\("scroll", handleScroll\)/)
   assert.match(button, /window\.removeEventListener\("resize", handleResize\)/)
   assert.match(button, /window\.removeEventListener\("keydown", handleKeyDown\)/)
+})
+
+test("keeps animated scroll above zero until the duration completes", async () => {
+  const button = await readRepositoryFile(
+    "src/components/scroll-to-top-button.tsx",
+  )
+
+  assert.match(
+    button,
+    /if \(progress < 1\)[\s\S]*Math\.max\([\s\S]*1,[\s\S]*Math\.round\(startScrollY \* \(1 - easedProgress\)\)[\s\S]*\)[\s\S]*window\.requestAnimationFrame\(animate\)/,
+  )
+  assert.match(
+    button,
+    /if \(startScrollY <= 0\)[\s\S]*if \(isKeyboard\) focusSiteLogo\(\)[\s\S]*return/,
+  )
 })
 ```
 
@@ -125,7 +140,7 @@ Run:
 node --test src/components/layout-contract.test.mjs
 ```
 
-Expected: 새 두 테스트와 React runtime 검사가 빈 `scroll-to-top-button.tsx` 소스를 읽어 FAIL하고 기존 Layout 테스트는 PASS한다.
+Expected: 새 세 테스트와 React runtime 검사가 빈 `scroll-to-top-button.tsx` 소스를 읽어 FAIL하고 기존 Layout 테스트는 PASS한다.
 
 - [ ] **Step 3: 한 effect가 전체 수명주기를 소유하는 컴포넌트 구현**
 
@@ -181,17 +196,24 @@ const ScrollToTopButton = () => {
       }
 
       const startScrollY = window.scrollY
+      if (startScrollY <= 0) {
+        if (isKeyboard) focusSiteLogo()
+        return
+      }
+
       const startedAt = window.performance.now()
 
       const animate = (timestamp: number) => {
         const elapsed = Math.max(0, timestamp - startedAt)
         const progress = Math.min(elapsed / SCROLL_DURATION_MS, 1)
         const easedProgress = 1 - (1 - progress) ** 3
-        const nextScrollY = Math.round(startScrollY * (1 - easedProgress))
-
-        window.scrollTo(0, nextScrollY)
 
         if (progress < 1) {
+          const nextScrollY = Math.max(
+            1,
+            Math.round(startScrollY * (1 - easedProgress)),
+          )
+          window.scrollTo(0, nextScrollY)
           scrollAnimationFrame = window.requestAnimationFrame(animate)
           return
         }
@@ -626,13 +648,14 @@ Expected: 홈 HTTP 200, 두 세션 title `Developer Blog`. 짧은 세션명은 m
 
 ```js
 async page => {
+  await page.emulateMedia({ reducedMotion: "no-preference" })
   const routes = [
     "/",
     "/posts/gatsby-blog-3-graphql-page-generation/",
   ]
   const viewports = [
     { width: 390, height: 500, edge: 16 },
-    { width: 1440, height: 500, edge: 24 },
+    { width: 1440, height: 300, edge: 24 },
   ]
   const results = []
 
@@ -642,6 +665,9 @@ async page => {
       await page.goto(`http://127.0.0.1:9000${route}`)
       await page.waitForLoadState("networkidle")
       const button = page.locator(".scroll-to-top-button")
+
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.waitForTimeout(50)
 
       if ((await button.count()) !== 1) throw new Error(`${route}: button count`)
       if ((await button.getAttribute("aria-hidden")) !== "true") {
@@ -672,6 +698,12 @@ async page => {
       if ((await button.getAttribute("aria-hidden")) !== "false") {
         throw new Error(`${route}: hidden at cumulative 16px`)
       }
+
+      await page.waitForFunction(expectedEdge => {
+        const element = document.querySelector(".scroll-to-top-button")
+        const rect = element.getBoundingClientRect()
+        return Math.abs(innerHeight - rect.bottom - expectedEdge) < 0.1
+      }, viewport.edge)
 
       const metrics = await button.evaluate((element, expectedEdge) => {
         const rect = element.getBoundingClientRect()
