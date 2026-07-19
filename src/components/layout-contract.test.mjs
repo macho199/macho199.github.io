@@ -60,12 +60,101 @@ test("imports the React runtime required by Gatsby SSR", async () => {
       "src/components/header.tsx",
       "src/components/footer.tsx",
       "src/components/layout.tsx",
+      "src/components/scroll-to-top-button.tsx",
     ].map(readRepositoryFile),
   )
 
   for (const source of componentSources) {
     assert.match(source, /^import \* as React from "react"$/m)
   }
+})
+
+test("defines the scroll direction and animation contracts", async () => {
+  const button = await readRepositoryFile(
+    "src/components/scroll-to-top-button.tsx",
+  )
+
+  assert.match(button, /const SCROLL_UP_THRESHOLD_PX = 16/)
+  assert.match(button, /const SCROLL_DURATION_MS = 1000/)
+  assert.match(
+    button,
+    /const CANCEL_SCROLL_KEYS = new Set\(\[[\s\S]*"ArrowUp"[\s\S]*"ArrowDown"[\s\S]*"PageUp"[\s\S]*"PageDown"[\s\S]*"Home"[\s\S]*"End"[\s\S]*"Space"[\s\S]*\]\)/,
+  )
+  assert.match(button, /window\.scrollY <= window\.innerHeight/)
+  assert.match(
+    button,
+    /currentScrollY > lastScrollY[\s\S]*setIsVisible\(false\)[\s\S]*upwardDistance = 0/,
+  )
+  assert.match(button, /upwardDistance \+= lastScrollY - currentScrollY/)
+  assert.match(button, /upwardDistance >= SCROLL_UP_THRESHOLD_PX/)
+  assert.match(
+    button,
+    /window\.addEventListener\("scroll", handleScroll, \{ passive: true \}\)/,
+  )
+  assert.match(
+    button,
+    /observationFrame = window\.requestAnimationFrame\(updateVisibility\)/,
+  )
+  assert.match(button, /elapsed \/ SCROLL_DURATION_MS/)
+  assert.match(button, /1 - \(1 - progress\) \*\* 3/)
+  assert.match(
+    button,
+    /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches/,
+  )
+  assert.match(button, /event\.detail === 0/)
+})
+
+test("keeps the scroll button accessible and cancels owned resources", async () => {
+  const button = await readRepositoryFile(
+    "src/components/scroll-to-top-button.tsx",
+  )
+
+  assert.match(
+    button,
+    /<button[\s\S]*type="button"[\s\S]*aria-label="페이지 맨 위로 이동"/,
+  )
+  assert.match(button, /aria-hidden=\{!isVisible\}/)
+  assert.match(button, /tabIndex=\{isVisible \? 0 : -1\}/)
+  assert.match(
+    button,
+    /<svg[\s\S]*aria-hidden="true"[\s\S]*focusable="false"/,
+  )
+  assert.match(
+    button,
+    /document[\s\S]*\.querySelector<HTMLElement>\("\.site-logo"\)/,
+  )
+  assert.match(button, /focus\(\{ preventScroll: true \}\)/)
+  assert.match(button, /CANCEL_SCROLL_KEYS\.has\(event\.code\)/)
+
+  for (const eventName of ["wheel", "touchstart", "pointerdown"]) {
+    assert.match(
+      button,
+      new RegExp(
+        `window\\.addEventListener\\("${eventName}", cancelScrollAnimation`,
+      ),
+    )
+    assert.match(
+      button,
+      new RegExp(
+        `window\\.removeEventListener\\("${eventName}", cancelScrollAnimation`,
+      ),
+    )
+  }
+
+  assert.match(button, /window\.cancelAnimationFrame\(observationFrame\)/)
+  assert.match(button, /window\.cancelAnimationFrame\(scrollAnimationFrame\)/)
+  assert.match(
+    button,
+    /window\.removeEventListener\("scroll", handleScroll\)/,
+  )
+  assert.match(
+    button,
+    /window\.removeEventListener\("resize", handleResize\)/,
+  )
+  assert.match(
+    button,
+    /window\.removeEventListener\("keydown", handleKeyDown\)/,
+  )
 })
 
 test("loads a responsive 920px common container", async () => {
