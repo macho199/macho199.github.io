@@ -45,17 +45,24 @@ const ScrollToTopButton = () => {
       }
 
       const startScrollY = window.scrollY
+      if (startScrollY <= 0) {
+        if (isKeyboard) focusSiteLogo()
+        return
+      }
+
       const startedAt = window.performance.now()
 
       const animate = (timestamp: number) => {
         const elapsed = Math.max(0, timestamp - startedAt)
         const progress = Math.min(elapsed / SCROLL_DURATION_MS, 1)
         const easedProgress = 1 - (1 - progress) ** 3
-        const nextScrollY = Math.round(startScrollY * (1 - easedProgress))
-
-        window.scrollTo(0, nextScrollY)
 
         if (progress < 1) {
+          const nextScrollY = Math.max(
+            1,
+            Math.round(startScrollY * (1 - easedProgress)),
+          )
+          window.scrollTo(0, nextScrollY)
           scrollAnimationFrame = window.requestAnimationFrame(animate)
           return
         }

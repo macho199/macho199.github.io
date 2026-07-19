@@ -159,6 +159,21 @@ test("keeps the scroll button accessible and cancels owned resources", async () 
   )
 })
 
+test("keeps animated scroll above zero until the duration completes", async () => {
+  const button = await readRepositoryFile(
+    "src/components/scroll-to-top-button.tsx",
+  )
+
+  assert.match(
+    button,
+    /if \(progress < 1\)[\s\S]*Math\.max\([\s\S]*1,[\s\S]*Math\.round\(startScrollY \* \(1 - easedProgress\)\)[\s\S]*\)[\s\S]*window\.requestAnimationFrame\(animate\)/,
+  )
+  assert.match(
+    button,
+    /if \(startScrollY <= 0\)[\s\S]*if \(isKeyboard\) focusSiteLogo\(\)[\s\S]*return/,
+  )
+})
+
 test("loads a responsive 920px common container", async () => {
   const [browserEntry, layoutCss] = await Promise.all([
     readRepositoryFile("gatsby-browser.js"),
