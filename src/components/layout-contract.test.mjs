@@ -15,16 +15,17 @@ const readRepositoryFile = path =>
   })
 
 test("defines a shared Header, main, and Footer shell", async () => {
-  const [layout, header, footer, container] = await Promise.all([
+  const [layout, header, footer, container, notFoundPage] = await Promise.all([
     readRepositoryFile("src/components/layout.tsx"),
     readRepositoryFile("src/components/header.tsx"),
     readRepositoryFile("src/components/footer.tsx"),
     readRepositoryFile("src/components/content-container.tsx"),
+    readRepositoryFile("src/pages/404.tsx"),
   ])
 
   assert.match(
     layout,
-    /<div className="site-shell">[\s\S]*<Header \/>[\s\S]*<main id="content" className="site-main">[\s\S]*\{children\}[\s\S]*<Footer \/>/,
+    /<div className="site-shell">[\s\S]*<Header \/>[\s\S]*<main id="content" className="site-main">[\s\S]*\{children\}[\s\S]*<Footer \/>[\s\S]*<ScrollToTopButton \/>/,
   )
   assert.match(header, /<header className="site-header">/)
   assert.match(header, /<Link to="\/" className="site-logo"[^>]*>\s*kjs\.log\s*<\/Link>/)
@@ -51,6 +52,7 @@ test("defines a shared Header, main, and Footer shell", async () => {
     /AI workflow · backend notes · product engineering/,
   )
   assert.match(container, /<div className="site-container">\{children\}<\/div>/)
+  assert.doesNotMatch(notFoundPage, /<Layout>|ScrollToTopButton/)
 })
 
 test("imports the React runtime required by Gatsby SSR", async () => {
@@ -60,12 +62,116 @@ test("imports the React runtime required by Gatsby SSR", async () => {
       "src/components/header.tsx",
       "src/components/footer.tsx",
       "src/components/layout.tsx",
+      "src/components/scroll-to-top-button.tsx",
     ].map(readRepositoryFile),
   )
 
   for (const source of componentSources) {
     assert.match(source, /^import \* as React from "react"$/m)
   }
+})
+
+test("defines the scroll direction and animation contracts", async () => {
+  const button = await readRepositoryFile(
+    "src/components/scroll-to-top-button.tsx",
+  )
+
+  assert.match(button, /const SCROLL_UP_THRESHOLD_PX = 16/)
+  assert.match(button, /const SCROLL_DURATION_MS = 1000/)
+  assert.match(
+    button,
+    /const CANCEL_SCROLL_KEYS = new Set\(\[[\s\S]*"ArrowUp"[\s\S]*"ArrowDown"[\s\S]*"PageUp"[\s\S]*"PageDown"[\s\S]*"Home"[\s\S]*"End"[\s\S]*"Space"[\s\S]*\]\)/,
+  )
+  assert.match(button, /window\.scrollY <= window\.innerHeight/)
+  assert.match(
+    button,
+    /currentScrollY > lastScrollY[\s\S]*setIsVisible\(false\)[\s\S]*upwardDistance = 0/,
+  )
+  assert.match(button, /upwardDistance \+= lastScrollY - currentScrollY/)
+  assert.match(button, /upwardDistance >= SCROLL_UP_THRESHOLD_PX/)
+  assert.match(
+    button,
+    /window\.addEventListener\("scroll", handleScroll, \{ passive: true \}\)/,
+  )
+  assert.match(
+    button,
+    /observationFrame = window\.requestAnimationFrame\(updateVisibility\)/,
+  )
+  assert.match(button, /elapsed \/ SCROLL_DURATION_MS/)
+  assert.match(button, /1 - \(1 - progress\) \*\* 3/)
+  assert.match(
+    button,
+    /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)\.matches/,
+  )
+  assert.match(button, /event\.detail === 0/)
+})
+
+test("keeps the scroll button accessible and cancels owned resources", async () => {
+  const button = await readRepositoryFile(
+    "src/components/scroll-to-top-button.tsx",
+  )
+
+  assert.match(
+    button,
+    /<button[\s\S]*type="button"[\s\S]*aria-label="페이지 맨 위로 이동"/,
+  )
+  assert.match(button, /aria-hidden=\{!isVisible\}/)
+  assert.match(button, /tabIndex=\{isVisible \? 0 : -1\}/)
+  assert.match(
+    button,
+    /<svg[\s\S]*aria-hidden="true"[\s\S]*focusable="false"/,
+  )
+  assert.match(
+    button,
+    /document[\s\S]*\.querySelector<HTMLElement>\("\.site-logo"\)/,
+  )
+  assert.match(button, /focus\(\{ preventScroll: true \}\)/)
+  assert.match(button, /CANCEL_SCROLL_KEYS\.has\(event\.code\)/)
+
+  for (const eventName of ["wheel", "touchstart", "pointerdown"]) {
+    assert.match(
+      button,
+      new RegExp(
+        `window\\.addEventListener\\("${eventName}", cancelScrollAnimation`,
+      ),
+    )
+    assert.match(
+      button,
+      new RegExp(
+        `window\\.removeEventListener\\("${eventName}", cancelScrollAnimation`,
+      ),
+    )
+  }
+
+  assert.match(button, /window\.cancelAnimationFrame\(observationFrame\)/)
+  assert.match(button, /window\.cancelAnimationFrame\(scrollAnimationFrame\)/)
+  assert.match(
+    button,
+    /window\.removeEventListener\("scroll", handleScroll\)/,
+  )
+  assert.match(
+    button,
+    /window\.removeEventListener\("resize", handleResize\)/,
+  )
+  assert.match(
+    button,
+    /window\.removeEventListener\("keydown", handleKeyDown\)/,
+  )
+})
+
+test("keeps animated scroll above zero until the duration completes", async () => {
+  const button = await readRepositoryFile(
+    "src/components/scroll-to-top-button.tsx",
+  )
+
+  assert.match(
+    button,
+    /if \(progress < 1\)[\s\S]*Math\.max\([\s\S]*1,[\s\S]*Math\.round\(startScrollY \* \(1 - easedProgress\)\)[\s\S]*\)[\s\S]*window\.requestAnimationFrame\(animate\)/,
+  )
+  assert.match(
+    button,
+    /if \(startScrollY <= 0\)[\s\S]*if \(isKeyboard\) focusSiteLogo\(\)[\s\S]*return/,
+  )
 })
 
 test("loads a responsive 920px common container", async () => {
@@ -106,6 +212,60 @@ test("loads a responsive 920px common container", async () => {
   assert.match(
     layoutCss,
     /@media \(max-width: 720px\)[\s\S]*?\.site-container\s*\{[^}]*padding-inline: var\(--container-gutter-phone\)/,
+  )
+})
+
+test("renders and styles one shared scroll to top button", async () => {
+  const [layout, layoutCss] = await Promise.all([
+    readRepositoryFile("src/components/layout.tsx"),
+    readRepositoryFile("src/styles/layout.css"),
+  ])
+
+  assert.match(
+    layout,
+    /import ScrollToTopButton from "\.\/scroll-to-top-button"/,
+  )
+  assert.equal((layout.match(/<ScrollToTopButton \/>/g) ?? []).length, 1)
+  assert.match(
+    layoutCss,
+    /\.scroll-to-top-button\s*\{(?=[^}]*position:\s*fixed)(?=[^}]*bottom:\s*calc\(var\(--space-6\) \+ var\(--space-3\)\))(?=[^}]*z-index:\s*30)(?=[^}]*width:\s*48px)(?=[^}]*height:\s*48px)(?=[^}]*border-radius:\s*var\(--radius-pill\))(?=[^}]*background:\s*var\(--bg\))(?=[^}]*opacity:\s*0)(?=[^}]*visibility:\s*hidden)(?=[^}]*pointer-events:\s*none)(?=[^}]*transform:\s*translateY\(var\(--space-2\)\))[^}]*\}/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.scroll-to-top-icon\s*\{(?=[^}]*width:\s*22px)(?=[^}]*height:\s*22px)[^}]*\}/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.scroll-to-top-button\.is-visible\s*\{(?=[^}]*opacity:\s*1)(?=[^}]*visibility:\s*visible)(?=[^}]*pointer-events:\s*auto)(?=[^}]*transform:\s*translateY\(0\))[^}]*\}/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.scroll-to-top-button:hover\s*\{[^}]*border-color:\s*var\(--accent\)[^}]*color:\s*var\(--accent-hover\)/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.scroll-to-top-button:active\s*\{[^}]*transform:\s*scale\(0\.92\)/s,
+  )
+  assert.match(
+    layoutCss,
+    /@media \(max-width: 720px\)[\s\S]*\.scroll-to-top-button\s*\{[^}]*bottom:\s*calc\(\s*var\(--space-4\) \+ var\(--space-3\) \+\s*env\(safe-area-inset-bottom, 0px\)\s*\)[^}]*\}/s,
+  )
+})
+
+test("aligns the scroll control with the responsive content edge", async () => {
+  const layoutCss = await readRepositoryFile("src/styles/layout.css")
+
+  assert.match(
+    layoutCss,
+    /\.scroll-to-top-button\s*\{[^}]*right:\s*max\(\s*calc\(var\(--container-gutter-desktop\) \+ var\(--space-3\)\),\s*calc\(\s*\(100vw - 920px\) \/ 2 \+ var\(--container-gutter-desktop\) \+ var\(--space-3\)\s*\)\s*\)[^}]*\}/s,
+  )
+  assert.match(
+    layoutCss,
+    /@media \(max-width: 1020px\)[\s\S]*?\.scroll-to-top-button\s*\{[^}]*right:\s*max\(\s*calc\(var\(--container-gutter-tablet\) \+ var\(--space-3\)\),\s*calc\(\s*\(100vw - 920px\) \/ 2 \+ var\(--container-gutter-tablet\) \+ var\(--space-3\)\s*\)\s*\)[^}]*\}/s,
+  )
+  assert.match(
+    layoutCss,
+    /@media \(max-width: 720px\)[\s\S]*?\.scroll-to-top-button\s*\{[^}]*right:\s*calc\(\s*var\(--container-gutter-phone\) \+ var\(--space-3\) \+\s*env\(safe-area-inset-right, 0px\)\s*\)[^}]*\}/s,
   )
 })
 

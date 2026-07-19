@@ -60,6 +60,17 @@ const postContracts = [
   },
 ]
 
+const expectedFilterTags = [
+  "Gatsby",
+  "GraphQL",
+  "MDX",
+  "SEO",
+  "Validation",
+  "GitHub Pages",
+  "React",
+  "Tailwind CSS",
+]
+
 assert.equal(countOpeningTags("h1"), 1, "home: one page heading")
 assert.equal(countClassedTags(main, "h1", "sr-only"), 1, "home: hidden h1")
 assert.match(main, /<h1\b[^>]*>[\s\S]*?개발자 블로그[\s\S]*?<\/h1>/)
@@ -118,13 +129,69 @@ const expectedPostPaths = postContracts.map(post => post.path)
 assert.deepEqual(postPaths, expectedPostPaths, "home: newest post first")
 assert.doesNotMatch(main, /\/posts\/mdx-foundation\//)
 
-assert.equal(countOpeningTags("button"), 0, "home: no inactive controls")
+assert.equal(
+  countClassedTags(main, "section", "post-filter-toolbar"),
+  1,
+  "home: one filter toolbar",
+)
+const toolbarMatch = main.match(
+  /<section\b(?=[^>]*class="[^"]*\bpost-filter-toolbar\b[^"]*")(?=[^>]*aria-label="글 필터")[^>]*>([\s\S]*?)<\/section>/,
+)
+
+assert.ok(toolbarMatch, "home: labelled post filter toolbar")
+
+const toolbar = toolbarMatch[1]
+
+assert.match(
+  toolbar,
+  /<span\b(?=[^>]*class="[^"]*\bpost-filter-label\b[^"]*")(?=[^>]*aria-hidden="true")[^>]*>\s*태그 필터\s*<\/span>/,
+  "home: visible mobile tag filter label",
+)
+
+const groupMatches = toolbar.match(
+  /<div\b(?=[^>]*class="[^"]*\bpost-filter-options\b[^"]*")(?=[^>]*role="group")(?=[^>]*aria-label="태그 필터")[^>]*>/g,
+) ?? []
+
+assert.equal(groupMatches.length, 1, "home: one labelled tag filter group")
+
+const filterButtons = [
+  ...toolbar.matchAll(
+    /<button\b([^>]*class="[^"]*\bpost-filter-button\b[^"]*"[^>]*)>([^<]*)<\/button>/g,
+  ),
+].map(match => ({
+  attributes: match[1],
+  label: match[2].trim(),
+}))
+
+assert.deepEqual(
+  filterButtons.map(button => button.label),
+  ["전체", ...expectedFilterTags],
+  "home: exact filter labels in first appearance order",
+)
+assert.equal(countOpeningTags("button"), filterButtons.length, "home: only filter buttons")
+assert.equal(
+  filterButtons.filter(button => /\baria-pressed="true"/.test(button.attributes)).length,
+  1,
+  "home: one initially selected filter",
+)
+assert.match(filterButtons[0].attributes, /\baria-pressed="true"/)
+assert.match(filterButtons[0].attributes, /\bdata-filter-kind="all"/)
+
+for (const button of filterButtons.slice(1)) {
+  assert.match(button.attributes, /\baria-pressed="false"/)
+  assert.match(button.attributes, /\bdata-filter-kind="tag"/)
+}
+
+assert.match(
+  toolbar,
+  /<p\b(?=[^>]*class="[^"]*\bpost-filter-count\b[^"]*")(?=[^>]*role="status")(?=[^>]*aria-live="polite")[^>]*>\s*3 posts\s*<\/p>/,
+  "home: initial post result count",
+)
 assert.doesNotMatch(
   main,
-  /class="[^"]*(?:filter-bar|pagination|result-count)[^"]*"/,
+  /class="[^"]*(?:pagination|search-input)[^"]*"/,
 )
-assert.doesNotMatch(main, /\b\d+\s+posts?\b/i)
 
 console.log(
-  "home build verified: actual MDX list and static screen contracts passed",
+  "home build verified: actual MDX list, initial filters, and static screen contracts passed",
 )

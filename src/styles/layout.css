@@ -90,6 +90,61 @@
     min-width: 0;
   }
 
+  .scroll-to-top-button {
+    position: fixed;
+    right: max(
+      calc(var(--container-gutter-desktop) + var(--space-3)),
+      calc(
+        (100vw - 920px) / 2 + var(--container-gutter-desktop) + var(--space-3)
+      )
+    );
+    bottom: calc(var(--space-6) + var(--space-3));
+    z-index: 30;
+    display: inline-grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--bg);
+    box-shadow: var(--elev-raised);
+    color: var(--accent);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(var(--space-2));
+    transition:
+      opacity var(--motion-base) var(--ease-standard),
+      visibility 0s linear var(--motion-base),
+      transform var(--motion-base) var(--ease-standard),
+      border-color var(--motion-fast) var(--ease-standard),
+      color var(--motion-fast) var(--ease-standard);
+  }
+
+  .scroll-to-top-button.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition-delay: 0s;
+  }
+
+  .scroll-to-top-icon {
+    width: 22px;
+    height: 22px;
+    pointer-events: none;
+  }
+
+  .scroll-to-top-button:hover {
+    border-color: var(--accent);
+    color: var(--accent-hover);
+  }
+
+  .scroll-to-top-button:active {
+    transform: scale(0.92);
+  }
+
   .site-footer {
     color: var(--muted);
     font-size: var(--text-sm);
@@ -117,10 +172,30 @@
   .site-container {
     padding-inline: var(--container-gutter-tablet);
   }
+
+  .scroll-to-top-button {
+    right: max(
+      calc(var(--container-gutter-tablet) + var(--space-3)),
+      calc(
+        (100vw - 920px) / 2 + var(--container-gutter-tablet) + var(--space-3)
+      )
+    );
+  }
 }
 
 @media (max-width: 720px) {
   .site-container {
     padding-inline: var(--container-gutter-phone);
+  }
+
+  .scroll-to-top-button {
+    right: calc(
+      var(--container-gutter-phone) + var(--space-3) +
+        env(safe-area-inset-right, 0px)
+    );
+    bottom: calc(
+      var(--space-4) + var(--space-3) +
+        env(safe-area-inset-bottom, 0px)
+    );
   }
 }

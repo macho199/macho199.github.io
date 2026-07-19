@@ -239,6 +239,10 @@
     overflow-wrap: anywhere;
   }
 
+  .post-page .mdx-content p {
+    text-wrap: wrap;
+  }
+
   .post-page .mdx-content :where(h2, h3, h4, h5) {
     color: var(--fg);
     overflow-wrap: anywhere;
