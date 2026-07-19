@@ -141,6 +141,13 @@ const toolbarMatch = main.match(
 assert.ok(toolbarMatch, "home: labelled post filter toolbar")
 
 const toolbar = toolbarMatch[1]
+
+assert.match(
+  toolbar,
+  /<span\b(?=[^>]*class="[^"]*\bpost-filter-label\b[^"]*")(?=[^>]*aria-hidden="true")[^>]*>\s*태그 필터\s*<\/span>/,
+  "home: visible mobile tag filter label",
+)
+
 const groupMatches = toolbar.match(
   /<div\b(?=[^>]*class="[^"]*\bpost-filter-options\b[^"]*")(?=[^>]*role="group")(?=[^>]*aria-label="태그 필터")[^>]*>/g,
 ) ?? []
