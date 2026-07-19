@@ -450,7 +450,7 @@ code, .code {
     <section class="doc-head">
       <p class="eyebrow">Implementation Plan · Navigation</p>
       <h1 class="doc-title">공통 상단 이동 버튼 구현계획</h1>
-      <p class="doc-sub">index와 post에 같은 스크롤 방향 규칙과 1초 상단 이동을 적용하고, 접근성·모바일 safe area·브라우저 차이까지 검증합니다.</p>
+      <p class="doc-sub">index와 post에 같은 스크롤 규칙을 적용하고, 버튼을 중앙 콘텐츠의 우측 하단에 정렬한 뒤 접근성·safe area·브라우저 차이까지 검증합니다.</p>
       <div class="meta-row">
         <span class="meta-tag"><b>작성일</b>2026-07-19</span>
         <span class="meta-tag"><b>작성자</b>Luna</span>
@@ -458,7 +458,7 @@ code, .code {
       </div>
       <div class="callout callout--key">
         <p class="callout-label">한 줄 요약</p>
-        <div class="callout-body">한 화면 이상 내려간 뒤 위로 16px 연속 이동할 때만 나타나는 44px 버튼을 만들고, 일반 환경은 1,000ms·모션 감소 환경은 즉시 맨 위로 이동하게 합니다.</div>
+        <div class="callout-body">한 화면 이상 내려간 뒤 위로 16px 연속 이동할 때만 나타나는 44px 버튼을 중앙 콘텐츠 오른쪽 선에 맞추고, 클릭 시 1,000ms 기준으로 맨 위로 이동하게 합니다.</div>
       </div>
     </section>
 
@@ -494,7 +494,7 @@ code, .code {
               <div class="flow-arrow"><span class="lbl">1회 렌더</span><span class="gly">→</span></div>
               <div class="flow-node is-accent"><b>ScrollToTopButton</b><small>listener와 두 RAF의 수명주기를 함께 관리</small></div>
               <div class="flow-arrow"><span class="lbl">DOM/CSS</span><span class="gly">→</span></div>
-              <div class="flow-node"><b>고정 버튼</b><small>표시 상태만 바꾸고 DOM은 유지</small></div>
+              <div class="flow-node"><b>콘텐츠 정렬 버튼</b><small>920px 컨테이너의 반응형 여백을 따라 우측 선에 고정</small></div>
             </div>
           </div>
         </div>
@@ -522,10 +522,10 @@ code, .code {
             <thead><tr><th>구분</th><th>내용</th></tr></thead>
             <tbody>
               <tr><td><span class="tag-inline tag-fix">확정</span></td><td class="lh">임계 위치는 한 화면 이후, 상향 누적은 16px, 이동 시간은 1,000ms입니다.</td></tr>
-              <tr><td><span class="tag-inline tag-fix">확정</span></td><td class="lh">PC 24px, 모바일 16px+safe area, 버튼 크기 44×44px입니다.</td></tr>
+              <tr><td><span class="tag-inline tag-fix">확정</span></td><td class="lh">PC에서는 824px 콘텐츠, 태블릿·모바일에서는 각 24px 여백의 오른쪽 선에 44×44px 버튼을 맞춥니다.</td></tr>
               <tr><td><span class="tag-inline tag-fix">확정</span></td><td class="lh">index와 post만 대상이며 404, 목차, URL, 저장소는 변경하지 않습니다.</td></tr>
               <tr><td><span class="tag-inline tag-est">검증</span></td><td class="lh">Chromium과 WebKit의 RAF 완료 시각은 1,000ms 직후 첫 frame인 1,000~1,100ms로 확인합니다.</td></tr>
-              <tr><td><span class="tag-inline tag-est">검증</span></td><td class="lh">테스트 환경의 safe-area inset은 0px일 수 있으므로 모바일 edge는 16px으로 확인합니다.</td></tr>
+              <tr><td><span class="tag-inline tag-est">검증</span></td><td class="lh">safe-area inset이 0px인 테스트 환경에서 390px·900px·1440px viewport의 우측 간격을 각각 24px·24px·308px로 확인합니다.</td></tr>
             </tbody>
           </table>
         </div>
@@ -551,9 +551,9 @@ code, .code {
         <h3 class="sub-title" id="task-2" data-toc="Task 2 · Layout과 CSS">Task 2 · 공통 Layout 연결과 반응형 시각 상태</h3>
         <div class="step-block">
           <div class="step-head"><span class="step-no">02</span><h4>한 번 렌더링하고 정확히 배치</h4></div>
-          <button class="check" data-check="t2-s1"><span class="check-box"></span><span class="check-text">Layout 1회 렌더와 404 제외, PC·모바일 CSS 실패 계약을 추가합니다.</span></button>
+          <button class="check" data-check="t2-s1"><span class="check-box"></span><span class="check-text">Layout 1회 렌더와 404 제외, PC·태블릿·모바일 콘텐츠 정렬 CSS 실패 계약을 추가합니다.</span></button>
           <button class="check" data-check="t2-s2"><span class="check-box"></span><span class="check-text"><code>Layout</code>의 Footer 뒤에 공통 버튼을 연결합니다.</span></button>
-          <button class="check" data-check="t2-s3"><span class="check-box"></span><span class="check-text">44px 원형, 표시 전환, hover·active, safe area 스타일을 구현합니다.</span></button>
+          <button class="check" data-check="t2-s3"><span class="check-box"></span><span class="check-text">920px 컨테이너와 여백 토큰으로 우측 선을 계산하고 44px 원형·표시 전환·safe area 스타일을 구현합니다.</span></button>
           <button class="check" data-check="t2-s4"><span class="check-box"></span><span class="check-text">전체 단위 테스트·typecheck 후 <code>feat: show shared scroll to top control</code> 커밋을 만듭니다.</span></button>
         </div>
 
@@ -562,7 +562,7 @@ code, .code {
           <div class="step-head"><span class="step-no">03</span><h4>실제 빌드와 사용자 동작 확인</h4></div>
           <button class="check" data-check="t3-s1"><span class="check-box"></span><span class="check-text">홈·모든 post는 버튼 1개, 404는 0개인 verifier를 먼저 실패시킵니다.</span></button>
           <button class="check" data-check="t3-s2"><span class="check-box"></span><span class="check-text"><code>npm run clean</code>과 <code>npm run build</code> 후 모든 자동 검증을 통과시킵니다.</span></button>
-          <button class="check" data-check="t3-s3"><span class="check-box"></span><span class="check-text">Chromium·WebKit에서 index·post의 임계값, 위치, 가로 overflow를 확인합니다.</span></button>
+          <button class="check" data-check="t3-s3"><span class="check-box"></span><span class="check-text">Chromium·WebKit에서 390px·900px·1440px viewport의 콘텐츠 우측 정렬, 목차 비겹침, 가로 overflow 0을 확인합니다.</span></button>
           <button class="check" data-check="t3-s4"><span class="check-box"></span><span class="check-text">1초 이동, 네 입력 취소, 모션 감소, 키보드 포커스, 404 경계를 확인합니다.</span></button>
           <button class="check" data-check="t3-s5"><span class="check-box"></span><span class="check-text">브라우저·서버를 종료하고 verifier 커밋 뒤 clean working tree를 확인합니다.</span></button>
         </div>
@@ -579,7 +579,8 @@ code, .code {
           <p class="callout-label">수용 기준</p>
           <ul>
             <li>index와 post에서 한 화면 이후 위로 15px까지 숨고 누적 16px에서 나타납니다.</li>
-            <li>다시 아래로 이동하면 즉시 숨고, PC·모바일에서 44×44px과 지정 edge를 지킵니다.</li>
+            <li>다시 아래로 이동하면 즉시 숨고, 폰·태블릿·PC에서 44×44px 버튼의 오른쪽 끝이 콘텐츠 오른쪽 선과 일치합니다.</li>
+            <li>광폭 post에서 버튼이 목차와 겹치지 않고 가로 overflow를 만들지 않습니다.</li>
             <li>일반 환경은 1,000ms 직후 첫 frame에 도착하고 모션 감소 환경은 즉시 도착합니다.</li>
             <li>이동 중 네 종류 입력으로 취소되고, 키보드 정상 완료에만 logo focus가 복구됩니다.</li>
             <li>정적 verifier 4종, 전체 Node 테스트, typecheck, Chromium·WebKit 검증이 모두 통과합니다.</li>

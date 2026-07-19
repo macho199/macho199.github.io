@@ -228,7 +228,7 @@ test("renders and styles one shared scroll to top button", async () => {
   assert.equal((layout.match(/<ScrollToTopButton \/>/g) ?? []).length, 1)
   assert.match(
     layoutCss,
-    /\.scroll-to-top-button\s*\{(?=[^}]*position:\s*fixed)(?=[^}]*right:\s*var\(--space-6\))(?=[^}]*bottom:\s*var\(--space-6\))(?=[^}]*z-index:\s*30)(?=[^}]*width:\s*44px)(?=[^}]*height:\s*44px)(?=[^}]*border-radius:\s*var\(--radius-pill\))(?=[^}]*background:\s*var\(--bg\))(?=[^}]*opacity:\s*0)(?=[^}]*visibility:\s*hidden)(?=[^}]*pointer-events:\s*none)(?=[^}]*transform:\s*translateY\(var\(--space-2\)\))[^}]*\}/s,
+    /\.scroll-to-top-button\s*\{(?=[^}]*position:\s*fixed)(?=[^}]*bottom:\s*var\(--space-6\))(?=[^}]*z-index:\s*30)(?=[^}]*width:\s*44px)(?=[^}]*height:\s*44px)(?=[^}]*border-radius:\s*var\(--radius-pill\))(?=[^}]*background:\s*var\(--bg\))(?=[^}]*opacity:\s*0)(?=[^}]*visibility:\s*hidden)(?=[^}]*pointer-events:\s*none)(?=[^}]*transform:\s*translateY\(var\(--space-2\)\))[^}]*\}/s,
   )
   assert.match(
     layoutCss,
@@ -244,7 +244,24 @@ test("renders and styles one shared scroll to top button", async () => {
   )
   assert.match(
     layoutCss,
-    /@media \(max-width: 720px\)[\s\S]*\.scroll-to-top-button\s*\{(?=[^}]*right:\s*calc\(var\(--space-4\) \+ env\(safe-area-inset-right, 0px\)\))(?=[^}]*bottom:\s*calc\(var\(--space-4\) \+ env\(safe-area-inset-bottom, 0px\)\))[^}]*\}/s,
+    /@media \(max-width: 720px\)[\s\S]*\.scroll-to-top-button\s*\{[^}]*bottom:\s*calc\(var\(--space-4\) \+ env\(safe-area-inset-bottom, 0px\)\)[^}]*\}/s,
+  )
+})
+
+test("aligns the scroll control with the responsive content edge", async () => {
+  const layoutCss = await readRepositoryFile("src/styles/layout.css")
+
+  assert.match(
+    layoutCss,
+    /\.scroll-to-top-button\s*\{[^}]*right:\s*max\(\s*var\(--container-gutter-desktop\),\s*calc\(\(100vw - 920px\) \/ 2 \+ var\(--container-gutter-desktop\)\)\s*\)[^}]*\}/s,
+  )
+  assert.match(
+    layoutCss,
+    /@media \(max-width: 1020px\)[\s\S]*?\.scroll-to-top-button\s*\{[^}]*right:\s*max\(\s*var\(--container-gutter-tablet\),\s*calc\(\(100vw - 920px\) \/ 2 \+ var\(--container-gutter-tablet\)\)\s*\)[^}]*\}/s,
+  )
+  assert.match(
+    layoutCss,
+    /@media \(max-width: 720px\)[\s\S]*?\.scroll-to-top-button\s*\{[^}]*right:\s*calc\(\s*var\(--container-gutter-phone\) \+ env\(safe-area-inset-right, 0px\)\s*\)[^}]*\}/s,
   )
 })
 

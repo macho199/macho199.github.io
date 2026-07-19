@@ -92,7 +92,10 @@
 
   .scroll-to-top-button {
     position: fixed;
-    right: var(--space-6);
+    right: max(
+      var(--container-gutter-desktop),
+      calc((100vw - 920px) / 2 + var(--container-gutter-desktop))
+    );
     bottom: var(--space-6);
     z-index: 30;
     display: inline-grid;
@@ -167,6 +170,13 @@
   .site-container {
     padding-inline: var(--container-gutter-tablet);
   }
+
+  .scroll-to-top-button {
+    right: max(
+      var(--container-gutter-tablet),
+      calc((100vw - 920px) / 2 + var(--container-gutter-tablet))
+    );
+  }
 }
 
 @media (max-width: 720px) {
@@ -175,7 +185,9 @@
   }
 
   .scroll-to-top-button {
-    right: calc(var(--space-4) + env(safe-area-inset-right, 0px));
+    right: calc(
+      var(--container-gutter-phone) + env(safe-area-inset-right, 0px)
+    );
     bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
   }
 }

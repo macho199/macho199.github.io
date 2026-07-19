@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** index와 post에서 한 화면 이상 내려간 사용자가 위로 16px 연속 스크롤하면 나타나고, 클릭 시 1,000ms 기준으로 맨 위까지 이동하는 공통 버튼을 제공한다.
+**Goal:** index와 post에서 한 화면 이상 내려간 사용자가 위로 16px 연속 스크롤하면 나타나고, 중앙 콘텐츠의 우측 하단에서 클릭 시 1,000ms 기준으로 맨 위까지 이동하는 공통 버튼을 제공한다.
 
-**Architecture:** 새 `ScrollToTopButton`이 노출 판단, 방향 누적, 사용자 정의 상단 이동, 입력 취소, 키보드 포커스 복구를 한 effect 안에서 소유한다. `Layout`은 이 컴포넌트를 한 번만 렌더링해 index와 post에 자동 적용하고 404는 기존 독립 경계를 유지한다. 소스 계약 테스트, Gatsby 프로덕션 HTML 검증, Chromium·WebKit 동작 검증을 순서대로 통과시킨다.
+**Architecture:** 새 `ScrollToTopButton`이 노출 판단, 방향 누적, 사용자 정의 상단 이동, 입력 취소, 키보드 포커스 복구를 한 effect 안에서 소유한다. `Layout`은 이 컴포넌트를 한 번만 렌더링해 index와 post에 자동 적용하고 404는 기존 독립 경계를 유지한다. CSS는 920px 컨테이너와 현재 반응형 여백 토큰을 기준으로 버튼의 오른쪽 끝을 콘텐츠 선에 맞추고, 소스 계약 테스트와 Chromium·WebKit 좌표 검증으로 이 정렬을 고정한다.
 
 **Tech Stack:** Gatsby 5.16.1, React 18.3.1, TypeScript 5.9.3, CSS, Node.js built-in test runner, Playwright CLI
 
@@ -18,7 +18,9 @@
 - 이동 중 wheel·touchstart·pointerdown과 지정된 스크롤 키 입력은 사용자의 기본 입력을 막지 않고 애니메이션만 취소한다.
 - 키보드 실행이 정상 완료된 경우에만 `.site-logo`로 포커스를 옮기고 pointer 실행 또는 취소 시에는 강제로 옮기지 않는다.
 - 버튼 DOM은 항상 유지하되 숨김 상태에서는 접근성 트리와 Tab 순서에서도 제외한다.
-- PC 위치는 오른쪽·아래 24px, 모바일은 16px에 각 safe-area inset을 더한다.
+- 1021px 이상에서는 920px 컨테이너의 48px 여백을 제외한 824px 콘텐츠 오른쪽 선에 버튼의 오른쪽 끝을 맞춘다.
+- 721~1020px에서는 24px 태블릿 여백, 720px 이하에서는 24px 폰 여백과 오른쪽 safe-area inset을 따른다.
+- 하단 간격은 721px 이상 24px, 720px 이하 16px와 하단 safe-area inset을 유지한다.
 - post 목차, URL·history, 저장소, 스크롤 진행률, 신규 런타임 패키지는 변경하지 않는다.
 - 구현·로컬 검증까지만 수행한다. push·PR·병합·배포는 별도 승인 전 수행하지 않는다.
 
@@ -359,7 +361,7 @@ git commit -m "feat: add scroll to top behavior"
 
 **Interfaces:**
 - Consumes: Task 1의 `.scroll-to-top-button`과 `is-visible` 클래스
-- Produces: Layout당 한 버튼, 44×44px 원형 고정 UI, PC 24px·모바일 16px+safe-area 위치
+- Produces: Layout당 한 버튼, 44×44px 원형 고정 UI, PC·태블릿·모바일 콘텐츠 우측 정렬
 
 - [ ] **Step 1: Layout·CSS 계약의 실패 테스트 작성**
 
@@ -376,7 +378,7 @@ test("renders and styles one shared scroll to top button", async () => {
   assert.equal((layout.match(/<ScrollToTopButton \/>/g) ?? []).length, 1)
   assert.match(
     layoutCss,
-    /\.scroll-to-top-button\s*\{(?=[^}]*position:\s*fixed)(?=[^}]*right:\s*var\(--space-6\))(?=[^}]*bottom:\s*var\(--space-6\))(?=[^}]*z-index:\s*30)(?=[^}]*width:\s*44px)(?=[^}]*height:\s*44px)(?=[^}]*border-radius:\s*var\(--radius-pill\))(?=[^}]*background:\s*var\(--bg\))(?=[^}]*opacity:\s*0)(?=[^}]*visibility:\s*hidden)(?=[^}]*pointer-events:\s*none)(?=[^}]*transform:\s*translateY\(var\(--space-2\)\))[^}]*\}/s,
+    /\.scroll-to-top-button\s*\{(?=[^}]*position:\s*fixed)(?=[^}]*right:\s*max\(var\(--container-gutter-desktop\),\s*calc\(\(100vw - 920px\) \/ 2 \+ var\(--container-gutter-desktop\)\)\))(?=[^}]*bottom:\s*var\(--space-6\))(?=[^}]*z-index:\s*30)(?=[^}]*width:\s*44px)(?=[^}]*height:\s*44px)(?=[^}]*border-radius:\s*var\(--radius-pill\))(?=[^}]*background:\s*var\(--bg\))(?=[^}]*opacity:\s*0)(?=[^}]*visibility:\s*hidden)(?=[^}]*pointer-events:\s*none)(?=[^}]*transform:\s*translateY\(var\(--space-2\)\))[^}]*\}/s,
   )
   assert.match(
     layoutCss,
@@ -386,7 +388,11 @@ test("renders and styles one shared scroll to top button", async () => {
   assert.match(layoutCss, /\.scroll-to-top-button:active\s*\{[^}]*transform:\s*scale\(0\.92\)/s)
   assert.match(
     layoutCss,
-    /@media \(max-width: 720px\)[\s\S]*\.scroll-to-top-button\s*\{(?=[^}]*right:\s*calc\(var\(--space-4\) \+ env\(safe-area-inset-right, 0px\)\))(?=[^}]*bottom:\s*calc\(var\(--space-4\) \+ env\(safe-area-inset-bottom, 0px\)\))[^}]*\}/s,
+    /@media \(max-width: 1020px\)[\s\S]*\.scroll-to-top-button\s*\{[^}]*right:\s*max\(var\(--container-gutter-tablet\),\s*calc\(\(100vw - 920px\) \/ 2 \+ var\(--container-gutter-tablet\)\)\)[^}]*\}/s,
+  )
+  assert.match(
+    layoutCss,
+    /@media \(max-width: 720px\)[\s\S]*\.scroll-to-top-button\s*\{(?=[^}]*right:\s*calc\(var\(--container-gutter-phone\) \+ env\(safe-area-inset-right, 0px\)\))(?=[^}]*bottom:\s*calc\(var\(--space-4\) \+ env\(safe-area-inset-bottom, 0px\)\))[^}]*\}/s,
   )
 })
 ```
@@ -445,7 +451,10 @@ const Layout = ({ children }: PropsWithChildren) => (
 ```css
 .scroll-to-top-button {
   position: fixed;
-  right: var(--space-6);
+  right: max(
+    var(--container-gutter-desktop),
+    calc((100vw - 920px) / 2 + var(--container-gutter-desktop))
+  );
   bottom: var(--space-6);
   z-index: 30;
   display: inline-grid;
@@ -494,11 +503,24 @@ const Layout = ({ children }: PropsWithChildren) => (
 }
 ```
 
-기존 `@media (max-width: 720px)` 안에는 다음을 추가한다.
+기존 `@media (max-width: 1020px)` 안에는 920px 컨테이너의 태블릿 여백을 따르는 위치를 추가한다.
 
 ```css
 .scroll-to-top-button {
-  right: calc(var(--space-4) + env(safe-area-inset-right, 0px));
+  right: max(
+    var(--container-gutter-tablet),
+    calc((100vw - 920px) / 2 + var(--container-gutter-tablet))
+  );
+}
+```
+
+기존 `@media (max-width: 720px)` 안에는 폰 콘텐츠 선과 safe area를 따르도록 다음을 추가한다.
+
+```css
+.scroll-to-top-button {
+  right: calc(
+    var(--container-gutter-phone) + env(safe-area-inset-right, 0px)
+  );
   bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
 }
 ```
@@ -654,8 +676,9 @@ async page => {
     "/posts/gatsby-blog-3-graphql-page-generation/",
   ]
   const viewports = [
-    { width: 390, height: 500, edge: 16 },
-    { width: 1440, height: 300, edge: 24 },
+    { width: 390, height: 500, right: 24, bottom: 16 },
+    { width: 900, height: 500, right: 24, bottom: 24 },
+    { width: 1440, height: 300, right: 308, bottom: 24 },
   ]
   const results = []
 
@@ -699,29 +722,52 @@ async page => {
         throw new Error(`${route}: hidden at cumulative 16px`)
       }
 
-      await page.waitForFunction(expectedEdge => {
+      await page.waitForFunction(({ expectedRight, expectedBottom }) => {
         const element = document.querySelector(".scroll-to-top-button")
         const rect = element.getBoundingClientRect()
-        return Math.abs(innerHeight - rect.bottom - expectedEdge) < 0.1
-      }, viewport.edge)
+        return (
+          Math.abs(innerWidth - rect.right - expectedRight) < 0.1 &&
+          Math.abs(innerHeight - rect.bottom - expectedBottom) < 0.1
+        )
+      }, {
+        expectedRight: viewport.right,
+        expectedBottom: viewport.bottom,
+      })
 
-      const metrics = await button.evaluate((element, expectedEdge) => {
+      const metrics = await button.evaluate((element, expected) => {
         const rect = element.getBoundingClientRect()
+        const content = document.querySelector(".site-header-inner")
+        const contentRect = content.getBoundingClientRect()
+        const contentStyle = getComputedStyle(content)
+        const contentRight =
+          contentRect.right - Number.parseFloat(contentStyle.paddingRight)
+        const toc = document.querySelector(".post-toc-rail")
+        const tocRect = toc?.getBoundingClientRect()
+        const tocIsVisible = toc && getComputedStyle(toc).display !== "none"
+
         return {
           width: Math.round(rect.width),
           height: Math.round(rect.height),
           right: Math.round(innerWidth - rect.right),
           bottom: Math.round(innerHeight - rect.bottom),
+          contentAlignment: Math.round(rect.right - contentRight),
+          tocGap: tocIsVisible ? Math.round(tocRect.left - rect.right) : null,
           overflow: document.documentElement.scrollWidth - innerWidth,
-          expectedEdge,
+          expected,
         }
-      }, viewport.edge)
+      }, { right: viewport.right, bottom: viewport.bottom })
 
       if (metrics.width !== 44 || metrics.height !== 44) {
         throw new Error(`${route}: ${metrics.width}x${metrics.height}`)
       }
-      if (metrics.right !== viewport.edge || metrics.bottom !== viewport.edge) {
+      if (metrics.right !== viewport.right || metrics.bottom !== viewport.bottom) {
         throw new Error(`${route}: edge ${metrics.right}/${metrics.bottom}`)
+      }
+      if (metrics.contentAlignment !== 0) {
+        throw new Error(`${route}: content alignment ${metrics.contentAlignment}`)
+      }
+      if (metrics.tocGap !== null && metrics.tocGap < 0) {
+        throw new Error(`${route}: toc overlap ${metrics.tocGap}`)
       }
       if (metrics.overflow !== 0) throw new Error(`${route}: horizontal overflow`)
 
@@ -739,7 +785,7 @@ async page => {
 }
 ```
 
-Expected: Chromium과 WebKit 모두 index·post의 두 viewport에서 초기·아래·15px 위쪽은 숨김, 누적 16px은 노출, 다시 1px 아래는 즉시 숨김이다. 버튼은 44×44px, PC edge 24px, 모바일 safe-area가 0인 테스트 환경에서 edge 16px, 가로 overflow 0이다.
+Expected: Chromium과 WebKit 모두 index·post의 폰·태블릿·PC viewport에서 초기·아래·15px 위쪽은 숨김, 누적 16px은 노출, 다시 1px 아래는 즉시 숨김이다. 버튼은 44×44px이고 `.site-header-inner`의 오른쪽 선과 오차 0px로 맞는다. safe-area가 0인 테스트 환경에서 우측 간격은 390px=24px, 900px=24px, 1440px=308px이며 하단 간격은 각각 16px, 24px, 24px이다. 광폭 post 목차와 겹치지 않고 가로 overflow는 0이다.
 
 - [ ] **Step 7: 1,000ms 이동, 취소, 모션 감소, 키보드 포커스 검증**
 
