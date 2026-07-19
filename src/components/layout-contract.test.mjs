@@ -15,16 +15,17 @@ const readRepositoryFile = path =>
   })
 
 test("defines a shared Header, main, and Footer shell", async () => {
-  const [layout, header, footer, container] = await Promise.all([
+  const [layout, header, footer, container, notFoundPage] = await Promise.all([
     readRepositoryFile("src/components/layout.tsx"),
     readRepositoryFile("src/components/header.tsx"),
     readRepositoryFile("src/components/footer.tsx"),
     readRepositoryFile("src/components/content-container.tsx"),
+    readRepositoryFile("src/pages/404.tsx"),
   ])
 
   assert.match(
     layout,
-    /<div className="site-shell">[\s\S]*<Header \/>[\s\S]*<main id="content" className="site-main">[\s\S]*\{children\}[\s\S]*<Footer \/>/,
+    /<div className="site-shell">[\s\S]*<Header \/>[\s\S]*<main id="content" className="site-main">[\s\S]*\{children\}[\s\S]*<Footer \/>[\s\S]*<ScrollToTopButton \/>/,
   )
   assert.match(header, /<header className="site-header">/)
   assert.match(header, /<Link to="\/" className="site-logo"[^>]*>\s*kjs\.log\s*<\/Link>/)
@@ -51,6 +52,7 @@ test("defines a shared Header, main, and Footer shell", async () => {
     /AI workflow · backend notes · product engineering/,
   )
   assert.match(container, /<div className="site-container">\{children\}<\/div>/)
+  assert.doesNotMatch(notFoundPage, /<Layout>|ScrollToTopButton/)
 })
 
 test("imports the React runtime required by Gatsby SSR", async () => {
@@ -195,6 +197,39 @@ test("loads a responsive 920px common container", async () => {
   assert.match(
     layoutCss,
     /@media \(max-width: 720px\)[\s\S]*?\.site-container\s*\{[^}]*padding-inline: var\(--container-gutter-phone\)/,
+  )
+})
+
+test("renders and styles one shared scroll to top button", async () => {
+  const [layout, layoutCss] = await Promise.all([
+    readRepositoryFile("src/components/layout.tsx"),
+    readRepositoryFile("src/styles/layout.css"),
+  ])
+
+  assert.match(
+    layout,
+    /import ScrollToTopButton from "\.\/scroll-to-top-button"/,
+  )
+  assert.equal((layout.match(/<ScrollToTopButton \/>/g) ?? []).length, 1)
+  assert.match(
+    layoutCss,
+    /\.scroll-to-top-button\s*\{(?=[^}]*position:\s*fixed)(?=[^}]*right:\s*var\(--space-6\))(?=[^}]*bottom:\s*var\(--space-6\))(?=[^}]*z-index:\s*30)(?=[^}]*width:\s*44px)(?=[^}]*height:\s*44px)(?=[^}]*border-radius:\s*var\(--radius-pill\))(?=[^}]*background:\s*var\(--bg\))(?=[^}]*opacity:\s*0)(?=[^}]*visibility:\s*hidden)(?=[^}]*pointer-events:\s*none)(?=[^}]*transform:\s*translateY\(var\(--space-2\)\))[^}]*\}/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.scroll-to-top-button\.is-visible\s*\{(?=[^}]*opacity:\s*1)(?=[^}]*visibility:\s*visible)(?=[^}]*pointer-events:\s*auto)(?=[^}]*transform:\s*translateY\(0\))[^}]*\}/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.scroll-to-top-button:hover\s*\{[^}]*border-color:\s*var\(--accent\)[^}]*color:\s*var\(--accent-hover\)/s,
+  )
+  assert.match(
+    layoutCss,
+    /\.scroll-to-top-button:active\s*\{[^}]*transform:\s*scale\(0\.92\)/s,
+  )
+  assert.match(
+    layoutCss,
+    /@media \(max-width: 720px\)[\s\S]*\.scroll-to-top-button\s*\{(?=[^}]*right:\s*calc\(var\(--space-4\) \+ env\(safe-area-inset-right, 0px\)\))(?=[^}]*bottom:\s*calc\(var\(--space-4\) \+ env\(safe-area-inset-bottom, 0px\)\))[^}]*\}/s,
   )
 })
 
