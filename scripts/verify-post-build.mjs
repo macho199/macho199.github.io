@@ -71,7 +71,10 @@ const postContracts = [
       slug: "gatsby-mdx-graphql-post-system",
       title: "MDX와 GraphQL로 관리 가능한 Gatsby 블로그 만들기",
     },
-    nextPost: null,
+    nextPost: {
+      slug: "gatsby-blog-reading-experience",
+      title: "긴 기술 글을 읽기 쉽게: Gatsby 블로그 읽기 경험 개선기",
+    },
     headings: [
       "화면을 만들기 전에 디자인 규칙 정하기",
       "UI 시안을 컴포넌트로 나누기",
@@ -83,6 +86,31 @@ const postContracts = [
       "Tailwind Preflight와 브라우저 기본 스타일 확인하기",
       "내 디자인으로 바꾸는 체크포인트",
       "여러 화면 크기에서 검증하기",
+    ],
+  },
+  {
+    slug: "gatsby-blog-reading-experience",
+    title: "긴 기술 글을 읽기 쉽게: Gatsby 블로그 읽기 경험 개선기",
+    description:
+      "코드 구문 강조, 복사 인터랙션, MDX 목차와 맨 위로 이동 기능을 연결해 긴 기술 글의 읽기 경험을 개선한 과정을 설명합니다.",
+    publishedAt: "2026-07-19",
+    publishedAtDisplay: "2026.07.19",
+    tags: ["Gatsby", "MDX", "React", "Accessibility"],
+    previousPost: {
+      slug: "custom-developer-blog-with-tailwind-css",
+      title: "Tailwind CSS로 내 디자인의 개발자 블로그 완성하기",
+    },
+    nextPost: null,
+    headings: [
+      "긴 기술 글에서 발견한 세 가지 불편",
+      "Vesper로 코드가 읽히게 만들기",
+      "MDX 코드 블록에 복사 기능 연결하기",
+      "MDX 제목을 목차 데이터로 연결하기",
+      "본문 옆에서 방해되지 않는 목차 UI 만들기",
+      "스크롤 위치에 따라 현재 목차 표시하기",
+      "홈과 포스트에서 맨 위로 버튼 공유하기",
+      "1초 상단 이동을 안전하게 다루기",
+      "검증하고 내 블로그에 적용하기",
     ],
   },
 ]
@@ -325,6 +353,15 @@ assert.ok(thirdPost, "Tailwind customization article generated")
 assert.match(thirdPost.main, /920px - 48px - 48px = 824px/)
 assert.match(thirdPost.main, /4\.5:1/)
 
+const fourthPost = generatedPosts.get("gatsby-blog-reading-experience")
+assert.ok(fourthPost, "reading experience article generated")
+assert.match(fourthPost.main, /@shikijs\/rehype/)
+assert.match(fourthPost.main, /tableOfContents\(maxDepth: 2\)/)
+assert.match(fourthPost.main, /IntersectionObserver/)
+assert.match(fourthPost.main, /SCROLL_DURATION_MS = 1000/)
+assert.match(fourthPost.main, /48px/)
+assert.match(fourthPost.main, /text-overflow: ellipsis/)
+
 const retiredSlugs = [
   "mdx-foundation",
   "create-a-blog-site-with-gatsby1",
@@ -343,5 +380,5 @@ for (const slug of retiredSlugs) {
 }
 
 console.log(
-  "post build verified: three content, TOC, metadata, navigation, route, and sitemap contracts passed",
+  "post build verified: four content, TOC, metadata, navigation, route, and sitemap contracts passed",
 )

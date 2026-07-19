@@ -286,6 +286,53 @@ test("explains how to customize the blog with Tailwind CSS", async () => {
   assert.doesNotMatch(post, /(?:제목|Gatsby로 블로그[^\n]*)\s*[123]편/)
 })
 
+test("explains how the blog improves long-form reading experience", async () => {
+  const post = await readRepositoryFile(
+    "content/posts/gatsby-blog-reading-experience/index.mdx",
+  )
+
+  assert.match(
+    post,
+    /title: "긴 기술 글을 읽기 쉽게: Gatsby 블로그 읽기 경험 개선기"/,
+  )
+  assert.match(post, /slug: "gatsby-blog-reading-experience"/)
+  assert.match(post, /publishedAt: "2026-07-19"/)
+  assert.match(post, /- Gatsby/)
+  assert.match(post, /- MDX/)
+  assert.match(post, /- React/)
+  assert.match(post, /- Accessibility/)
+  assert.match(post, /## 긴 기술 글에서 발견한 세 가지 불편/)
+  assert.match(post, /## Vesper로 코드가 읽히게 만들기/)
+  assert.match(post, /## MDX 코드 블록에 복사 기능 연결하기/)
+  assert.match(post, /## MDX 제목을 목차 데이터로 연결하기/)
+  assert.match(post, /## 본문 옆에서 방해되지 않는 목차 UI 만들기/)
+  assert.match(post, /## 스크롤 위치에 따라 현재 목차 표시하기/)
+  assert.match(post, /## 홈과 포스트에서 맨 위로 버튼 공유하기/)
+  assert.match(post, /## 1초 상단 이동을 안전하게 다루기/)
+  assert.match(post, /## 검증하고 내 블로그에 적용하기/)
+  assert.match(post, /@shikijs\/rehype/)
+  assert.match(post, /MDXProvider/)
+  assert.match(
+    post,
+    /서버 렌더링에서는 코드 카드와 언어 이름, 원래 `pre`가 출력되고 복사 버튼은 아직 나타나지 않습니다/,
+  )
+  assert.doesNotMatch(post, /서버 렌더링에서는 원래 코드만 출력됩니다/)
+  assert.match(post, /tableOfContents\(maxDepth: 2\)/)
+  assert.match(post, /IntersectionObserver/)
+  assert.match(post, /스크롤에 따른 활성 상태 자동 갱신만 생략됩니다/)
+  assert.doesNotMatch(post, /환경에서는 활성 상태 갱신만 생략됩니다/)
+  assert.match(post, /aria-current/)
+  assert.match(post, /SCROLL_DURATION_MS = 1000/)
+  assert.match(post, /prefers-reduced-motion/)
+  assert.match(post, /48px/)
+  assert.match(post, /text-overflow: ellipsis/)
+  assert.equal((post.match(/^```(?:javascript|tsx)$/gm) ?? []).length, 5)
+  assert.doesNotMatch(
+    post,
+    /text-wrap: pretty|모바일 Safari|카드 제목 조기 줄바꿈/,
+  )
+})
+
 test("registers a production verifier for all approved posts", async () => {
   const [packageSource, verifier, styleVerifier] = await Promise.all([
     readRepositoryFile("package.json"),
@@ -301,6 +348,7 @@ test("registers a production verifier for all approved posts", async () => {
   assert.match(verifier, /why-github-pages-and-gatsby/)
   assert.match(verifier, /gatsby-mdx-graphql-post-system/)
   assert.match(verifier, /custom-developer-blog-with-tailwind-css/)
+  assert.match(verifier, /gatsby-blog-reading-experience/)
   assert.match(styleVerifier, /why-github-pages-and-gatsby/)
   assert.match(verifier, /for \(const contract of postContracts\)/)
   assert.match(verifier, /previousPost:/)

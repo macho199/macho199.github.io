@@ -32,6 +32,15 @@ const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 const postContracts = [
   {
+    path: "/posts/gatsby-blog-reading-experience/",
+    title: "긴 기술 글을 읽기 쉽게: Gatsby 블로그 읽기 경험 개선기",
+    description:
+      "코드 구문 강조, 복사 인터랙션, MDX 목차와 맨 위로 이동 기능을 연결해 긴 기술 글의 읽기 경험을 개선한 과정을 설명합니다.",
+    publishedAt: "2026-07-19",
+    publishedAtDisplay: "2026.07.19",
+    tags: ["Gatsby", "MDX", "React", "Accessibility"],
+  },
+  {
     path: "/posts/custom-developer-blog-with-tailwind-css/",
     title: "Tailwind CSS로 내 디자인의 개발자 블로그 완성하기",
     description:
@@ -61,12 +70,12 @@ const postContracts = [
 ]
 
 const expectedFilterTags = [
-  "Tailwind CSS",
-  "React",
-  "Responsive Web",
-  "Accessibility",
   "Gatsby",
   "MDX",
+  "React",
+  "Accessibility",
+  "Tailwind CSS",
+  "Responsive Web",
   "GraphQL",
   "Validation",
   "GitHub Pages",
@@ -186,7 +195,7 @@ for (const button of filterButtons.slice(1)) {
 
 assert.match(
   toolbar,
-  /<p\b(?=[^>]*class="[^"]*\bpost-filter-count\b[^"]*")(?=[^>]*role="status")(?=[^>]*aria-live="polite")[^>]*>\s*3 posts\s*<\/p>/,
+  /<p\b(?=[^>]*class="[^"]*\bpost-filter-count\b[^"]*")(?=[^>]*role="status")(?=[^>]*aria-live="polite")[^>]*>\s*4 posts\s*<\/p>/,
   "home: initial post result count",
 )
 assert.doesNotMatch(
