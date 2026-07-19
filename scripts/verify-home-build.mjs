@@ -32,6 +32,15 @@ const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
 const postContracts = [
   {
+    path: "/posts/gatsby-google-search-console-seo/",
+    title: "Gatsby 블로그를 Google 검색에 연결하기: Search Console·sitemap·구조화 데이터",
+    description:
+      "Gatsby 블로그의 Google Search Console 소유권을 확인하고 robots.txt·sitemap·BlogPosting 구조화 데이터를 연결한 뒤, 가져오기 오류를 진단해 성공 상태까지 확인한 과정을 설명합니다.",
+    publishedAt: "2026-07-20",
+    publishedAtDisplay: "2026.07.20",
+    tags: ["Gatsby", "Google Search Console", "SEO", "Sitemap"],
+  },
+  {
     path: "/posts/gatsby-blog-reading-experience/",
     title: "긴 기술 글을 읽기 쉽게: Gatsby 블로그 읽기 경험 개선기",
     description:
@@ -71,6 +80,9 @@ const postContracts = [
 
 const expectedFilterTags = [
   "Gatsby",
+  "Google Search Console",
+  "SEO",
+  "Sitemap",
   "MDX",
   "React",
   "Accessibility",
@@ -195,7 +207,7 @@ for (const button of filterButtons.slice(1)) {
 
 assert.match(
   toolbar,
-  /<p\b(?=[^>]*class="[^"]*\bpost-filter-count\b[^"]*")(?=[^>]*role="status")(?=[^>]*aria-live="polite")[^>]*>\s*4 posts\s*<\/p>/,
+  /<p\b(?=[^>]*class="[^"]*\bpost-filter-count\b[^"]*")(?=[^>]*role="status")(?=[^>]*aria-live="polite")[^>]*>\s*5 posts\s*<\/p>/,
   "home: initial post result count",
 )
 assert.doesNotMatch(
