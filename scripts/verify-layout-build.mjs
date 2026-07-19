@@ -2,6 +2,8 @@ import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
 import { readFile, readdir } from "node:fs/promises"
 
+import config from "../gatsby-config.mjs"
+
 const postsDirectory = new URL("../public/posts/", import.meta.url)
 const postDirectories = (await readdir(postsDirectory, { withFileTypes: true }))
   .filter(entry => entry.isDirectory())
@@ -32,6 +34,25 @@ const countClassedTags = (source, tag, className) =>
 const countOpeningTags = (source, tag) =>
   source.match(new RegExp(`<${tag}(?:\\s|>)`, "g"))?.length ?? 0
 
+/** @param {string} value */
+const escapeRegex = value => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+const verificationValue = config.siteMetadata.googleSiteVerification
+
+/** @param {string} html */
+const countGoogleVerificationTags = html =>
+  html.match(
+    new RegExp(
+      `<meta\\b(?=[^>]*name="google-site-verification")(?=[^>]*content="${escapeRegex(verificationValue)}")[^>]*>`,
+      "g",
+    ),
+  )?.length ?? 0
+
+/** @param {string} html */
+const countBlogPostingScripts = html =>
+  html.match(
+    /<script\b(?=[^>]*type="application\/ld\+json")(?=[^>]*id="blog-posting-json-ld")[^>]*>/g,
+  )?.length ?? 0
+
 /**
  * @param {string} html
  * @param {string} name
@@ -49,6 +70,11 @@ for (const [name, url] of pages) {
   const html = await readFile(url, "utf8")
 
   assertLocalFavicon(html, name)
+  assert.equal(
+    countGoogleVerificationTags(html),
+    1,
+    `${name}: one exact Google site verification tag`,
+  )
 
   assert.equal(
     countClassedTags(html, "button", "scroll-to-top-button"),
@@ -97,6 +123,23 @@ const favicon = await readFile(
 )
 
 assertLocalFavicon(notFoundHtml, "not found")
+assert.equal(
+  countGoogleVerificationTags(notFoundHtml),
+  1,
+  "not found: one exact Google site verification tag",
+)
+assert.equal(
+  countBlogPostingScripts(
+    await readFile(new URL("../public/index.html", import.meta.url), "utf8"),
+  ),
+  0,
+  "home: no BlogPosting JSON-LD",
+)
+assert.equal(
+  countBlogPostingScripts(notFoundHtml),
+  0,
+  "not found: no BlogPosting JSON-LD",
+)
 assert.equal(
   countClassedTags(notFoundHtml, "button", "scroll-to-top-button"),
   0,

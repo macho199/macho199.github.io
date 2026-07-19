@@ -23,7 +23,7 @@ await Promise.all([
     path.join(
       publicDirectory,
       "posts",
-      "gatsby-blog-1-getting-started",
+      "why-github-pages-and-gatsby",
       "index.html",
     ),
   ),

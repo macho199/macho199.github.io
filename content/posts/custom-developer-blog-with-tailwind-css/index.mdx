@@ -1,0 +1,261 @@
+---
+title: "Tailwind CSS로 내 디자인의 개발자 블로그 완성하기"
+slug: "custom-developer-blog-with-tailwind-css"
+publishedAt: "2026-06-27"
+description: "Tailwind CSS 디자인 토큰, 로컬 폰트, 824px 레이아웃과 반응형 규칙을 적용해 자신만의 개발자 블로그 UI를 만드는 과정을 설명합니다."
+tags:
+  - Tailwind CSS
+  - React
+  - Responsive Web
+  - Accessibility
+---
+
+앞선 글까지 따라왔다면 MDX 파일을 추가하는 것만으로 홈 목록과 상세 URL을 만들 수 있습니다. 이제 남은 질문은 **같은 데이터 구조를 유지하면서 어떻게 내 디자인으로 바꿀 것인가**입니다.
+
+이 블로그는 Tailwind CSS를 사용하지만 모든 스타일을 긴 utility class로 작성하지 않았습니다. 색상·글꼴·간격은 디자인 토큰으로 모으고, 홈과 포스트의 세부 표현은 역할이 드러나는 CSS class로 나눴습니다. Tailwind는 토큰과 기본 스타일 기반을 제공하고, React 컴포넌트는 화면 구조를, 범위가 제한된 CSS는 실제 표현을 담당합니다.
+
+이 글에서는 UI 시안을 코드로 옮긴 순서와 독자가 직접 바꿔볼 지점을 실제 파일 기준으로 설명합니다.
+
+## 화면을 만들기 전에 디자인 규칙 정하기
+
+카드 하나부터 꾸미기 시작하면 비슷한 회색과 간격이 화면마다 조금씩 달라지기 쉽습니다. 먼저 반복해서 사용할 값을 역할별로 정하면 수정 범위를 예측할 수 있습니다.
+
+이 블로그가 먼저 정한 규칙은 다음과 같습니다.
+
+- 흰 배경과 짙은 본문 색을 기본으로 사용합니다.
+- 연초록은 강조, 링크, 현재 상태를 나타내는 데 사용합니다.
+- 제목은 serif, 본문과 UI는 sans-serif, 코드는 monospace로 구분합니다.
+- 간격은 4px 단위의 토큰에서 선택합니다.
+- 콘텐츠는 중앙의 공통 컨테이너를 기준으로 정렬합니다.
+- 링크와 키보드 focus는 색상 외에도 밑줄과 outline으로 구분합니다.
+
+규칙은 예쁜 값을 모아두는 것에 그치지 않습니다. `--accent`는 강조의 역할, `--muted`는 보조 정보의 역할처럼 **이름이 왜 쓰이는지**를 설명해야 합니다. 그래야 색상 팔레트를 바꿀 때 컴포넌트의 의미가 유지됩니다.
+
+## UI 시안을 컴포넌트로 나누기
+
+하나의 긴 페이지 컴포넌트보다 반복되는 화면 책임을 먼저 찾았습니다.
+
+```text
+Layout
+  ├─ Header
+  ├─ ContentContainer
+  │   ├─ 홈: HomeIntro → PostList → PostCard
+  │   └─ 상세: PostHeader → MDX 본문 → 목차 → PostNavigation
+  └─ Footer
+```
+
+`Layout`은 모든 페이지의 헤더·본문·푸터를 만듭니다. `ContentContainer`는 같은 가로 정렬 기준을 제공합니다. 홈의 `PostCard`와 상세의 `PostHeader`는 GraphQL을 직접 알지 않고 정리된 props만 받습니다.
+
+이 경계 덕분에 디자인 변경과 데이터 변경을 분리할 수 있습니다.
+
+- 카드 여백을 바꿀 때 GraphQL 쿼리는 수정하지 않습니다.
+- 태그 데이터가 바뀌어도 태그 색상 규칙은 유지됩니다.
+- 공통 콘텐츠 폭을 바꾸면 헤더, 홈, 상세가 함께 정렬됩니다.
+- 상세 기능은 포스트 템플릿 안에서 모든 글에 한 번만 적용됩니다.
+
+처음 자신의 블로그를 만들 때도 화면에 보이는 덩어리를 먼저 나누고, 각 컴포넌트가 받을 데이터와 꾸밀 책임을 구분하면 좋습니다.
+
+## Tailwind CSS에 디자인 토큰 정의하기
+
+`src/styles/theme.css`는 Tailwind를 불러오고 프로젝트의 디자인 값을 정의합니다.
+
+```css
+@import "tailwindcss" source("../");
+
+:root {
+  --bg: #ffffff;
+  --fg: #0d0d0d;
+  --muted: #6e6e6e;
+  --accent: #10a37f;
+  --link: #0a7a5e;
+  --border: #e5e5e5;
+}
+
+@theme inline {
+  --color-canvas: var(--bg);
+  --color-ink: var(--fg);
+  --color-copy-muted: var(--muted);
+  --color-brand: var(--accent);
+  --color-link: var(--link);
+}
+```
+
+`:root` 변수는 일반 CSS에서도 사용할 수 있습니다. `@theme inline`은 같은 값을 Tailwind theme token으로 연결합니다. 따라서 컴포넌트가 utility를 사용하든 `.post-title` 같은 class를 사용하든 하나의 색상 기준을 공유할 수 있습니다.
+
+자신의 색감으로 바꾸려면 먼저 다음 값을 수정해볼 수 있습니다.
+
+- `--bg`, `--surface`: 페이지와 카드 배경
+- `--fg`, `--muted`: 제목·본문과 보조 정보
+- `--accent`: 태그의 `#`, focus, 활성 상태
+- `--link`, `--link-hover`: 본문 링크
+- `--border`: 구분선과 카드 테두리
+
+색을 고른 뒤에는 역할이 다른 값을 무조건 하나로 합치지 않는 편이 좋습니다. 브랜드 강조색이 흰 배경의 작은 링크에서 충분히 진하지 않다면 `--accent`와 `--link`를 분리해 각각의 목적에 맞출 수 있습니다.
+
+## 로컬 폰트 적용하기
+
+현재 블로그는 제목과 로고에 `Noto Serif KR`, 본문과 UI에 `Noto Sans KR`를 사용합니다. 외부 폰트 서버에 의존하지 않고 필요한 굵기만 패키지에서 불러옵니다.
+
+```javascript
+import "@fontsource/noto-serif-kr/400.css"
+import "@fontsource/noto-sans-kr/400.css"
+import "@fontsource/noto-sans-kr/500.css"
+import "@fontsource/noto-sans-kr/600.css"
+```
+
+`gatsby-browser.js`에서 폰트를 불러오고 `theme.css`에서 역할별 stack을 정의합니다.
+
+```css
+--font-display: "Noto Serif KR", ui-serif, Georgia, serif;
+--font-body: "Noto Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif;
+--font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+```
+
+글꼴을 바꾸고 싶다면 import와 변수 두 경계를 함께 확인해야 합니다. CSS 변수의 이름만 바꾸고 실제 파일을 불러오지 않으면 fallback 글꼴이 보일 수 있습니다. 사용하지 않는 굵기를 모두 내려받지 않고 제목·본문·강조에 필요한 굵기만 선택하면 정적 자산도 줄일 수 있습니다.
+
+## 824px 콘텐츠 레이아웃 통일하기
+
+헤더, 홈 목록, 포스트 제목과 본문이 서로 다른 폭을 가지면 화면의 세로 기준선이 흔들립니다. 이 블로그는 모든 주요 화면이 `.site-container`를 사용하게 했습니다.
+
+```css
+.site-container {
+  width: 100%;
+  max-width: 920px;
+  min-width: 0;
+  margin-inline: auto;
+  padding-inline: var(--container-gutter-desktop);
+}
+```
+
+전역 `box-sizing: border-box`가 적용되어 있으므로 `max-width: 920px`에는 좌우 padding도 포함됩니다. 데스크톱 gutter가 각각 48px일 때 실제 안쪽 콘텐츠 폭은 다음과 같습니다.
+
+```text
+920px - 48px - 48px = 824px
+```
+
+제목과 본문에 각각 다른 max-width를 주지 않고 같은 컨테이너를 상속하게 만들었습니다. 화면이 920px보다 좁아지면 컨테이너가 `width: 100%`로 줄고, 미디어 쿼리에서 좌우 gutter만 24px로 바뀝니다.
+
+콘텐츠 폭을 바꾸고 싶다면 먼저 `.site-container`의 920px과 gutter 변수를 조정합니다. 카드·포스트·헤더에 같은 숫자를 반복해서 넣지 않아야 전체 정렬이 함께 유지됩니다.
+
+## 홈 목록과 포스트 화면 스타일링하기
+
+홈 카드에는 제목만 크게 강조하지 않고 태그, 설명, 날짜의 정보 순서를 분명하게 만들었습니다. `PostCard`가 출력하는 구조에 `.post-card-*` class를 적용해 홈 화면 밖으로 스타일이 새지 않게 합니다.
+
+```css
+.post-card-main {
+  display: grid;
+  min-width: 0;
+  max-width: 760px;
+  gap: var(--space-3);
+}
+
+.post-card-title-link {
+  overflow-wrap: break-word;
+  word-break: keep-all;
+}
+```
+
+`min-width: 0`은 grid나 flex 자식의 긴 텍스트가 부모 폭을 밀어내지 않게 하는 중요한 규칙입니다. 한글 제목은 `word-break: keep-all`로 단어 중간 분리를 줄이고, 필요한 경우에만 줄바꿈합니다.
+
+상세 화면은 `.post-page` 아래에서 제목, 설명, 본문 스타일의 범위를 제한합니다.
+
+```css
+.post-title {
+  font-size: clamp(28px, 4vw, 36px);
+  overflow-wrap: break-word;
+  text-wrap: balance;
+  word-break: keep-all;
+}
+
+.post-page .mdx-content {
+  color: var(--fg-2);
+  font-size: var(--text-base);
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+```
+
+제목은 화면 폭에 따라 부드럽게 커지고, 본문은 읽기 쉬운 행간을 사용합니다. 코드와 표는 콘텐츠 폭을 넘길 수 있으므로 자체 가로 스크롤 경계를 갖습니다.
+
+## 모바일 레이아웃 설계하기
+
+반응형 디자인은 데스크톱을 단순히 축소하는 작업이 아닙니다. 작은 화면에서 정보의 우선순위와 터치 영역을 다시 확인해야 합니다.
+
+현재 720px 이하에서는 다음 규칙을 사용합니다.
+
+- 공통 좌우 gutter를 24px로 줄입니다.
+- 포스트 제목은 `clamp(30px, 10vw, 36px)` 범위에서 조정합니다.
+- 상세 설명은 본문 크기로 낮춥니다.
+- 이전·다음 글 카드를 두 열에서 한 열로 바꿉니다.
+- 코드 블록의 안쪽 여백을 줄입니다.
+- 태그 필터의 결과 수와 필터 목록을 서로 다른 행에 배치합니다.
+
+모바일에서 가로 스크롤이 생기면 가장 먼저 고정 width, 긴 코드, `white-space: nowrap`, flex/grid 자식의 `min-width`를 확인합니다. 페이지 전체를 `overflow-x: hidden`으로 가리기 전에 어떤 자식이 부모를 밀어내는지 찾아야 합니다.
+
+또한 버튼과 링크는 최소 44px 터치 영역을 확보하고 키보드 focus가 보이는지 확인합니다. 모바일 디자인과 접근성은 별도 작업이 아니라 같은 컴포넌트 규칙 안에서 다뤄야 합니다.
+
+## Tailwind Preflight와 브라우저 기본 스타일 확인하기
+
+Tailwind를 연결하면 Preflight가 브라우저 기본 스타일을 초기화합니다. 덕분에 브라우저마다 다른 기본 여백을 없앨 수 있지만, 블로그 문서가 기대하는 제목 크기·목록 마커·링크 밑줄도 함께 사라질 수 있습니다.
+
+이 동작을 오류로 보고 Preflight를 제거하기보다 필요한 의미 스타일을 `@layer base`에서 다시 선언했습니다.
+
+```css
+@layer base {
+  h1 { font-size: var(--text-3xl); }
+  h2 { font-size: var(--text-2xl); }
+
+  ul { list-style: disc; }
+  ol { list-style: decimal; }
+
+  a {
+    color: var(--link);
+    text-decoration: underline;
+  }
+}
+```
+
+링크는 색상만으로 본문과 구분하지 않고 밑줄을 유지합니다. 기본 링크와 hover 색상은 흰 배경에서 WCAG AA의 일반 텍스트 기준인 4.5:1 이상인지 테스트가 계산합니다. `:focus-visible`에는 outline과 focus ring을 함께 적용했습니다.
+
+Preflight 이후 화면이 달라졌다면 먼저 초기화된 브라우저 기본값이 무엇인지 확인합니다. 그다음 해당 의미를 전역 기본값으로 복원할지, `.mdx-content` 안에서만 복원할지 범위를 결정하면 됩니다.
+
+## 내 디자인으로 바꾸는 체크포인트
+
+현재 구조를 유지하면서 자신의 디자인으로 바꾸려면 다음 순서가 안전합니다.
+
+1. `theme.css`의 배경·본문·강조·링크 색을 바꿉니다.
+2. `gatsby-browser.js`와 글꼴 변수를 함께 바꿉니다.
+3. `.site-container`의 최대 폭과 화면별 gutter를 조정합니다.
+4. `home.css`에서 카드 간격과 제목 크기를 바꿉니다.
+5. `post.css`에서 상세 제목, 본문 행간, 코드 블록을 바꿉니다.
+6. hover뿐 아니라 focus와 active 상태도 확인합니다.
+7. 한글 긴 제목, 긴 URL, 코드와 표를 테스트 콘텐츠로 확인합니다.
+
+한 번에 모든 값을 바꾸기보다 색상, 타이포그래피, 레이아웃 순서로 나누면 어떤 변경이 화면에 영향을 줬는지 알기 쉽습니다. GraphQL과 frontmatter 계약은 그대로 두기 때문에 디자인을 실험해도 글 데이터 흐름은 유지됩니다.
+
+현재 블로그에 적용된 목차, 코드 복사, 스크롤 상단 버튼과 Safari 줄바꿈 디버깅 과정은 각각 판단과 검증 내용이 충분해 후속 사례 글로 분리합니다.
+
+## 여러 화면 크기에서 검증하기
+
+마지막에는 화면을 눈으로 한 번 보는 데서 끝내지 않고 소스와 생성 결과를 함께 확인합니다.
+
+```shell
+npm test
+npm run typecheck
+npm run build
+npm run verify:styles
+npm run verify:layout
+npm run verify:home
+npm run verify:post
+```
+
+브라우저에서는 데스크톱과 모바일에서 다음을 확인합니다.
+
+- 헤더, 제목, 본문이 같은 콘텐츠 기준선에 맞는지
+- 긴 한글 제목이 단어 중간에서 부자연스럽게 끊기지 않는지
+- 코드와 표만 필요한 범위에서 가로 스크롤하는지
+- 태그와 카드가 화면 밖으로 밀려나지 않는지
+- 링크·버튼을 키보드와 터치로 사용할 수 있는지
+- Chrome뿐 아니라 Safari 계열에서도 본문이 가용 폭을 사용하는지
+
+디자인 토큰, 컴포넌트 경계, 공통 컨테이너를 먼저 정하면 블로그의 인상을 바꾸면서도 데이터 구조와 페이지 생성 흐름을 유지할 수 있습니다. 이것이 Tailwind CSS를 단순한 class 모음이 아니라 자신만의 디자인 시스템을 연결하는 기반으로 사용한 이유입니다.
