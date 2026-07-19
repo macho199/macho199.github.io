@@ -91,3 +91,15 @@ test("configures verified site identity and article structured data", async () =
   assert.match(seo, /serializeJsonLd\(blogPosting\)/)
   assert.match(seo, /type="application\/ld\+json"/)
 })
+
+test("publishes one crawl policy with the production sitemap location", async () => {
+  const robots = await readFile(
+    new URL("static/robots.txt", repositoryRoot),
+    "utf8",
+  )
+
+  assert.equal(
+    robots,
+    "User-agent: *\nAllow: /\n\nSitemap: https://macho199.github.io/sitemap-index.xml\n",
+  )
+})
