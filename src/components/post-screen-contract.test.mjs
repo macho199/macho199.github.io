@@ -192,38 +192,33 @@ test("uses predictable paragraph wrapping inside post content", async () => {
   )
 })
 
-test("documents the current Gatsby rebuild and Tailwind fixes", async () => {
-  const [post, oldSample] = await Promise.all([
-    readRepositoryFile("content/posts/gatsby-blog-1-getting-started/index.mdx"),
-    readRepositoryFile("content/posts/mdx-foundation/index.mdx"),
-  ])
+test("explains why the blog uses GitHub Pages and Gatsby", async () => {
+  const post = await readRepositoryFile(
+    "content/posts/why-github-pages-and-gatsby/index.mdx",
+  )
 
-  assert.match(post, /title: "Gatsby로 블로그 사이트 만들기 1편 - 시작하기"/)
-  assert.match(post, /slug: "gatsby-blog-1-getting-started"/)
-  assert.match(post, /publishedAt: "2026-04-18"/)
   assert.match(
     post,
-    /배포 산출물만 남은 GitHub Pages 블로그를 Gatsby 5 소스로 재구축하며 Tailwind CSS 4의 Preflight 회귀와 접근성 문제를 해결한 과정을 정리합니다\./,
+    /title: "왜 GitHub Pages와 Gatsby였을까: 개발자 블로그 다시 만들기"/,
   )
-  assert.match(post, /Gatsby \| 5\.16\.1/)
-  assert.match(post, /Tailwind CSS \| 4\.3\.3/)
-  assert.match(post, /"@tailwindcss\/postcss": \{\}/)
-  assert.match(post, /@import "tailwindcss" source\("\.\.\/"\);/)
-  assert.match(post, /제목 크기, 목록 마커, 링크 식별성/)
-  assert.match(post, /4\.5:1/)
-  assert.match(post, /npm run typecheck/)
-  assert.match(post, /## 검증과 단계별 배포 경계/)
-  assert.match(post, /GitHub Actions 배포는 이후 출시 단계에서 연결했습니다/)
-  assert.doesNotMatch(post, /GitHub Actions 배포는 아직 연결하지 않았다/)
-  assert.doesNotMatch(
-    post,
-    /2025|ERROR #98123|@mdx-js\/react|text-red-500|당시 GitHub Pages 배포 방식/,
-  )
-  assert.doesNotMatch(
-    post,
-    /hello-gatsby-tailwindcss\.png|github-pages-setting\.png/,
-  )
-  assert.equal(oldSample, "")
+  assert.match(post, /slug: "why-github-pages-and-gatsby"/)
+  assert.match(post, /publishedAt: "2026-04-18"/)
+  assert.match(post, /- GitHub Pages/)
+  assert.match(post, /- SSG/)
+  assert.match(post, /## 블로그를 다시 만들게 된 배경/)
+  assert.match(post, /## 먼저 요구사항 정하기/)
+  assert.match(post, /## GitHub Pages를 선택한 이유/)
+  assert.match(post, /## Gatsby를 선택한 이유/)
+  assert.match(post, /## 배포 산출물을 소스 프로젝트로 재구축하기/)
+  assert.match(post, /## 최소 프로젝트 구조 만들기/)
+  assert.match(post, /## 처음부터 디자인 변경 지점 분리하기/)
+  assert.match(post, /## 빌드와 GitHub Pages 배포 확인하기/)
+  assert.match(post, /## 다음 글/)
+  assert.match(post, /gatsby-config\.mjs/)
+  assert.match(post, /deploy-pages\.yml/)
+  assert.match(post, /npm run build/)
+  assert.doesNotMatch(post, /(?:제목|Gatsby로 블로그[^\n]*)\s*[123]편/)
+  assert.doesNotMatch(post, /2025|ERROR #98123|text-red-500/)
 })
 
 test("documents MDX post management as article two", async () => {

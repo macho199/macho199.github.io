@@ -1,0 +1,183 @@
+---
+title: "왜 GitHub Pages와 Gatsby였을까: 개발자 블로그 다시 만들기"
+slug: "why-github-pages-and-gatsby"
+publishedAt: "2026-04-18"
+description: "무료 정적 호스팅과 React 기반 UI라는 요구사항에서 GitHub Pages와 Gatsby를 선택하고, 배포 파일만 남은 블로그를 소스 프로젝트로 재구축한 과정을 설명합니다."
+tags:
+  - Gatsby
+  - GitHub Pages
+  - React
+  - SSG
+---
+
+개발자 블로그를 새로 만들 때는 프레임워크부터 고르기 쉽습니다. 하지만 도구를 먼저 정하면 나중에 운영 방식이 도구에 끌려갈 수 있습니다. 이 블로그는 반대로 **어떻게 쓰고, 어디에 배포하고, 어느 부분을 직접 바꿀 것인지**부터 정했습니다.
+
+결론부터 말하면 저장소와 가까운 무료 정적 호스팅에는 GitHub Pages를, React로 화면을 구성하면서 MDX 글을 정적 페이지로 만들기 위해 Gatsby를 선택했습니다. 모든 블로그에 이 조합이 정답이라는 뜻은 아닙니다. 이 글에서는 선택 기준과 한계를 함께 살펴보고, 배포 산출물만 남아 있던 사이트를 유지보수 가능한 소스 프로젝트로 다시 만든 과정을 설명합니다.
+
+## 블로그를 다시 만들게 된 배경
+
+기존 저장소에는 브라우저가 읽는 HTML·CSS·JavaScript 산출물이 남아 있었습니다. 공개 화면은 동작했지만 원본 React 컴포넌트, 글 데이터 흐름, 빌드 설정을 재현할 소스 기준선은 없었습니다.
+
+생성된 HTML을 직접 수정하는 방법도 있습니다. 다만 다음 글을 추가하거나 공통 헤더를 바꿀 때 같은 작업을 여러 파일에 반복해야 합니다. 빌드를 다시 실행하면 직접 수정한 내용이 사라질 수도 있습니다. 공개 화면을 보존하는 것과 계속 개발할 수 있는 프로젝트를 갖는 것은 다른 문제였습니다.
+
+그래서 바로 새 화면을 배포하지 않고 다음 경계를 세웠습니다.
+
+1. 공개 상태를 제공하는 `main`과 새 소스를 통합하는 `develop`을 분리합니다.
+2. Gatsby가 같은 결과를 다시 만들 수 있는 최소 기준선을 먼저 만듭니다.
+3. 콘텐츠, 데이터, UI, 배포를 작은 변경과 검증 단위로 나눕니다.
+4. 충분히 확인한 변경만 `main`으로 보내 GitHub Pages에 배포합니다.
+
+이 방식의 핵심은 특정 브랜치 이름이 아닙니다. **공개 중인 결과와 재구축 중인 소스를 한 번에 바꾸지 않는 것**이 핵심입니다.
+
+## 먼저 요구사항 정하기
+
+이 블로그에 필요한 조건은 다음과 같았습니다.
+
+- 별도 서버 비용 없이 정적 파일을 배포할 수 있어야 합니다.
+- 글과 변경 이력을 Git으로 함께 관리해야 합니다.
+- 익숙한 React 컴포넌트로 화면을 나눌 수 있어야 합니다.
+- 글은 `content/posts` 아래의 파일로 관리할 수 있어야 합니다.
+- 색상, 글꼴, 콘텐츠 폭을 직접 바꿀 수 있어야 합니다.
+- 빌드 시점에 잘못된 글을 발견하고 SEO 파일도 함께 만들 수 있어야 합니다.
+
+댓글, 회원 기능, 요청마다 달라지는 서버 응답은 이번 요구사항에 없었습니다. 이 구분이 중요합니다. 정적 호스팅은 단순히 저렴한 선택이 아니라, **필요한 기능이 정적 결과만으로 충분할 때** 적합한 선택입니다.
+
+## GitHub Pages를 선택한 이유
+
+GitHub Pages는 저장소에서 만든 정적 파일을 웹에 공개하는 서비스입니다. 이 블로그에는 세 가지 장점이 잘 맞았습니다.
+
+첫째, 소스와 배포 이력을 같은 GitHub 저장소에서 추적할 수 있습니다. 둘째, 정적 사이트를 위한 별도 서버를 운영하지 않아도 됩니다. 셋째, GitHub Actions로 테스트와 빌드를 통과한 `public` 디렉터리만 배포할 수 있습니다.
+
+반대로 서버 런타임이 필요한 기능에는 맞지 않습니다. 요청마다 데이터베이스를 조회하거나 서버에서 인증을 처리해야 한다면 별도 백엔드나 다른 배포 환경이 필요합니다. 이 블로그는 글을 작성한 뒤 빌드하고 배포하는 흐름이므로 이 제한이 문제가 되지 않았습니다.
+
+현재 `.github/workflows/deploy-pages.yml`은 `main` 대상 PR에서 동일한 검증을 실행하고, `main`에 반영된 경우에만 Pages 배포 단계로 넘어갑니다. 즉, 호스팅 서비스보다 먼저 **어떤 산출물만 공개할지**를 workflow가 결정합니다.
+
+## Gatsby를 선택한 이유
+
+GitHub Pages가 결과를 올려둘 장소라면 Gatsby는 그 결과를 만드는 도구입니다. Gatsby는 빌드할 때 React 화면과 MDX 글을 HTML로 바꾸는 정적 사이트 생성기(SSG)입니다.
+
+이 프로젝트에서는 Gatsby의 다음 특성이 요구사항과 맞았습니다.
+
+- React 컴포넌트로 홈, 헤더, 포스트 화면을 구성할 수 있습니다.
+- `gatsby-source-filesystem`으로 글 파일을 수집할 수 있습니다.
+- `gatsby-plugin-mdx`로 Markdown과 JSX를 함께 처리할 수 있습니다.
+- GraphQL 데이터 계층에서 목록과 상세 페이지가 같은 글 데이터를 조회합니다.
+- `gatsby-plugin-sitemap`으로 빌드한 URL을 sitemap에 연결할 수 있습니다.
+
+현재 `gatsby-config.mjs`의 핵심 플러그인 경계는 다음과 같습니다.
+
+```javascript
+plugins: [
+  {
+    resolve: "gatsby-plugin-mdx",
+    options: {
+      mdxOptions: {
+        remarkPlugins: [remarkGfm],
+        rehypePlugins: [rehypeSlug, [rehypeShiki, codeHighlightingOptions]],
+      },
+    },
+  },
+  {
+    resolve: "gatsby-source-filesystem",
+    options: {
+      name: "posts",
+      path: path.join(rootDirectory, "content", "posts"),
+    },
+  },
+  {
+    resolve: "gatsby-plugin-sitemap",
+    options: { excludes: ["/404.html"] },
+  },
+]
+```
+
+여기서 Gatsby를 선택한 이유는 인기나 성능 순위만이 아닙니다. 이미 React에 익숙했고, 글 파일을 수집해 목록·상세·SEO로 연결하는 데이터 계층이 필요했습니다. 더 단순한 HTML 사이트나 서버 기능이 중심인 서비스라면 다른 선택이 더 적합할 수 있습니다.
+
+## 배포 산출물을 소스 프로젝트로 재구축하기
+
+재구축은 완성 화면을 한 번에 복제하는 작업으로 진행하지 않았습니다. 실패 원인을 좁힐 수 있도록 다음 순서로 기준선을 만들었습니다.
+
+1. `.nvmrc`, `package.json`, lockfile로 Node.js와 의존성 버전을 고정합니다.
+2. Gatsby가 빈 페이지라도 빌드할 수 있는 설정을 만듭니다.
+3. MDX 파일을 Gatsby 데이터 계층에 연결합니다.
+4. 홈 목록과 포스트 상세 경로를 만듭니다.
+5. 디자인 토큰, 로컬 폰트, 반응형 레이아웃을 적용합니다.
+6. 생성된 HTML·CSS·sitemap을 검증하는 스크립트를 추가합니다.
+7. 마지막에 GitHub Pages 배포를 연결합니다.
+
+이 순서를 사용하면 화면이 깨졌을 때 콘텐츠 변환 문제인지, CSS 문제인지, 배포 문제인지 구분하기 쉽습니다. 작은 PR로 나누면 각 단계의 결정과 검증 근거도 Git 이력에 남습니다.
+
+## 최소 프로젝트 구조 만들기
+
+처음 따라 만드는 경우에는 파일 수보다 역할을 이해하는 편이 중요합니다. 이 블로그의 최소 경계는 다음과 같습니다.
+
+```text
+content/posts/
+  <slug>/index.mdx       글 본문과 frontmatter
+src/pages/index.tsx      홈 목록과 GraphQL 쿼리
+src/templates/post.tsx   포스트 상세 화면과 GraphQL 쿼리
+src/styles/              디자인 토큰과 화면별 CSS
+gatsby-config.mjs        플러그인과 콘텐츠 소스 설정
+gatsby-node.mjs          글 검증과 정적 페이지 생성
+```
+
+새 글은 `content/posts/<slug>/index.mdx`에 둡니다. `gatsby-config.mjs`가 이 디렉터리를 `posts`라는 이름으로 수집하고, `gatsby-node.mjs`가 유효한 글만 `/posts/<slug>/` 경로로 만듭니다. 홈과 상세 화면은 같은 MDX 데이터를 GraphQL로 조회합니다.
+
+이 구조에서는 글을 늘리기 위해 React 파일을 매번 수정하지 않습니다. 반대로 화면을 바꿀 때는 글 파일 전체를 고치지 않아도 됩니다. 콘텐츠와 표현의 변경 경계를 나누는 것이 관리 가능한 블로그의 출발점입니다.
+
+## 처음부터 디자인 변경 지점 분리하기
+
+자신만의 디자인으로 바꾸고 싶다면 컴포넌트의 숫자 값을 곳곳에서 직접 수정하기보다 변경 지점을 먼저 모아두는 편이 좋습니다.
+
+이 프로젝트에서는 다음 세 곳부터 살펴보면 됩니다.
+
+- `src/styles/theme.css`: `--accent`, `--link`, 글꼴, 간격 같은 디자인 토큰
+- `src/styles/layout.css`: `.site-container`의 최대 폭과 화면별 좌우 여백
+- `gatsby-browser.js`: 실제로 불러오는 로컬 폰트와 굵기
+
+예를 들어 브랜드 색을 바꾸고 싶다면 `--accent`의 역할을 유지한 채 값만 바꿉니다. 본문 폭을 바꾸고 싶다면 카드나 제목마다 폭을 수정하지 않고 `.site-container`를 기준으로 조정합니다. 제목용 글꼴과 본문용 글꼴도 역할별 변수로 분리하면 전체 인상이 일관되게 바뀝니다.
+
+화면 컴포넌트는 데이터를 가져오는 부분과 보이는 부분을 나눕니다. 덕분에 독자는 GraphQL 쿼리를 건드리지 않고 카드 모양을 바꿀 수 있고, 반대로 데이터 규칙을 바꾸면서 CSS까지 함께 수정할 필요가 없습니다.
+
+## 빌드와 GitHub Pages 배포 확인하기
+
+로컬 화면이 보인다는 사실만으로 배포 준비가 끝난 것은 아닙니다. 현재 workflow는 소스 계약, 타입, 정적 빌드, 생성 결과를 순서대로 확인합니다.
+
+```yaml
+- name: Test source contracts
+  run: npm test
+
+- name: Type-check source
+  run: npm run typecheck
+
+- name: Build Gatsby site
+  run: npm run build
+
+- name: Verify generated posts
+  run: npm run verify:post
+
+- name: Upload GitHub Pages artifact
+  uses: actions/upload-pages-artifact@v4
+  with:
+    path: public
+```
+
+로컬에서도 같은 경계를 확인할 수 있습니다.
+
+```shell
+npm test
+npm run typecheck
+npm run build
+npm run verify:styles
+npm run verify:layout
+npm run verify:home
+npm run verify:post
+```
+
+`npm run build`는 Gatsby가 정적 사이트를 만들 수 있는지 확인합니다. 뒤의 검증기는 홈 카드 순서, 포스트 메타데이터, canonical, sitemap처럼 빌드 성공만으로는 알기 어려운 결과를 확인합니다. 이 검증이 모두 통과한 `public` 디렉터리가 GitHub Pages artifact가 됩니다.
+
+## 다음 글
+
+이 글에서는 GitHub Pages와 Gatsby를 선택한 기준, 소스가 없는 사이트를 재구축한 순서, 처음 디자인을 바꿀 때 살펴볼 경계를 정리했습니다.
+
+다음 글에서는 `content/posts/<slug>/index.mdx` 한 개가 Gatsby 데이터 계층으로 들어가 홈 목록과 상세 페이지가 되는 과정을 살펴봅니다. frontmatter를 계약으로 고정하고, GraphQL로 글 목록을 조회하며, 잘못된 글을 빌드 전에 발견하는 방법까지 연결합니다.
