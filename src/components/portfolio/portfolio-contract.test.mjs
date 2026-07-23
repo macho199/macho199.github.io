@@ -68,6 +68,46 @@ test("renders the portfolio overview, ordered projects, achievements, and workin
   )
 })
 
+test("renders shared core technologies and every project's technologies and related links", async () => {
+  const [web, project] = await Promise.all([
+    readRepositoryFile("src/components/portfolio/portfolio-web.tsx"),
+    readRepositoryFile("src/components/portfolio/portfolio-project.tsx"),
+  ])
+
+  assert.match(
+    web,
+    /portfolio\.coreTechnologies\.map\(technology =>[\s\S]*<li key=\{technology\}>\{technology\}<\/li>/,
+  )
+  assert.match(
+    project,
+    /<ul\s+className="portfolio-project-technologies"\s+aria-label="프로젝트 기술 목록"\s*>[\s\S]*project\.technologies\.map\(technology =>[\s\S]*<li key=\{technology\}>\{technology\}<\/li>/,
+  )
+  assert.match(project, /project\.relatedLinks\.length > 0 && \(/)
+  assert.match(
+    project,
+    /project\.relatedLinks\.map\(link =>[\s\S]*href=\{link\.url\}[\s\S]*\{link\.label\}/,
+  )
+})
+
+test("places GitHub and the dated single-source PDF action in the 30-second hero", async () => {
+  const web = await readRepositoryFile(
+    "src/components/portfolio/portfolio-web.tsx",
+  )
+
+  assert.match(
+    web,
+    /const formattedUpdatedAt = portfolio\.updatedAt\.replaceAll\("-", "\."\)/,
+  )
+  assert.match(
+    web,
+    /const githubLink = portfolio\.links\.find\(link => link\.label === "GitHub"\)!/,
+  )
+  assert.match(
+    web,
+    /<header className="portfolio-hero">[\s\S]*className="portfolio-hero-actions"[\s\S]*href=\{githubLink\.url\}[\s\S]*PDF 다운로드 · 최신 갱신 \{formattedUpdatedAt\}[\s\S]*같은 공개 콘텐츠에서 생성한 최신 PDF입니다\.[\s\S]*<\/header>/,
+  )
+})
+
 test("publishes exactly four metrics from the shared portfolio data", () => {
   assert.equal(portfolio.metrics.length, 4)
 })
@@ -134,7 +174,7 @@ test("offers approved public links and a downloadable portfolio PDF", async () =
   assert.match(content, /\{ label: "GitHub", url: "https:\/\/github\.com\/macho199" \}/)
   assert.match(
     web,
-    /<a[\s\S]*href="\/downloads\/kwon-jongseong-backend-portfolio\.pdf"[\s\S]*download[\s\S]*>[\s\S]*PDF 포트폴리오 다운로드[\s\S]*<\/a>/,
+    /<a[\s\S]*href="\/downloads\/kwon-jongseong-backend-portfolio\.pdf"[\s\S]*download[\s\S]*>[\s\S]*PDF 다운로드 · 최신 갱신 \{formattedUpdatedAt\}[\s\S]*<\/a>/,
   )
 })
 
@@ -218,6 +258,10 @@ test("defines token-based responsive portfolio presentation without inline UI", 
     portfolioCss,
     /\.portfolio-project section\[aria-label\]::before\s*\{[^}]*content:\s*attr\(aria-label\)/s,
   )
+  assert.match(
+    portfolioCss,
+    /\.portfolio-project \.portfolio-project-technologies li,\s*\.portfolio-project \.portfolio-project-technologies li \+ li\s*\{[^}]*margin-top:\s*0;[^}]*padding:\s*var\(--space-1\) var\(--space-3\);/s,
+  )
   assert.match(portfolioCss, /max-width:\s*\d+ch/)
   assert.doesNotMatch(portfolioCss, /@keyframes|animation(?:-name)?:/i)
 
@@ -242,6 +286,29 @@ test("defines a verifier for the generated portfolio HTML", async () => {
   assert.match(verifier, /resume-migration/)
   assert.match(verifier, /recommendation-load-test/)
   assert.match(verifier, /data-pulse/)
+  for (const approvedTechnology of [
+    "AWS S3",
+    "PostgreSQL",
+    "MSA",
+    "Debezium CDC",
+  ]) {
+    assert.ok(
+      verifier.includes(approvedTechnology),
+      `${approvedTechnology} generated HTML contract`,
+    )
+  }
+  assert.ok(
+    verifier.includes("PDF 다운로드 · 최신 갱신 2026.07.23"),
+    "dated PDF action generated HTML contract",
+  )
+  assert.ok(
+    verifier.includes("AI 에이전트는 탐색·정리·추적에 사용"),
+    "AI-agent working-style generated HTML contract",
+  )
+  assert.ok(
+    verifier.includes("최종 판단과 검증은 개발자가 담당"),
+    "expert-judgment working-style generated HTML contract",
+  )
   assert.match(
     verifier,
     /assert\.doesNotMatch\(\s*main,\s*\/\\bstyle\\s\*=\/i,\s*"portfolio: no inline styles",?\s*\)/s,
@@ -325,6 +392,43 @@ test("rejects a generated portfolio document with a hidden document ancestor", (
   }
 })
 
+test("rejects private IPv4 from built visible text while preserving URL and phone checks", async () => {
+  const { assertPublicPortfolioVisibleText } = await import(
+    "../../../scripts/verify-portfolio-build.mjs"
+  )
+
+  assert.equal(typeof assertPublicPortfolioVisibleText, "function")
+
+  for (const privateText of [
+    "10.0.0.1",
+    "127.10.20.30",
+    "169.254.1.2",
+    "172.16.5.4",
+    "172.31.255.255",
+    "192.168.40.50",
+    "https://macho199.github.io/portfolio/10.0.0.1",
+  ]) {
+    assert.throws(
+      () => assertPublicPortfolioVisibleText(`visible ${privateText}`),
+      /no private IPv4/,
+      privateText,
+    )
+  }
+
+  assert.throws(
+    () =>
+      assertPublicPortfolioVisibleText(
+        "https://macho199.github.io/portfolio/010-1234-5678",
+      ),
+    /no phone number/,
+  )
+  assert.doesNotThrow(() =>
+    assertPublicPortfolioVisibleText(
+      "public 8.8.8.8 https://macho199.github.io/portfolio/8.8.4.4",
+    ),
+  )
+})
+
 test("publishes a shell-free noindex print route at the nested portfolio path", async () => {
   const route = await readRepositoryFile("src/pages/portfolio/print.tsx")
 
@@ -392,7 +496,10 @@ test("composes exactly nine deterministic print pages from shared portfolio data
     printDocument,
     /\{pageNumber\} \/ \{totalPages\}/,
   )
-  assert.match(printDocument, /업데이트 \{updatedAt\}/)
+  assert.match(
+    printDocument,
+    /업데이트 \{updatedAt\.replaceAll\("-", "\."\)\}/,
+  )
   assert.match(
     printDocument,
     /https:\/\/macho199\.github\.io\/portfolio\//,

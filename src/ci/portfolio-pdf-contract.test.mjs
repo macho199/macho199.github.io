@@ -84,6 +84,52 @@ test("attempts every cleanup task even when one cleanup fails", async () => {
   assert.deepEqual(cleanupErrors, [browserFailure])
 })
 
+test("preserves a generation failure and every ordered cleanup failure", async () => {
+  const { runWithGenerationCleanup } = await import(generatorUrl.href)
+  const generationFailure = new Error("generation failed")
+  const browserFailure = new Error("browser close failed")
+  const serverFailure = new Error("server close failed")
+  /** @type {string[]} */
+  const calls = []
+
+  await assert.rejects(
+    runWithGenerationCleanup(
+      async () => {
+        calls.push("generate")
+        throw generationFailure
+      },
+      [
+        () => {
+          calls.push("browser")
+          throw browserFailure
+        },
+        () => {
+          calls.push("server")
+          throw serverFailure
+        },
+        () => {
+          calls.push("temporary file")
+        },
+      ],
+    ),
+    error => {
+      assert.ok(error instanceof AggregateError)
+      assert.deepEqual(
+        error.errors,
+        [generationFailure, browserFailure, serverFailure],
+      )
+      assert.equal(error.cause, generationFailure)
+      return true
+    },
+  )
+  assert.deepEqual(calls, [
+    "generate",
+    "browser",
+    "server",
+    "temporary file",
+  ])
+})
+
 test("removes a stale stable PDF before requiring built print HTML", async () => {
   const generator = await readRepositoryFile("scripts/generate-portfolio-pdf.mjs")
 
@@ -185,7 +231,7 @@ test("adds approved metadata and always cleans generation resources", async () =
   assert.match(generator, /\.setModificationDate\(/)
   assert.match(
     generator,
-    /finally\s*\{[\s\S]*browser\?\.close\(\)[\s\S]*closeServer\([\s\S]*rm\(temporaryDirectory/s,
+    /await runWithGenerationCleanup\(async \(\) => \{[\s\S]*\}, \[[\s\S]*browser\?\.close\(\)[\s\S]*closeServer\([\s\S]*rm\(temporaryDirectory/s,
   )
 })
 
@@ -201,7 +247,11 @@ test("verifies PDF structure, metadata, text, labels, and privacy", async () => 
   assert.match(verifier, /10 \* 1024/)
   assert.match(verifier, /10 \* 1024 \* 1024/)
   assert.match(verifier, /PDFDocument\.load\(/)
-  assert.match(verifier, /\.getPageCount\(\),\s*9/)
+  assert.match(verifier, /totalPages:\s*9/)
+  assert.match(verifier, /A4_WIDTH_POINTS\s*=\s*595\.28/)
+  assert.match(verifier, /A4_HEIGHT_POINTS\s*=\s*841\.89/)
+  assert.match(verifier, /A4_POINT_TOLERANCE\s*=\s*1/)
+  assert.match(verifier, /assertPortfolioPdfPageContracts\(/)
   assert.match(
     verifier,
     /\.getTitle\(\),\s*"권종성 백엔드 개발자 포트폴리오"/,
@@ -231,12 +281,19 @@ test("verifies PDF structure, metadata, text, labels, and privacy", async () => 
     "최종 미해결 누락 0건",
     "500 TPS",
     "https://macho199.github.io/portfolio/",
-    "1 / 9",
-    "9 / 9",
+    "AI 에이전트는 탐색·정리·추적에 사용",
+    "최종 판단과 검증은 개발자가 담당",
   ]) {
     assert.ok(verifier.includes(approvedText), `${approvedText} text contract`)
   }
 
+  assert.match(verifier, /const pageNumber = index \+ 1/)
+  assert.match(verifier, /pageText\.trim\(\)\.length > 0/)
+  assert.match(verifier, /page\.getSize\(\)/)
+  assert.match(
+    verifier,
+    /\[`\$\{pageNumber\} \/ \$\{contract\.totalPages\}`\]/,
+  )
   assert.match(verifier, /no private email/)
   assert.match(verifier, /no private phone number/)
   assert.match(verifier, /no internal URL/)

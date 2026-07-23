@@ -33,6 +33,29 @@ const PortfolioProjectView = ({ project }: PortfolioProjectProps) => (
         ))}
       </ul>
     </section>
+    <section aria-label="사용 기술">
+      <ul
+        className="portfolio-project-technologies"
+        aria-label="프로젝트 기술 목록"
+      >
+        {project.technologies.map(technology => (
+          <li key={technology}>{technology}</li>
+        ))}
+      </ul>
+    </section>
+    {project.relatedLinks.length > 0 && (
+      <section aria-label="관련 링크">
+        <ul className="portfolio-project-related-links">
+          {project.relatedLinks.map(link => (
+            <li key={link.url}>
+              <a href={link.url} target="_blank" rel="noopener noreferrer">
+                {link.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
   </article>
 )
 

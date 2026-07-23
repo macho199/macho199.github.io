@@ -250,17 +250,61 @@ export const runCleanupTasks = async tasks => {
     .map(result => result.reason)
 }
 
+/**
+ * @template T
+ * @param {() => T | Promise<T>} operation
+ * @param {readonly (() => unknown | Promise<unknown>)[]} cleanupTasks
+ * @returns {Promise<T>}
+ */
+export const runWithGenerationCleanup = async (
+  operation,
+  cleanupTasks,
+) => {
+  let operationFailed = false
+  let operationError
+  let operationResult
+
+  try {
+    operationResult = await operation()
+  } catch (error) {
+    operationFailed = true
+    operationError = error
+  }
+
+  const cleanupErrors = await runCleanupTasks(cleanupTasks)
+
+  if (operationFailed) {
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        [operationError, ...cleanupErrors],
+        "Portfolio PDF generation and cleanup both failed",
+        { cause: operationError },
+      )
+    }
+
+    throw operationError
+  }
+
+  if (cleanupErrors.length > 0) {
+    throw new AggregateError(
+      cleanupErrors,
+      "Failed to clean portfolio PDF generation resources",
+    )
+  }
+
+  return /** @type {T} */ (operationResult)
+}
+
 export const generatePortfolioPdf = async () => {
   await rm(portfolioPdfPath, { force: true })
   await access(printHtmlPath)
   await mkdir(downloadsPath, { recursive: true })
 
   let browser
-  let generationError
   let server
   let temporaryDirectory
 
-  try {
+  await runWithGenerationCleanup(async () => {
     temporaryDirectory = await mkdtemp(
       join(downloadsPath, ".portfolio-pdf-"),
     )
@@ -349,26 +393,14 @@ export const generatePortfolioPdf = async () => {
     await rename(finalPdfPath, portfolioPdfPath)
 
     console.log(`portfolio PDF generated: ${PORTFOLIO_PDF_PATH}`)
-  } catch (error) {
-    generationError = error
-    throw error
-  } finally {
-    const cleanupErrors = await runCleanupTasks([
-      () => browser?.close(),
-      () => closeServer(server),
-      () =>
-        temporaryDirectory
-          ? rm(temporaryDirectory, { force: true, recursive: true })
-          : undefined,
-    ])
-
-    if (cleanupErrors.length > 0 && generationError === undefined) {
-      throw new AggregateError(
-        cleanupErrors,
-        "Failed to clean portfolio PDF generation resources",
-      )
-    }
-  }
+  }, [
+    () => browser?.close(),
+    () => closeServer(server),
+    () =>
+      temporaryDirectory
+        ? rm(temporaryDirectory, { force: true, recursive: true })
+        : undefined,
+  ])
 }
 
 const isDirectRun =

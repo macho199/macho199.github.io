@@ -27,7 +27,7 @@ const PrintPage = ({
     <footer className="portfolio-print-footer">
       <span>{portfolio.name} 백엔드 개발자 포트폴리오</span>
       <span>{pageNumber} / {totalPages}</span>
-      <span>업데이트 {updatedAt}</span>
+      <span>업데이트 {updatedAt.replaceAll("-", ".")}</span>
       <span>{CANONICAL_PORTFOLIO_URL}</span>
     </footer>
   </section>

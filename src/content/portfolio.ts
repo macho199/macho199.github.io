@@ -1,3 +1,5 @@
+import { findPrivateIpv4Addresses } from "./public-content-privacy.mjs"
+
 export type PortfolioLink = Readonly<{
   label: string
   url: `https://${string}`
@@ -227,6 +229,8 @@ export const portfolio = {
     "등용문2.5 개발자 1인당 담당 프로젝트 평균 1~2개→5~8개",
   ],
   workingStyle: [
+    "AI 에이전트는 탐색·정리·추적에 사용",
+    "최종 판단과 검증은 개발자가 담당",
     "운영 중인 서비스의 데이터 흐름과 변경 영향을 먼저 확인합니다.",
     "모호한 요구사항은 질문으로 범위를 맞추고 선택 이유와 데이터 흐름을 설명합니다.",
     "데이터 비교·부하 시험·응답 시간처럼 확인 가능한 결과로 변경 효과를 검증합니다.",
@@ -336,7 +340,10 @@ export const validatePortfolio = (
   })
 
   const serialized = JSON.stringify(selectedPortfolio)
-  if (forbiddenPublicContentPatterns.some(pattern => pattern.test(serialized))) {
+  if (
+    forbiddenPublicContentPatterns.some(pattern => pattern.test(serialized)) ||
+    findPrivateIpv4Addresses(serialized).length > 0
+  ) {
     errors.push("portfolio contains a forbidden public-content pattern")
   }
 

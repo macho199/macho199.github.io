@@ -6,6 +6,7 @@ import { resolve } from "node:path"
 
 import { PDFDocument } from "pdf-lib"
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs"
+import { findPrivateIpv4Addresses } from "../src/content/public-content-privacy.mjs"
 
 export const PORTFOLIO_PDF_PATH =
   "public/downloads/kwon-jongseong-backend-portfolio.pdf"
@@ -14,6 +15,9 @@ export const PORTFOLIO_WEB_URL =
 
 const MINIMUM_PDF_SIZE = 10 * 1024
 const MAXIMUM_PDF_SIZE = 10 * 1024 * 1024
+const A4_WIDTH_POINTS = 595.28
+const A4_HEIGHT_POINTS = 841.89
+const A4_POINT_TOLERANCE = 1
 const httpUrlPattern =
   /https?:\/\/[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]*?(?=https?:\/\/|[^A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]|$)/giu
 const privatePhonePatterns = [
@@ -34,6 +38,48 @@ const defaultPdfPath = fileURLToPath(
     import.meta.url,
   ),
 )
+const standardFontDataUrl = fileURLToPath(
+  new URL("../node_modules/pdfjs-dist/standard_fonts/", import.meta.url),
+)
+const portfolioPageContract = {
+  canonicalUrl: PORTFOLIO_WEB_URL,
+  name: "권종성",
+  pageAnchors: [
+    [
+      "17년 경력 시니어 백엔드 개발자",
+      "17년간 채용 플랫폼과 채용 솔루션을 개발·운영한 백엔드 개발자입니다.",
+    ],
+    [
+      "Java",
+      "AI 에이전트는 탐색·정리·추적에 사용",
+      "최종 판단과 검증은 개발자가 담당",
+    ],
+    ["이력서 첨부파일 NAS→S3 무중단 전환"],
+    [
+      "이력서 첨부파일 NAS→S3 무중단 전환",
+      "서비스 중단 없이 약 800만 개 전환",
+    ],
+    [
+      "알바몬 이력서 데이터 마이그레이션 정합성 검증",
+      "1천만 건 이상의 원본과 이관 결과를 비교·보정해 누락 제거",
+    ],
+    [
+      "알바몬 이력서 데이터 마이그레이션 정합성 검증",
+      "최종 미해결 누락 0건",
+    ],
+    ["잡코리아 모바일 추천2.0 부하 시험 개선"],
+    [
+      "잡코리아 모바일 추천2.0 부하 시험 개선",
+      "500 TPS 시험의 커넥션·날짜 매핑 원인 분석",
+    ],
+    [
+      "잡코리아·알바몬 리부트 CPC API 성능 시험 P95 응답 500ms 이하",
+      "data-pulse 공통 데이터 연동 기반",
+    ],
+  ],
+  totalPages: 9,
+  updatedAt: "2026.07.23",
+}
 
 const assertValidDate = (value, label) => {
   assert.ok(
@@ -42,7 +88,8 @@ const assertValidDate = (value, label) => {
   )
 }
 
-const createPdfLoadingTask = data => getDocument({ data })
+const createPdfLoadingTask = data =>
+  getDocument({ data, standardFontDataUrl })
 
 const runWithCleanup = async (operation, cleanup, aggregateMessage) => {
   let operationError
@@ -121,6 +168,90 @@ export const extractPdfText = async (
   )
 }
 
+/**
+ * @typedef {Readonly<{
+ *   canonicalUrl: string
+ *   name: string
+ *   pageAnchors: readonly (readonly string[])[]
+ *   totalPages: number
+ *   updatedAt: string
+ * }>} PortfolioPdfPageContract
+ */
+
+/**
+ * @param {PDFDocument} pdfDocument
+ * @param {readonly string[]} pageTexts
+ * @param {PortfolioPdfPageContract} contract
+ */
+export const assertPortfolioPdfPageContracts = (
+  pdfDocument,
+  pageTexts,
+  contract,
+) => {
+  assert.equal(
+    pdfDocument.getPageCount(),
+    contract.totalPages,
+    "portfolio PDF page count",
+  )
+  assert.equal(
+    pageTexts.length,
+    contract.totalPages,
+    "portfolio PDF extracted page count",
+  )
+  assert.equal(
+    contract.pageAnchors.length,
+    contract.totalPages,
+    "portfolio PDF page-anchor contract count",
+  )
+
+  pdfDocument.getPages().forEach((page, index) => {
+    const pageNumber = index + 1
+    const pageText = pageTexts[index]
+    const { width, height } = page.getSize()
+
+    assert.ok(
+      Math.abs(width - A4_WIDTH_POINTS) <= A4_POINT_TOLERANCE,
+      `portfolio PDF page ${pageNumber} A4 width`,
+    )
+    assert.ok(
+      Math.abs(height - A4_HEIGHT_POINTS) <= A4_POINT_TOLERANCE,
+      `portfolio PDF page ${pageNumber} A4 height`,
+    )
+    assert.ok(
+      pageText.trim().length > 0,
+      `portfolio PDF page ${pageNumber} is nonblank`,
+    )
+    assert.ok(
+      pageText.includes(contract.name),
+      `portfolio PDF page ${pageNumber} contains name`,
+    )
+    assert.ok(
+      pageText.includes(contract.updatedAt),
+      `portfolio PDF page ${pageNumber} contains formatted update date`,
+    )
+    assert.ok(
+      pageText.includes(contract.canonicalUrl),
+      `portfolio PDF page ${pageNumber} contains canonical URL`,
+    )
+
+    const pageLabels = (pageText.match(/\d+\s+\/\s+\d+/gu) ?? [])
+      .map(label => label.replace(/\s+/gu, " "))
+
+    assert.deepEqual(
+      pageLabels,
+      [`${pageNumber} / ${contract.totalPages}`],
+      `portfolio PDF page ${pageNumber} exact page label`,
+    )
+
+    for (const anchor of contract.pageAnchors[index]) {
+      assert.ok(
+        pageText.includes(anchor),
+        `portfolio PDF page ${pageNumber} contains ${anchor}`,
+      )
+    }
+  })
+}
+
 export const assertPublicPortfolioText = extractedText => {
   assert.doesNotMatch(
     extractedText,
@@ -130,6 +261,14 @@ export const assertPublicPortfolioText = extractedText => {
   assert.ok(
     !privatePhonePatterns.some(pattern => pattern.test(extractedText)),
     "no private phone number",
+  )
+  assert.equal(
+    findPrivateIpv4Addresses(
+      extractedText,
+      candidate => isIP(candidate) === 4,
+    ).length,
+    0,
+    "no private IPv4",
   )
 
   const detectedHttpUrls = extractedText.match(httpUrlPattern) ?? []
@@ -210,7 +349,6 @@ export const verifyPortfolioPdf = async pdfPath => {
   })
 
   assert.equal(pdfDocument.isEncrypted, false, "portfolio PDF is unencrypted")
-  assert.equal(pdfDocument.getPageCount(), 9, "portfolio PDF page count")
   assert.equal(
     pdfDocument.getTitle(),
     "권종성 백엔드 개발자 포트폴리오",
@@ -228,21 +366,11 @@ export const verifyPortfolioPdf = async pdfPath => {
   const pageTexts = await extractPdfText(pdfBytes)
   const extractedText = pageTexts.join("\n")
 
-  for (const approvedText of [
-    "약 800만 개",
-    "1천만 건 이상",
-    "최종 미해결 누락 0건",
-    "500 TPS",
-    PORTFOLIO_WEB_URL,
-  ]) {
-    assert.ok(
-      extractedText.includes(approvedText),
-      `portfolio PDF contains ${approvedText}`,
-    )
-  }
-
-  assert.ok(extractedText.includes("1 / 9"), "portfolio PDF contains 1 / 9")
-  assert.ok(extractedText.includes("9 / 9"), "portfolio PDF contains 9 / 9")
+  assertPortfolioPdfPageContracts(
+    pdfDocument,
+    pageTexts,
+    portfolioPageContract,
+  )
   assertPublicPortfolioText(extractedText)
 
   console.log(

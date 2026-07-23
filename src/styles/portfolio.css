@@ -79,6 +79,71 @@
     overflow-wrap: anywhere;
   }
 
+  .portfolio-hero-technologies {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .portfolio-hero-technologies h2 {
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: 600;
+  }
+
+  .portfolio-hero-technology-list,
+  .portfolio-project-technologies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .portfolio-hero-technology-list li,
+  .portfolio-project-technologies li {
+    margin: 0;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-warm);
+    color: var(--fg-2);
+    font-size: var(--text-sm);
+  }
+
+  .portfolio-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .portfolio-hero-actions a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    padding-inline: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--link);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .portfolio-hero-actions a[download] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-on);
+  }
+
+  .portfolio-hero-actions p {
+    flex-basis: 100%;
+    color: var(--muted);
+    font-size: var(--text-sm);
+  }
+
   .portfolio-metrics,
   .portfolio-projects,
   .portfolio-achievements,
@@ -215,6 +280,7 @@
   }
 
   .portfolio-project ul,
+  .portfolio-project-related-links,
   .portfolio-achievements ul,
   .portfolio-working-style ul,
   .portfolio-links ul {
@@ -222,6 +288,7 @@
   }
 
   .portfolio-project li,
+  .portfolio-project-related-links li,
   .portfolio-achievements li,
   .portfolio-working-style li {
     padding-left: var(--space-1);
@@ -229,9 +296,16 @@
   }
 
   .portfolio-project li + li,
+  .portfolio-project-related-links li + li,
   .portfolio-achievements li + li,
   .portfolio-working-style li + li {
     margin-top: var(--space-2);
+  }
+
+  .portfolio-project .portfolio-project-technologies li,
+  .portfolio-project .portfolio-project-technologies li + li {
+    margin-top: 0;
+    padding: var(--space-1) var(--space-3);
   }
 
   .portfolio-achievements,

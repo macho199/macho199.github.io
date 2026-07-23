@@ -1,6 +1,9 @@
 import assert from "node:assert/strict"
 import { readdir, readFile } from "node:fs/promises"
+import { isIP } from "node:net"
 import { pathToFileURL } from "node:url"
+
+import { findPrivateIpv4Addresses } from "../src/content/public-content-privacy.mjs"
 
 const canonicalUrlPattern = /https:\/\/macho199\.github\.io\/portfolio\//
 const pdfPathPattern = /\/downloads\/kwon-jongseong-backend-portfolio\.pdf/
@@ -152,10 +155,47 @@ export const assertOneVisibleH1 = main => {
 }
 
 const projectContracts = [
-  { id: "nas-to-s3", contribution: "2인 팀 · 60%" },
-  { id: "resume-migration", contribution: "팀 프로젝트 · 30%" },
-  { id: "recommendation-load-test", contribution: "팀 프로젝트 · 30%" },
-  { id: "data-pulse", contribution: "팀 프로젝트 · 30%" },
+  {
+    id: "nas-to-s3",
+    contribution: "2인 팀 · 60%",
+    technologies: [
+      "Java",
+      "Spring Boot",
+      "MSSQL",
+      "AWS S3",
+      "S3 Presigned URL",
+      "C#",
+      "ASP.NET",
+    ],
+  },
+  {
+    id: "resume-migration",
+    contribution: "팀 프로젝트 · 30%",
+    technologies: [
+      "Java",
+      "Spring Boot",
+      "MSSQL",
+      "PostgreSQL",
+      "SQL",
+      "Kafka",
+    ],
+  },
+  {
+    id: "recommendation-load-test",
+    contribution: "팀 프로젝트 · 30%",
+    technologies: ["Java", "Spring Boot", "MSSQL", "MSA"],
+  },
+  {
+    id: "data-pulse",
+    contribution: "팀 프로젝트 · 30%",
+    technologies: [
+      "Java",
+      "Spring Boot",
+      "MSSQL",
+      "Debezium CDC",
+      "Kafka",
+    ],
+  },
 ]
 
 const printProjectIds = [
@@ -163,6 +203,47 @@ const printProjectIds = [
   "resume-migration",
   "recommendation-load-test",
 ]
+
+/** @param {string} visibleText */
+export const assertPublicPortfolioVisibleText = visibleText => {
+  assert.doesNotMatch(
+    visibleText,
+    /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i,
+    "portfolio: no private email",
+  )
+  assert.doesNotMatch(
+    visibleText,
+    /(?:\+82[-.\s]?(?:0)?|0)(?:1[016789]|2|3[1-3]|4[1-4]|5[1-5]|6[1-4]|70)[-.\s]?\d{3,4}[-.\s]?\d{4}/,
+    "portfolio: no phone number",
+  )
+  assert.doesNotMatch(
+    visibleText,
+    /(?:localhost|intranet|사번|자격증\s*번호)/i,
+    "portfolio: no internal host or credential-number pattern",
+  )
+  assert.equal(
+    findPrivateIpv4Addresses(
+      visibleText,
+      candidate => isIP(candidate) === 4,
+    ).length,
+    0,
+    "portfolio: no private IPv4",
+  )
+}
+
+/** @param {string} source @param {string} className */
+const readListTextsByClass = (source, className) => {
+  const listMatch = source.match(
+    new RegExp(
+      `<ul\\b[^>]*\\bclass="[^"]*\\b${className}\\b[^"]*"[^>]*>([\\s\\S]*?)<\\/ul>`,
+    ),
+  )
+
+  assert.ok(listMatch, `portfolio: ${className} list`)
+
+  return [...listMatch[1].matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/g)]
+    .map(match => normalizeText(match[1]))
+}
 
 /** @param {string} html */
 export const verifyPortfolioHtml = html => {
@@ -212,7 +293,34 @@ export const verifyPortfolioHtml = html => {
       ),
       `${contract.id}: approved contribution`,
     )
+    assert.deepEqual(
+      readListTextsByClass(body, "portfolio-project-technologies"),
+      contract.technologies,
+      `${contract.id}: exact shared technologies`,
+    )
   }
+
+  assert.equal(
+    main.match(/\bclass="[^"]*\bportfolio-project-related-links\b[^"]*"/g)?.length ?? 0,
+    0,
+    "portfolio: no related-link sections when shared relatedLinks are empty",
+  )
+
+  assert.deepEqual(
+    readListTextsByClass(main, "portfolio-hero-technology-list"),
+    [
+      "Java",
+      "Spring Boot",
+      "PostgreSQL",
+      "MSSQL",
+      "Kafka",
+      "Redis",
+      "AWS S3",
+      "C#",
+      "ASP.NET",
+    ],
+    "portfolio: exact shared core technologies",
+  )
 
   const metricsMatch = main.match(
     /<dl\b[^>]*\bclass="[^"]*\bportfolio-metrics-list\b[^"]*"[^>]*>([\s\S]*?)<\/dl>/,
@@ -235,44 +343,52 @@ export const verifyPortfolioHtml = html => {
     pdfPathPattern.test(readAttribute(attributes, "href")),
   )
 
-  assert.equal(pdfAnchors.length, 1, "portfolio: one stable PDF anchor")
-  assert.equal(
-    readAttribute(pdfAnchors[0][1], "href"),
-    "/downloads/kwon-jongseong-backend-portfolio.pdf",
-    "portfolio: stable PDF path",
-  )
-  assert.ok(
-    hasBooleanAttribute(pdfAnchors[0][1], "download"),
-    "portfolio: PDF anchor has download",
-  )
+  assert.equal(pdfAnchors.length, 2, "portfolio: hero and closing stable PDF anchors")
+  for (const [, attributes, body] of pdfAnchors) {
+    assert.equal(
+      readAttribute(attributes, "href"),
+      "/downloads/kwon-jongseong-backend-portfolio.pdf",
+      "portfolio: stable PDF path",
+    )
+    assert.ok(
+      hasBooleanAttribute(attributes, "download"),
+      "portfolio: PDF anchor has download",
+    )
+    assert.equal(
+      normalizeText(body),
+      "PDF 다운로드 · 최신 갱신 2026.07.23",
+      "portfolio: exact dated PDF action",
+    )
+  }
 
   const githubAnchors = anchors.filter(
     ([, attributes]) =>
       readAttribute(attributes, "href") === "https://github.com/macho199",
   )
 
-  assert.equal(githubAnchors.length, 1, "portfolio: one GitHub link")
+  assert.equal(githubAnchors.length, 2, "portfolio: hero and closing GitHub links")
+  assert.match(
+    normalizeText(main),
+    /AI 에이전트는 탐색·정리·추적에 사용/,
+    "portfolio: AI-agent working style",
+  )
+  assert.match(
+    normalizeText(main),
+    /최종 판단과 검증은 개발자가 담당/,
+    "portfolio: expert-judgment working style",
+  )
+  assert.match(
+    normalizeText(main),
+    /같은 공개 콘텐츠에서 생성한 최신 PDF입니다\./,
+    "portfolio: single-source PDF freshness explanation",
+  )
 
   assert.doesNotMatch(
     main,
     /\bstyle\s*=/i,
     "portfolio: no inline styles",
   )
-  assert.doesNotMatch(
-    main,
-    /(?:\+82[-.\s]?(?:0)?|0)(?:1[016789]|2|3[1-3]|4[1-4]|5[1-5]|6[1-4]|70)[-.\s]?\d{3,4}[-.\s]?\d{4}/,
-    "portfolio: no phone number",
-  )
-  assert.doesNotMatch(
-    main,
-    /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i,
-    "portfolio: no private email",
-  )
-  assert.doesNotMatch(
-    main,
-    /(?:localhost|intranet|사번|자격증\s*번호)/i,
-    "portfolio: no internal host or credential-number pattern",
-  )
+  assertPublicPortfolioVisibleText(normalizeText(main))
 
   const canonicalLinks = [
     ...html.matchAll(
@@ -299,6 +415,10 @@ export const verifyPortfolioHtml = html => {
 
 /** @param {string} html */
 export const verifyPortfolioPrintHtml = html => {
+  const mainMatch = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)
+
+  assert.ok(mainMatch, "portfolio print: main landmark")
+
   const robotsMeta = [
     ...html.matchAll(
       /<meta\b(?=[^>]*\bname="robots")(?=[^>]*\bcontent="noindex, nofollow")[^>]*>/gi,
@@ -325,6 +445,7 @@ export const verifyPortfolioPrintHtml = html => {
     /\bclass="[^"]*\bscroll-to-top\b[^"]*"/i,
     "portfolio print: no scroll-to-top control",
   )
+  assertPublicPortfolioVisibleText(normalizeText(mainMatch[1]))
 
   const pageElements = [
     ...html.matchAll(
@@ -362,7 +483,7 @@ export const verifyPortfolioPrintHtml = html => {
     )
     assert.match(
       pageText,
-      /업데이트 2026-07-23/,
+      /업데이트 2026\.07\.23/,
       `portfolio print: page ${pageNumber} updated date`,
     )
     assert.match(
