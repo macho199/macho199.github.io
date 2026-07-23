@@ -45,20 +45,11 @@ const readJob = (workflow, jobName) => {
   return `${marker}${body}`
 }
 
-/**
- * @param {string} source
- * @param {readonly string[]} fragments
- */
-const assertInOrder = (source, fragments) => {
-  let previousIndex = -1
-
-  for (const fragment of fragments) {
-    const currentIndex = source.indexOf(fragment)
-
-    assert.ok(currentIndex > previousIndex, `${fragment} must appear in order`)
-    previousIndex = currentIndex
-  }
-}
+/** @param {string} job */
+const readStepActions = job =>
+  [...job.matchAll(/^        (uses|run): (.+)$/gm)].map(
+    ([, action, value]) => `${action}: ${value}`,
+  )
 
 test("ignores YAML comments when checking active workflow configuration", () => {
   const activeWorkflow = stripYamlComments(`permissions:
@@ -93,28 +84,34 @@ test("builds and verifies the Pages artifact in order", async () => {
   const buildJob = readJob(workflow, "build")
 
   assert.notEqual(buildJob, "", "build job must exist")
-  assertInOrder(buildJob, [
-    "        uses: actions/checkout@v6",
-    "        uses: actions/setup-node@v6",
-    "        run: npm ci",
-    "        run: npm test",
-    "        run: npm run typecheck",
-    "        run: npm run build",
-    "        run: npm run verify:styles",
-    "        run: npm run verify:layout",
-    "        run: npm run verify:home",
-    "        run: npm run verify:post",
-    "        uses: actions/configure-pages@v5",
-    "        uses: actions/upload-pages-artifact@v4",
+  assert.deepEqual(readStepActions(buildJob), [
+    "uses: actions/checkout@v6",
+    "uses: actions/setup-node@v6",
+    "run: npm ci",
+    "run: npm test",
+    "run: npm run typecheck",
+    "run: npm run build",
+    "run: npm run verify:styles",
+    "run: npm run verify:layout",
+    "run: npm run verify:home",
+    "run: npm run verify:post",
+    "run: npm run verify:portfolio",
+    "run: npx playwright install --with-deps chromium",
+    "run: npm run generate:portfolio-pdf",
+    "run: npm run verify:portfolio-pdf",
+    "uses: actions/configure-pages@v5",
+    "uses: actions/upload-pages-artifact@v4",
   ])
   assert.match(buildJob, /^          node-version-file: \.nvmrc$/m)
   assert.match(buildJob, /^          cache: npm$/m)
   assert.match(buildJob, /^          path: public$/m)
   assert.match(buildJob, /permissions:\n      contents: read/)
+  assert.doesNotMatch(buildJob, /^      [A-Za-z0-9_-]+: write$/m)
   assert.doesNotMatch(
     buildJob,
-    /^      (?:pages: write|id-token: write)|^    environment:$/m,
+    /secrets\.|GITHUB_TOKEN|\bPAT\b|api[_-]?key/i,
   )
+  assert.doesNotMatch(buildJob, /^    environment:$/m)
   assert.doesNotMatch(buildJob, /^        run: npm run clean$/m)
 })
 
@@ -141,6 +138,7 @@ test("deploys only from main after build with least privilege", async () => {
   )
   assert.match(deployJob, /^        id: deployment$/m)
   assert.match(deployJob, /^        uses: actions\/deploy-pages@v4$/m)
+  assert.doesNotMatch(deployJob, /generate:portfolio-pdf/)
 })
 
 test("does not add generated branches or long-lived credentials", async () => {

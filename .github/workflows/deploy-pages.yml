@@ -50,6 +50,18 @@ jobs:
       - name: Verify generated posts
         run: npm run verify:post
 
+      - name: Verify generated portfolio
+        run: npm run verify:portfolio
+
+      - name: Install portfolio PDF browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate portfolio PDF
+        run: npm run generate:portfolio-pdf
+
+      - name: Verify portfolio PDF
+        run: npm run verify:portfolio-pdf
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
