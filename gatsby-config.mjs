@@ -63,7 +63,7 @@ const config = {
     {
       resolve: "gatsby-plugin-sitemap",
       options: {
-        excludes: ["/404.html"],
+        excludes: ["/404.html", "/portfolio/print/", "/portfolio/print"],
       },
     },
   ],

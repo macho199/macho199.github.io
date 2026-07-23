@@ -303,6 +303,197 @@
     outline-offset: 4px;
     box-shadow: var(--focus-ring);
   }
+
+  .portfolio-print-document {
+    min-width: 0;
+    background: var(--surface);
+    color: var(--fg);
+  }
+
+  .portfolio-print-page {
+    display: flex;
+    width: min(210mm, 100%);
+    min-height: 297mm;
+    flex-direction: column;
+    margin-inline: auto;
+    padding: 14mm 15mm 10mm;
+    background: var(--bg);
+  }
+
+  .portfolio-print-content {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .portfolio-print-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-1) var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .portfolio-print-footer span:nth-child(even) {
+    text-align: right;
+  }
+
+  .portfolio-print-cover,
+  .portfolio-print-overview,
+  .portfolio-print-closing,
+  .portfolio-print-project-block {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .portfolio-print-cover {
+    align-content: center;
+    min-height: 245mm;
+  }
+
+  .portfolio-print-cover h1 {
+    max-width: 15ch;
+    font-size: 40px;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+    text-wrap: balance;
+    word-break: keep-all;
+  }
+
+  .portfolio-print-eyebrow {
+    color: var(--accent-hover);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+
+  .portfolio-print-positioning,
+  .portfolio-print-project-headline {
+    color: var(--fg-2);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 1.65;
+    overflow-wrap: break-word;
+    word-break: keep-all;
+  }
+
+  .portfolio-print-summary {
+    display: grid;
+    gap: var(--space-2);
+    max-width: 68ch;
+    padding-left: var(--space-5);
+    border-left: 3px solid var(--accent);
+    color: var(--muted);
+  }
+
+  .portfolio-print-link-list {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .portfolio-print-link-list a {
+    color: var(--link);
+    overflow-wrap: anywhere;
+  }
+
+  .portfolio-print-overview,
+  .portfolio-print-closing,
+  .portfolio-print-project-block {
+    align-content: start;
+  }
+
+  .portfolio-print-overview section,
+  .portfolio-print-closing section,
+  .portfolio-print-project-block section {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .portfolio-print-overview h2,
+  .portfolio-print-closing h2,
+  .portfolio-print-project-header h2 {
+    font-size: 25px;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+    word-break: keep-all;
+  }
+
+  .portfolio-print-project-header {
+    display: grid;
+    gap: var(--space-3);
+    padding-bottom: var(--space-5);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .portfolio-print-project-block h3 {
+    color: var(--accent-hover);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: 600;
+  }
+
+  .portfolio-print-overview ul,
+  .portfolio-print-closing ul,
+  .portfolio-print-project-block ul {
+    margin: 0;
+  }
+
+  .portfolio-print-overview li + li,
+  .portfolio-print-closing li + li,
+  .portfolio-print-project-block li + li {
+    margin-top: var(--space-2);
+  }
+
+  .portfolio-print-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: 0;
+    list-style: none;
+  }
+
+  .portfolio-print-tag-list li {
+    margin: 0;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-warm);
+  }
+
+  .portfolio-print-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin: 0;
+  }
+
+  .portfolio-print-metrics > div {
+    display: flex;
+    min-height: 92px;
+    flex-direction: column-reverse;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  .portfolio-print-metrics dt {
+    color: var(--muted);
+    font-size: var(--text-sm);
+  }
+
+  .portfolio-print-metrics dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+  }
 }
 
 @media (max-width: 1020px) {
@@ -409,5 +600,34 @@
 
   .portfolio-links a {
     justify-content: center;
+  }
+}
+
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  .portfolio-print-document {
+    background: transparent;
+  }
+
+  .portfolio-print-page {
+    box-sizing: border-box;
+    width: 210mm;
+    height: 297mm;
+    min-height: 0;
+    margin: 0;
+    break-after: page;
+    overflow: hidden;
+  }
+
+  .portfolio-print-page:last-child {
+    break-after: auto;
+  }
+
+  .portfolio-print-project-block {
+    break-inside: avoid;
   }
 }

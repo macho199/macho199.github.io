@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises"
 import { test } from "node:test"
 
 import {
+  getPdfProjects,
   portfolio,
 // @ts-expect-error Node 24 imports the shared TypeScript content contract directly.
 } from "../../content/portfolio.ts"
@@ -322,4 +323,155 @@ test("rejects a generated portfolio document with a hidden document ancestor", (
       `hidden ${ancestor}`,
     )
   }
+})
+
+test("publishes a shell-free noindex print route at the nested portfolio path", async () => {
+  const route = await readRepositoryFile("src/pages/portfolio/print.tsx")
+
+  assert.match(
+    route,
+    /import PortfolioPrintDocument from "\.\.\/\.\.\/components\/portfolio\/portfolio-print-document"/,
+  )
+  assert.match(route, /import Seo from "\.\.\/\.\.\/components\/seo"/)
+  assert.match(route, /<PortfolioPrintDocument \/>/)
+  assert.doesNotMatch(
+    route,
+    /\b(?:Layout|Header|Footer|ScrollToTopButton)\b/,
+  )
+  assert.match(
+    route,
+    /export const Head: HeadFC = \(\{ location \}\) => \([\s\S]*<Seo[\s\S]*pathname=\{location\.pathname\}[\s\S]*robots="noindex, nofollow"[\s\S]*\/>[\s\S]*\)/,
+  )
+})
+
+test("composes exactly nine deterministic print pages from shared portfolio data", async () => {
+  const printDocument = await readRepositoryFile(
+    "src/components/portfolio/portfolio-print-document.tsx",
+  )
+  const pdfProjects = getPdfProjects(portfolio)
+
+  assert.deepEqual(
+    pdfProjects.map(project => project.id),
+    ["nas-to-s3", "resume-migration", "recommendation-load-test"],
+  )
+  assert.match(
+    printDocument,
+    /import \{ getPdfProjects, portfolio \} from "\.\.\/\.\.\/content\/portfolio"/,
+  )
+  assert.match(
+    printDocument,
+    /const pdfProjects = getPdfProjects\(portfolio\)/,
+  )
+  assert.equal(
+    [...printDocument.matchAll(/<PrintPage\b/g)].length,
+    9,
+  )
+  assert.equal(
+    [...printDocument.matchAll(/pageNumber=\{\d\}/g)].length,
+    9,
+  )
+  for (let pageNumber = 1; pageNumber <= 9; pageNumber += 1) {
+    assert.match(
+      printDocument,
+      new RegExp(`pageNumber=\\{${pageNumber}\\}`),
+    )
+  }
+  assert.match(
+    printDocument,
+    /type PrintPageProps = Readonly<\{[\s\S]*pageNumber: number[\s\S]*totalPages: 9[\s\S]*updatedAt: string[\s\S]*children: React\.ReactNode[\s\S]*\}>/,
+  )
+  assert.match(
+    printDocument,
+    /<section className="portfolio-print-page" data-page=\{pageNumber\}>/,
+  )
+  assert.match(
+    printDocument,
+    /\{portfolio\.name\} 백엔드 개발자 포트폴리오/,
+  )
+  assert.match(
+    printDocument,
+    /\{pageNumber\} \/ \{totalPages\}/,
+  )
+  assert.match(printDocument, /업데이트 \{updatedAt\}/)
+  assert.match(
+    printDocument,
+    /https:\/\/macho199\.github\.io\/portfolio\//,
+  )
+})
+
+test("uses the approved nine-page content map without PDF-only project prose", async () => {
+  const printDocument = await readRepositoryFile(
+    "src/components/portfolio/portfolio-print-document.tsx",
+  )
+
+  assert.match(printDocument, /\{portfolio\.positioning\}/)
+  assert.match(printDocument, /portfolio\.summary\.map/)
+  assert.match(printDocument, /portfolio\.links\.map/)
+  assert.match(printDocument, /portfolio\.coreTechnologies\.map/)
+  assert.match(printDocument, /portfolio\.metrics\.map/)
+  assert.match(printDocument, /portfolio\.workingStyle\.map/)
+  assert.match(printDocument, /\{project\.headline\}/)
+  assert.match(printDocument, /\{project\.problem\}/)
+  assert.match(printDocument, /project\.scaleAndConstraints\.map/)
+  assert.match(printDocument, /project\.role\.map/)
+  assert.match(printDocument, /project\.decisions\.map/)
+  assert.match(printDocument, /project\.failureHandling\.map/)
+  assert.match(printDocument, /project\.result\.map/)
+  assert.match(printDocument, /project\.technologies\.map/)
+  assert.match(printDocument, /portfolio\.additionalAchievements\.map/)
+  assert.match(
+    printDocument,
+    /const dataPulse = portfolio\.projects\.find\(project => project\.id === "data-pulse"\)/,
+  )
+  assert.match(printDocument, /\{dataPulse\.headline\}/)
+  assert.match(printDocument, /dataPulse\.result\.map/)
+  assert.doesNotMatch(
+    printDocument,
+    /서비스를 멈추지 않고 약 800만 개|1천만 건 이상의 원본과 이관 결과|500 TPS 시험에서 드러난/,
+  )
+})
+
+test("defines A4 pagination and keeps each print content block together", async () => {
+  const portfolioCss = await readRepositoryFile("src/styles/portfolio.css")
+
+  assert.match(
+    portfolioCss,
+    /@page\s*\{[^}]*size:\s*A4 portrait;[^}]*margin:\s*0;/s,
+  )
+  assert.match(
+    portfolioCss,
+    /@media print\s*\{[\s\S]*?\.portfolio-print-page\s*\{[^}]*width:\s*210mm;[^}]*height:\s*297mm;[^}]*break-after:\s*page;[^}]*overflow:\s*hidden;/,
+  )
+  assert.match(
+    portfolioCss,
+    /@media print\s*\{[\s\S]*?\.portfolio-print-page:last-child\s*\{[^}]*break-after:\s*auto;/,
+  )
+  assert.match(
+    portfolioCss,
+    /\.portfolio-print-project-block\s*\{[^}]*break-inside:\s*avoid;/s,
+  )
+})
+
+test("extends the production verifier for print HTML and every sitemap XML file", async () => {
+  const verifier = await readRepositoryFile(
+    "scripts/verify-portfolio-build.mjs",
+  )
+
+  assert.match(
+    verifier,
+    /public\/portfolio\/print\/index\.html/,
+  )
+  assert.match(verifier, /noindex, nofollow/)
+  assert.match(verifier, /portfolio-print-page/)
+  assert.match(verifier, /const pageNumber = index \+ 1/)
+  assert.match(
+    verifier,
+    /new RegExp\(`\$\{pageNumber\} \/ 9`\)/,
+  )
+  assert.match(verifier, /site-header/)
+  assert.match(verifier, /site-footer/)
+  assert.match(verifier, /scroll-to-top/)
+  assert.match(verifier, /sitemap[^"'`]*\\\.xml/)
+  assert.match(verifier, /<loc>/)
+  assert.match(verifier, /portfolio\\\/print/)
 })

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { readFile } from "node:fs/promises"
+import { readdir, readFile } from "node:fs/promises"
 import { pathToFileURL } from "node:url"
 
 const canonicalUrlPattern = /https:\/\/macho199\.github\.io\/portfolio\//
@@ -158,6 +158,12 @@ const projectContracts = [
   { id: "data-pulse", contribution: "팀 프로젝트 · 30%" },
 ]
 
+const printProjectIds = [
+  "nas-to-s3",
+  "resume-migration",
+  "recommendation-load-test",
+]
+
 /** @param {string} html */
 export const verifyPortfolioHtml = html => {
   const mainMatch = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/)
@@ -291,11 +297,157 @@ export const verifyPortfolioHtml = html => {
   )
 }
 
+/** @param {string} html */
+export const verifyPortfolioPrintHtml = html => {
+  const robotsMeta = [
+    ...html.matchAll(
+      /<meta\b(?=[^>]*\bname="robots")(?=[^>]*\bcontent="noindex, nofollow")[^>]*>/gi,
+    ),
+  ]
+
+  assert.equal(
+    robotsMeta.length,
+    1,
+    "portfolio print: one noindex, nofollow robots meta",
+  )
+  assert.doesNotMatch(
+    html,
+    /\bclass="[^"]*\bsite-header\b[^"]*"/i,
+    "portfolio print: no common site header",
+  )
+  assert.doesNotMatch(
+    html,
+    /\bclass="[^"]*\bsite-footer\b[^"]*"/i,
+    "portfolio print: no common site footer",
+  )
+  assert.doesNotMatch(
+    html,
+    /\bclass="[^"]*\bscroll-to-top\b[^"]*"/i,
+    "portfolio print: no scroll-to-top control",
+  )
+
+  const pageElements = [
+    ...html.matchAll(
+      /<section\b([^>]*\bclass="[^"]*\bportfolio-print-page\b[^"]*"[^>]*)>/g,
+    ),
+  ]
+
+  assert.equal(
+    pageElements.length,
+    9,
+    "portfolio print: exactly nine print sections",
+  )
+
+  for (const [index, pageElement] of pageElements.entries()) {
+    const pageNumber = index + 1
+    const pageEnd =
+      pageElements[index + 1]?.index ?? html.indexOf("</main>", pageElement.index)
+    const pageHtml = html.slice(pageElement.index, pageEnd)
+    const pageText = normalizeText(pageHtml)
+
+    assert.equal(
+      readAttribute(pageElement[1], "data-page"),
+      String(pageNumber),
+      `portfolio print: page ${pageNumber} data marker`,
+    )
+    assert.match(
+      pageText,
+      /권종성 백엔드 개발자 포트폴리오/,
+      `portfolio print: page ${pageNumber} document name`,
+    )
+    assert.match(
+      pageText,
+      new RegExp(`${pageNumber} / 9`),
+      `portfolio print: page ${pageNumber} label`,
+    )
+    assert.match(
+      pageText,
+      /업데이트 2026-07-23/,
+      `portfolio print: page ${pageNumber} updated date`,
+    )
+    assert.match(
+      pageText,
+      canonicalUrlPattern,
+      `portfolio print: page ${pageNumber} canonical web URL text`,
+    )
+  }
+
+  const projectIds = [
+    ...html.matchAll(/\bdata-project-id="([^"]+)"/g),
+  ].map(match => match[1])
+
+  assert.deepEqual(
+    [...new Set(projectIds)],
+    printProjectIds,
+    "portfolio print: only three PDF project ids",
+  )
+  for (const projectId of printProjectIds) {
+    assert.equal(
+      projectIds.filter(id => id === projectId).length,
+      2,
+      `portfolio print: ${projectId} has two case-study pages`,
+    )
+  }
+
+  console.log(
+    "portfolio print build verified: noindex, shell, nine-page, project, and footer contracts passed",
+  )
+}
+
+/**
+ * @param {readonly Readonly<{ path: string, xml: string }>[]} sitemapFiles
+ */
+export const verifyPortfolioSitemaps = sitemapFiles => {
+  assert.ok(
+    sitemapFiles.length > 0,
+    "portfolio print: generated sitemap XML files exist",
+  )
+
+  for (const sitemapFile of sitemapFiles) {
+    assert.match(
+      sitemapFile.xml,
+      /<(?:sitemapindex|urlset)\b/,
+      `${sitemapFile.path}: sitemap XML root`,
+    )
+
+    const locations = [
+      ...sitemapFile.xml.matchAll(/<loc>([^<]+)<\/loc>/g),
+    ].map(match => match[1])
+
+    for (const location of locations) {
+      assert.doesNotMatch(
+        location,
+        /\/portfolio\/print\/?(?:$|[?#])/,
+        `${sitemapFile.path}: excludes portfolio print location`,
+      )
+    }
+  }
+}
+
 const isDirectExecution =
   process.argv[1] !== undefined &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 
 if (isDirectExecution) {
-  const html = await readFile(new URL("../public/portfolio/index.html", import.meta.url), "utf8")
+  const publicRoot = new URL("../public/", import.meta.url)
+  const sitemapPaths = (await readdir(publicRoot, { recursive: true }))
+    .filter(path => /(?:^|\/)sitemap[^/]*\.xml$/i.test(path))
+    .sort()
+  const [html, printHtml, sitemapFiles] = await Promise.all([
+    readFile(new URL("../public/portfolio/index.html", import.meta.url), "utf8"),
+    readFile(
+      new URL("../public/portfolio/print/index.html", import.meta.url),
+      "utf8",
+    ),
+    Promise.all(
+      sitemapPaths.map(async path => ({
+        path,
+        xml: await readFile(new URL(path, publicRoot), "utf8"),
+      })),
+    ),
+  ])
+
   verifyPortfolioHtml(html)
+  verifyPortfolioPrintHtml(printHtml)
+  verifyPortfolioSitemaps(sitemapFiles)
 }
