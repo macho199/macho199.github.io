@@ -313,6 +313,11 @@ const assertNoCredentialReferences = source => {
   )
   assert.doesNotMatch(
     semanticSource,
+    /\btoJSON\s*\(\s*github\s*\)|\$\{\{\s*github\s*\}\}/i,
+    "whole GitHub context access is forbidden",
+  )
+  assert.doesNotMatch(
+    semanticSource,
     /GITHUB_TOKEN|\bPAT\b|api[_-]?key/i,
     "long-lived credentials are forbidden",
   )
@@ -377,15 +382,21 @@ const readBuildJobFixture = async () => {
 /** @param {string} deployJob */
 const assertDeployJobContract = deployJob => {
   const deploySteps = readSteps(deployJob)
+  const permissions = readJobMapping(deployJob, "permissions")
 
   assert.match(deployJob, /^    needs: build$/m)
   assert.match(
     deployJob,
     /^    if: github\.event_name != 'pull_request' && github\.ref == 'refs\/heads\/main'$/m,
   )
-  assert.match(deployJob, /permissions:\n      contents: read/)
-  assert.match(deployJob, /^      pages: write$/m)
-  assert.match(deployJob, /^      id-token: write$/m)
+  assert.deepEqual(Object.keys(permissions).sort(), [
+    "contents",
+    "id-token",
+    "pages",
+  ])
+  assert.equal(permissions.contents, "read")
+  assert.equal(permissions.pages, "write")
+  assert.equal(permissions["id-token"], "write")
   assert.match(deployJob, /environment:\n      name: github-pages/)
   assert.match(
     deployJob,
@@ -597,6 +608,28 @@ test("rejects the entire secrets context in the build job", async () => {
   assert.throws(() => assertBuildJobIsUnprivileged(mutation))
 })
 
+test("rejects serialization of the entire GitHub context", async () => {
+  const buildJob = await readBuildJobFixture()
+  const mutation = replaceRequired(
+    buildJob,
+    "    runs-on: ubuntu-latest",
+    "    runs-on: ubuntu-latest\n    env:\n      RELEASE_CONTEXT: ${{ toJSON(github) }}",
+  )
+
+  assert.throws(() => assertBuildJobIsUnprivileged(mutation))
+})
+
+test("allows an ordinary non-sensitive GitHub ref", async () => {
+  const buildJob = await readBuildJobFixture()
+  const mutation = replaceRequired(
+    buildJob,
+    "    runs-on: ubuntu-latest",
+    "    runs-on: ubuntu-latest\n    env:\n      SOURCE_REF: ${{ github.ref }}",
+  )
+
+  assert.doesNotThrow(() => assertBuildJobIsUnprivileged(mutation))
+})
+
 test("rejects a decoded GitHub token expression in the build job", async () => {
   const buildJob = await readBuildJobFixture()
   const mutation = replaceRequired(
@@ -630,6 +663,50 @@ test("rejects an encoded PDF generation run in the deploy job", async () => {
   )
 
   assert.throws(() => assertDeployJobContract(mutation))
+})
+
+test("rejects an extra deploy write permission", async () => {
+  const deployJob = await readDeployJobFixture()
+  const mutation = replaceRequired(
+    deployJob,
+    "      contents: read",
+    "      contents: read\n      packages: write",
+  )
+
+  assert.throws(() => assertDeployJobContract(mutation))
+})
+
+test("rejects duplicate deploy permission keys", async () => {
+  const deployJob = await readDeployJobFixture()
+  const mutation = replaceRequired(
+    deployJob,
+    "      pages: write",
+    "      pages: write\n      pages: write",
+  )
+
+  assert.throws(() => assertDeployJobContract(mutation))
+})
+
+test("rejects inline deploy permissions", async () => {
+  const deployJob = await readDeployJobFixture()
+  const mutation = replaceRequired(
+    deployJob,
+    "    permissions:\n      contents: read\n      pages: write\n      id-token: write",
+    "    permissions: { contents: read, pages: write, id-token: write }",
+  )
+
+  assert.throws(() => assertDeployJobContract(mutation))
+})
+
+test("accepts quoted values for the exact deploy permissions", async () => {
+  const deployJob = await readDeployJobFixture()
+  const mutation = replaceRequired(
+    deployJob,
+    "    permissions:\n      contents: read\n      pages: write\n      id-token: write",
+    '    permissions:\n      contents: "read"\n      pages: "write"\n      id-token: "write"',
+  )
+
+  assert.doesNotThrow(() => assertDeployJobContract(mutation))
 })
 
 test("deploys only from main after build with least privilege", async () => {
