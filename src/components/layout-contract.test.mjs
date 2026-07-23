@@ -29,7 +29,12 @@ test("defines a shared Header, main, and Footer shell", async () => {
   )
   assert.match(header, /<header className="site-header">/)
   assert.match(header, /<Link to="\/" className="site-logo"[^>]*>\s*kjs\.log\s*<\/Link>/)
-  assert.equal((header.match(/<Link\b/g) ?? []).length, 1)
+  assert.match(
+    header,
+    /<Link to="\/" className="site-logo"[^>]*>[\s\S]*<\/Link>[\s\S]*<nav[^>]*aria-label="주요 메뉴"[\s\S]*<Link to="\/portfolio\/"[^>]*>[\s\S]*포트폴리오[\s\S]*<\/Link>[\s\S]*<a[\s\S]*href=\{GITHUB_PROFILE_URL\}/,
+  )
+  assert.equal((header.match(/<Link\b/g) ?? []).length, 2)
+  assert.equal((header.match(/<Link to="\/portfolio\/"/g) ?? []).length, 1)
   assert.match(
     header,
     /const GITHUB_PROFILE_URL = "https:\/\/github\.com\/macho199"/,

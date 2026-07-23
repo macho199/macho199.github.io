@@ -14,9 +14,10 @@ const readRepositoryFile = path =>
     throw error
   })
 
-test("renders one hidden home heading and the approved introduction", async () => {
+test("renders one hidden home heading, the approved introduction, and a portfolio CTA", async () => {
   const homeIntro = await readRepositoryFile("src/components/home-intro.tsx")
 
+  assert.match(homeIntro, /import \{ Link \} from "gatsby"/)
   assert.match(
     homeIntro,
     /<h1 id="home-title" className="sr-only">[\s\S]*개발자 블로그[\s\S]*<\/h1>/,
@@ -25,6 +26,11 @@ test("renders one hidden home heading and the approved introduction", async () =
     homeIntro,
     /AI를 활용한 개발 워크플로우, 백엔드 구현 기록, 제품 관점의\s+엔지니어링 판단을 짧고 실용적으로 정리하는 블로그입니다\./,
   )
+  assert.match(
+    homeIntro,
+    /<Link to="\/portfolio\/"[^>]*>[\s\S]*백엔드 포트폴리오 보기[\s\S]*<\/Link>/,
+  )
+  assert.equal((homeIntro.match(/<Link to="\/portfolio\/"/g) ?? []).length, 1)
 })
 
 test("renders a typed post card with informational tags and real metadata", async () => {
