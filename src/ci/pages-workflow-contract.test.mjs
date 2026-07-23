@@ -19,7 +19,34 @@ const stripYamlComments = source =>
   source
     .split("\n")
     .map(line => {
-      const commentIndex = line.search(/(^|\s)#/)
+      let quote
+      let commentIndex = -1
+
+      for (let index = 0; index < line.length; index += 1) {
+        const character = line[index]
+
+        if (quote === '"') {
+          if (character === "\\") {
+            index += 1
+          } else if (character === '"') {
+            quote = undefined
+          }
+        } else if (quote === "'") {
+          if (character === "'" && line[index + 1] === "'") {
+            index += 1
+          } else if (character === "'") {
+            quote = undefined
+          }
+        } else if (character === '"' || character === "'") {
+          quote = character
+        } else if (
+          character === "#" &&
+          (index === 0 || /\s/.test(line[index - 1]))
+        ) {
+          commentIndex = index
+          break
+        }
+      }
 
       return commentIndex === -1 ? line : line.slice(0, commentIndex).trimEnd()
     })
@@ -241,23 +268,51 @@ const expectedBuildStepActions = [
 
 /** @param {string} buildJob */
 const assertExactBuildStepActions = buildJob => {
+  const steps = readSteps(buildJob)
+
   assert.deepEqual(readStepActions(buildJob), expectedBuildStepActions)
+
+  for (const step of steps) {
+    for (const field of ["if", "continue-on-error", "shell"]) {
+      assert.ok(
+        !Object.hasOwn(step, field),
+        `required build steps must not define ${field}`,
+      )
+    }
+  }
+
+  const hasJobDefaults = readYamlEntries(buildJob).some(
+    entry =>
+      !entry.sequence &&
+      entry.indentation === 4 &&
+      entry.key === "defaults",
+  )
+
+  assert.equal(hasJobDefaults, false, "build job must not define defaults")
 }
 
 /** @param {string} source */
 const assertNoCredentialReferences = source => {
-  assert.doesNotMatch(
+  const semanticSource = [
     source,
-    /\bsecrets\s*(?:\.|\[)/i,
+    ...readYamlEntries(source).flatMap(entry => [
+      entry.key,
+      typeof entry.value === "string" ? entry.value : "",
+    ]),
+  ].join("\n")
+
+  assert.doesNotMatch(
+    semanticSource,
+    /\bsecrets\b/i,
     "secret expressions are forbidden",
   )
   assert.doesNotMatch(
-    source,
+    semanticSource,
     /\bgithub\s*(?:\.\s*token|\[\s*['"]token['"]\s*\])/i,
     "GitHub token expressions are forbidden",
   )
   assert.doesNotMatch(
-    source,
+    semanticSource,
     /GITHUB_TOKEN|\bPAT\b|api[_-]?key/i,
     "long-lived credentials are forbidden",
   )
@@ -317,6 +372,39 @@ const readBuildJobFixture = async () => {
   assert.notEqual(workflowFile, "", "deploy-pages.yml must exist")
 
   return readJob(stripYamlComments(workflowFile), "build")
+}
+
+/** @param {string} deployJob */
+const assertDeployJobContract = deployJob => {
+  const deploySteps = readSteps(deployJob)
+
+  assert.match(deployJob, /^    needs: build$/m)
+  assert.match(
+    deployJob,
+    /^    if: github\.event_name != 'pull_request' && github\.ref == 'refs\/heads\/main'$/m,
+  )
+  assert.match(deployJob, /permissions:\n      contents: read/)
+  assert.match(deployJob, /^      pages: write$/m)
+  assert.match(deployJob, /^      id-token: write$/m)
+  assert.match(deployJob, /environment:\n      name: github-pages/)
+  assert.match(
+    deployJob,
+    /^      url: \$\{\{ steps\.deployment\.outputs\.page_url \}\}$/m,
+  )
+  assert.deepEqual(readStepActions(deployJob), [
+    "uses: actions/deploy-pages@v4",
+  ])
+  assert.deepEqual(Object.keys(deploySteps[0]).sort(), ["id", "name", "uses"])
+  assert.equal(deploySteps[0].id, "deployment")
+  assert.equal(deploySteps[0].name, "Deploy GitHub Pages artifact")
+}
+
+const readDeployJobFixture = async () => {
+  const workflowFile = await readRepositoryFile(".github/workflows/deploy-pages.yml")
+
+  assert.notEqual(workflowFile, "", "deploy-pages.yml must exist")
+
+  return readJob(stripYamlComments(workflowFile), "deploy")
 }
 
 test("ignores YAML comments when checking active workflow configuration", () => {
@@ -443,6 +531,107 @@ test("ties the public path to the upload-pages-artifact step", async () => {
   assert.throws(() => assertUploadsPublic(mutation))
 })
 
+test("rejects an always-false PDF generation step", async () => {
+  const buildJob = await readBuildJobFixture()
+  const mutation = replaceRequired(
+    buildJob,
+    "        run: npm run generate:portfolio-pdf",
+    "        run: npm run generate:portfolio-pdf\n        if: ${{ false }}",
+  )
+
+  assert.throws(() => assertExactBuildStepActions(mutation))
+})
+
+test("rejects an always-false PDF verification step", async () => {
+  const buildJob = await readBuildJobFixture()
+  const mutation = replaceRequired(
+    buildJob,
+    "        run: npm run verify:portfolio-pdf",
+    "        run: npm run verify:portfolio-pdf\n        if: ${{ false }}",
+  )
+
+  assert.throws(() => assertExactBuildStepActions(mutation))
+})
+
+test("rejects continue-on-error on PDF verification", async () => {
+  const buildJob = await readBuildJobFixture()
+  const mutation = replaceRequired(
+    buildJob,
+    "        run: npm run verify:portfolio-pdf",
+    "        run: npm run verify:portfolio-pdf\n        continue-on-error: true",
+  )
+
+  assert.throws(() => assertExactBuildStepActions(mutation))
+})
+
+test("rejects a custom shell on a required build step", async () => {
+  const buildJob = await readBuildJobFixture()
+  const mutation = replaceRequired(
+    buildJob,
+    "        run: npm run generate:portfolio-pdf",
+    "        run: npm run generate:portfolio-pdf\n        shell: bash {0} || true",
+  )
+
+  assert.throws(() => assertExactBuildStepActions(mutation))
+})
+
+test("rejects build defaults that can mask run failures", async () => {
+  const buildJob = await readBuildJobFixture()
+  const mutation = replaceRequired(
+    buildJob,
+    "    permissions:",
+    "    defaults:\n      run:\n        shell: bash {0} || true\n    permissions:",
+  )
+
+  assert.throws(() => assertExactBuildStepActions(mutation))
+})
+
+test("rejects the entire secrets context in the build job", async () => {
+  const buildJob = await readBuildJobFixture()
+  const mutation = replaceRequired(
+    buildJob,
+    "    runs-on: ubuntu-latest",
+    "    runs-on: ubuntu-latest\n    env:\n      RELEASE_CONTEXT: ${{ toJSON(secrets) }}",
+  )
+
+  assert.throws(() => assertBuildJobIsUnprivileged(mutation))
+})
+
+test("rejects a decoded GitHub token expression in the build job", async () => {
+  const buildJob = await readBuildJobFixture()
+  const mutation = replaceRequired(
+    buildJob,
+    "    runs-on: ubuntu-latest",
+    '    runs-on: ubuntu-latest\n    env:\n      RELEASE_TOKEN: "${{ github.\\u0074oken }}"',
+  )
+
+  assert.throws(() => assertBuildJobIsUnprivileged(mutation))
+})
+
+test("keeps comment markers inside quoted credential scalars active", async () => {
+  const buildJob = await readBuildJobFixture()
+  const mutation = replaceRequired(
+    buildJob,
+    "    runs-on: ubuntu-latest",
+    '    runs-on: ubuntu-latest\n    env:\n      NOTE: "visible # ${{ secrets[\'TOKEN\'] }}"',
+  )
+  const activeMutation = stripYamlComments(mutation)
+
+  assert.match(activeMutation, /# \$\{\{ secrets\['TOKEN'\] \}\}/)
+  assert.throws(() => assertBuildJobIsUnprivileged(activeMutation))
+})
+
+test("rejects an encoded PDF generation run in the deploy job", async () => {
+  const deployJob = await readDeployJobFixture()
+  const mutation = replaceRequired(
+    deployJob,
+    "    steps:\n",
+    '    steps:\n      - run: "npm run generate\\u003aportfolio-pdf"\n',
+  )
+
+  assert.throws(() => assertDeployJobContract(mutation))
+})
+
 test("deploys only from main after build with least privilege", async () => {
   const workflowFile = await readRepositoryFile(".github/workflows/deploy-pages.yml")
 
@@ -451,22 +640,7 @@ test("deploys only from main after build with least privilege", async () => {
   const deployJob = readJob(workflow, "deploy")
 
   assert.notEqual(deployJob, "", "deploy job must exist")
-  assert.match(deployJob, /^    needs: build$/m)
-  assert.match(
-    deployJob,
-    /^    if: github\.event_name != 'pull_request' && github\.ref == 'refs\/heads\/main'$/m,
-  )
-  assert.match(deployJob, /permissions:\n      contents: read/)
-  assert.match(deployJob, /^      pages: write$/m)
-  assert.match(deployJob, /^      id-token: write$/m)
-  assert.match(deployJob, /environment:\n      name: github-pages/)
-  assert.match(
-    deployJob,
-    /^      url: \$\{\{ steps\.deployment\.outputs\.page_url \}\}$/m,
-  )
-  assert.match(deployJob, /^        id: deployment$/m)
-  assert.match(deployJob, /^        uses: actions\/deploy-pages@v4$/m)
-  assert.doesNotMatch(deployJob, /generate:portfolio-pdf/)
+  assertDeployJobContract(deployJob)
 })
 
 test("does not add generated branches or long-lived credentials", async () => {
