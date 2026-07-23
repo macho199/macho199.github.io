@@ -2,6 +2,11 @@ import assert from "node:assert/strict"
 import { readFile } from "node:fs/promises"
 import { test } from "node:test"
 
+import {
+  portfolio,
+// @ts-expect-error Node 24 imports the shared TypeScript content contract directly.
+} from "../../content/portfolio.ts"
+
 const repositoryRoot = new URL("../../../", import.meta.url)
 
 /** @param {string} path */
@@ -56,6 +61,14 @@ test("renders the portfolio overview, ordered projects, achievements, and workin
     web,
     /<section[^>]*aria-labelledby="portfolio-working-style-title"[\s\S]*<h2 id="portfolio-working-style-title">[\s\S]*일하는 방식[\s\S]*portfolio\.workingStyle\.map\(item =>/,
   )
+})
+
+test("publishes exactly four metrics from the shared portfolio data", () => {
+  assert.equal(portfolio.metrics.length, 4)
+})
+
+test("keeps 17 years visible in the shared portfolio positioning", () => {
+  assert.match(portfolio.positioning, /17년/)
 })
 
 test("renders all four metrics and every project as semantic content", async () => {
