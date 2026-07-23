@@ -242,7 +242,7 @@ const approvedPublicUrlPattern =
   /^https:\/\/(?:macho199\.github\.io(?:\/.*)?|github\.com\/macho199(?:\/.*)?)$/i
 
 const forbiddenPublicContentPatterns = [
-  /@(?!(?:github|macho199))/i,
+  /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i,
   /(?:010[-.\s]?\d{4}|localhost|intranet|사번|자격증\s*번호)/i,
   /https?:\/\/(?!macho199\.github\.io|github\.com\/macho199)/i,
 ] as const

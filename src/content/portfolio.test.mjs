@@ -28,9 +28,23 @@ test("keeps the approved public portfolio contract valid", () => {
 test("contains no private contact or internal URL pattern", () => {
   const serialized = JSON.stringify(portfolio)
 
-  assert.doesNotMatch(serialized, /@(?!(?:github|macho199))/i)
+  assert.doesNotMatch(serialized, /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i)
   assert.doesNotMatch(serialized, /(?:010[-.\s]?\d{4}|localhost|intranet|사번|자격증\s*번호)/i)
   assert.doesNotMatch(serialized, /https?:\/\/(?!macho199\.github\.io|github\.com\/macho199)/i)
+})
+
+test("rejects every email address from public content", () => {
+  for (const email of ["name@macho199.dev", "person@example.com"]) {
+    const invalidPortfolio = structuredClone(portfolio)
+    invalidPortfolio.name = email
+
+    assert.ok(
+      validatePortfolio(invalidPortfolio).includes(
+        "portfolio contains a forbidden public-content pattern",
+      ),
+      `expected ${email} to be rejected`,
+    )
+  }
 })
 
 test("reports blank public content", () => {
