@@ -110,7 +110,7 @@ const PortfolioPrintDocument = () => {
   const githubLink = portfolio.links.find(link => link.label === "GitHub")!
 
   return (
-    <main className="portfolio-print-document">
+    <main className="portfolio-print-document" data-portfolio-print-ready="true">
       <PrintPage pageNumber={1} totalPages={9} updatedAt={portfolio.updatedAt}>
         <div className="portfolio-print-cover">
           <p className="portfolio-print-eyebrow">Backend Engineer Portfolio</p>

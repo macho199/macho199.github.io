@@ -15,7 +15,9 @@
     "verify:layout": "node scripts/verify-layout-build.mjs",
     "verify:home": "node scripts/verify-home-build.mjs",
     "verify:post": "node scripts/verify-post-build.mjs",
-    "verify:portfolio": "node scripts/verify-portfolio-build.mjs"
+    "verify:portfolio": "node scripts/verify-portfolio-build.mjs",
+    "generate:portfolio-pdf": "node scripts/generate-portfolio-pdf.mjs",
+    "verify:portfolio-pdf": "node scripts/verify-portfolio-pdf.mjs"
   },
   "engines": {
     "node": "24.14.1",
