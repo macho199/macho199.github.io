@@ -165,7 +165,7 @@ export const verifyPortfolioHtml = html => {
   assert.ok(mainMatch, "portfolio: main landmark")
 
   const main = mainMatch[1]
-  const h1Element = assertOneVisibleH1(main)
+  const h1Element = assertOneVisibleH1(html)
 
   assert.match(
     normalizeText(h1Element.content),

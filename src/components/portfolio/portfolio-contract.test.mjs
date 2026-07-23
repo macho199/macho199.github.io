@@ -6,7 +6,10 @@ import {
   portfolio,
 // @ts-expect-error Node 24 imports the shared TypeScript content contract directly.
 } from "../../content/portfolio.ts"
-import { assertOneVisibleH1 } from "../../../scripts/verify-portfolio-build.mjs"
+import {
+  assertOneVisibleH1,
+  verifyPortfolioHtml,
+} from "../../../scripts/verify-portfolio-build.mjs"
 
 const repositoryRoot = new URL("../../../", import.meta.url)
 
@@ -294,4 +297,29 @@ test("requires exactly one generated H1 while accepting a visible nested H1", ()
       ),
     /portfolio: exactly one h1/,
   )
+})
+
+test("rejects a generated portfolio document with a hidden document ancestor", () => {
+  const hiddenDocuments = [
+    [
+      "main",
+      "<!doctype html><html><body><main hidden><h1>백엔드 개발자 포트폴리오</h1></main></body></html>",
+    ],
+    [
+      "body",
+      "<!doctype html><html><body hidden><main><h1>백엔드 개발자 포트폴리오</h1></main></body></html>",
+    ],
+    [
+      "html",
+      "<!doctype html><html hidden><body><main><h1>백엔드 개발자 포트폴리오</h1></main></body></html>",
+    ],
+  ]
+
+  for (const [ancestor, html] of hiddenDocuments) {
+    assert.throws(
+      () => verifyPortfolioHtml(html),
+      /portfolio: h1 is visible/,
+      `hidden ${ancestor}`,
+    )
+  }
 })
