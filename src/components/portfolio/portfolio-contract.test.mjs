@@ -147,3 +147,100 @@ test("imports the React runtime required by Gatsby SSR", async () => {
     assert.match(source, /^import \* as React from "react"$/m)
   }
 })
+
+test("registers the responsive portfolio stylesheet and production verifier", async () => {
+  const [browserEntry, packageSource] = await Promise.all([
+    readRepositoryFile("gatsby-browser.js"),
+    readRepositoryFile("package.json"),
+  ])
+  const packageJson = JSON.parse(packageSource)
+
+  assert.match(
+    browserEntry,
+    /^import "\.\/src\/styles\/portfolio\.css"$/m,
+  )
+  assert.equal(
+    packageJson.scripts?.["verify:portfolio"],
+    "node scripts/verify-portfolio-build.mjs",
+  )
+})
+
+test("defines token-based responsive portfolio presentation without inline UI", async () => {
+  const [portfolioCss, ...publicPageSources] = await Promise.all([
+    readRepositoryFile("src/styles/portfolio.css"),
+    ...[
+      "src/pages/portfolio.tsx",
+      "src/components/portfolio/portfolio-web.tsx",
+      "src/components/portfolio/portfolio-metrics.tsx",
+      "src/components/portfolio/portfolio-project.tsx",
+    ].map(readRepositoryFile),
+  ])
+
+  assert.match(portfolioCss, /@layer components\s*\{/)
+  assert.doesNotMatch(portfolioCss, /(^|\n)\s*:root\s*\{/)
+  assert.doesNotMatch(portfolioCss, /--portfolio-[\w-]+\s*:/)
+  assert.doesNotMatch(portfolioCss, /#[\da-f]{3,8}\b|rgba?\(/i)
+  assert.match(portfolioCss, /var\(--space-\d+\)/)
+  assert.match(portfolioCss, /var\(--(?:fg|muted|surface|border|accent)\)/)
+
+  assert.match(
+    portfolioCss,
+    /\.portfolio-metrics-list\s*\{[^}]*grid-template-columns:\s*repeat\(4,\s*minmax\(0,\s*1fr\)\)/s,
+  )
+  assert.match(
+    portfolioCss,
+    /@media \(max-width:\s*1020px\)\s*\{[\s\S]*?\.portfolio-metrics-list\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
+  )
+  assert.match(
+    portfolioCss,
+    /@media \(max-width:\s*720px\)\s*\{[\s\S]*?\.portfolio-metrics-list\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/,
+  )
+  assert.match(portfolioCss, /@media \(max-width:\s*390px\)/)
+
+  assert.match(
+    portfolioCss,
+    /\.portfolio-project h2\s*\{[^}]*word-break:\s*keep-all;[^}]*overflow-wrap:\s*break-word;/s,
+  )
+  assert.match(
+    portfolioCss,
+    /\.portfolio-links a\[download\]:focus-visible\s*\{[^}]*outline:/s,
+  )
+  assert.match(
+    portfolioCss,
+    /\.portfolio-links ul\s*\{[^}]*flex-wrap:\s*wrap;/s,
+  )
+  assert.match(
+    portfolioCss,
+    /\.portfolio-project section\[aria-label\]::before\s*\{[^}]*content:\s*attr\(aria-label\)/s,
+  )
+  assert.match(portfolioCss, /max-width:\s*\d+ch/)
+  assert.doesNotMatch(portfolioCss, /@keyframes|animation(?:-name)?:/i)
+
+  const publicPageSource = publicPageSources.join("\n")
+  assert.doesNotMatch(publicPageSource, /\bstyle\s*=/)
+  assert.doesNotMatch(publicPageSource, /<(?:progress|meter)\b/)
+  assert.doesNotMatch(publicPageSource, /<(?:details|button)\b/)
+})
+
+test("defines a verifier for the generated portfolio HTML", async () => {
+  const verifier = await readRepositoryFile(
+    "scripts/verify-portfolio-build.mjs",
+  )
+
+  assert.match(
+    verifier,
+    /readFile\(new URL\("\.\.\/public\/portfolio\/index\.html", import\.meta\.url\), "utf8"\)/,
+  )
+  assert.match(verifier, /https:\\\/\\\/macho199\\\.github\\\.io\\\/portfolio\\\//)
+  assert.match(verifier, /kwon-jongseong-backend-portfolio\\\.pdf/)
+  assert.match(verifier, /nas-to-s3/)
+  assert.match(verifier, /resume-migration/)
+  assert.match(verifier, /recommendation-load-test/)
+  assert.match(verifier, /data-pulse/)
+  assert.match(
+    verifier,
+    /assert\.doesNotMatch\(\s*main,\s*\/\\bstyle\\s\*=\/i,\s*"portfolio: no inline styles",?\s*\)/s,
+  )
+  assert.ok(verifier.includes("\\+82"))
+  assert.ok(verifier.includes("|70)"))
+})

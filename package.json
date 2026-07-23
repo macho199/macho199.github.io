@@ -14,7 +14,8 @@
     "verify:styles": "node scripts/verify-style-build.mjs",
     "verify:layout": "node scripts/verify-layout-build.mjs",
     "verify:home": "node scripts/verify-home-build.mjs",
-    "verify:post": "node scripts/verify-post-build.mjs"
+    "verify:post": "node scripts/verify-post-build.mjs",
+    "verify:portfolio": "node scripts/verify-portfolio-build.mjs"
   },
   "engines": {
     "node": "24.14.1",
