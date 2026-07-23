@@ -44,35 +44,81 @@ const assertValidDate = (value, label) => {
 
 const createPdfLoadingTask = data => getDocument({ data })
 
+const runWithCleanup = async (operation, cleanup, aggregateMessage) => {
+  let operationError
+  let operationFailed = false
+
+  try {
+    return await operation()
+  } catch (error) {
+    operationError = error
+    operationFailed = true
+    throw error
+  } finally {
+    try {
+      await cleanup()
+    } catch (cleanupError) {
+      if (!operationFailed) {
+        throw cleanupError
+      }
+
+      const operationErrors =
+        operationError instanceof AggregateError &&
+        operationError.cause === operationError.errors[0]
+          ? operationError.errors
+          : [operationError]
+      const primaryError =
+        operationError instanceof AggregateError && operationError.cause
+          ? operationError.cause
+          : operationError
+
+      throw new AggregateError(
+        [...operationErrors, cleanupError],
+        aggregateMessage,
+        { cause: primaryError },
+      )
+    }
+  }
+}
+
 export const extractPdfText = async (
   pdfBytes,
   createLoadingTask = createPdfLoadingTask,
 ) => {
   const loadingTask = createLoadingTask(new Uint8Array(pdfBytes))
 
-  try {
-    const pdfDocument = await loadingTask.promise
-    const pageTexts = []
+  return runWithCleanup(
+    async () => {
+      const pdfDocument = await loadingTask.promise
+      const pageTexts = []
 
-    for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
-      const page = await pdfDocument.getPage(pageNumber)
+      for (
+        let pageNumber = 1;
+        pageNumber <= pdfDocument.numPages;
+        pageNumber += 1
+      ) {
+        const page = await pdfDocument.getPage(pageNumber)
 
-      try {
-        const textContent = await page.getTextContent()
-        const pageText = textContent.items
-          .map(item => ("str" in item ? item.str : ""))
-          .join("")
+        const pageText = await runWithCleanup(
+          async () => {
+            const textContent = await page.getTextContent()
+
+            return textContent.items
+              .map(item => ("str" in item ? item.str : ""))
+              .join("")
+          },
+          () => page.cleanup(),
+          "PDF.js text extraction and page cleanup both failed",
+        )
 
         pageTexts.push(pageText)
-      } finally {
-        page.cleanup()
       }
-    }
 
-    return pageTexts
-  } finally {
-    await loadingTask.destroy()
-  }
+      return pageTexts
+    },
+    () => loadingTask.destroy(),
+    "PDF.js document work and loading-task cleanup both failed",
+  )
 }
 
 export const assertPublicPortfolioText = extractedText => {
@@ -80,6 +126,10 @@ export const assertPublicPortfolioText = extractedText => {
     extractedText,
     /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i,
     "no private email",
+  )
+  assert.ok(
+    !privatePhonePatterns.some(pattern => pattern.test(extractedText)),
+    "no private phone number",
   )
 
   const detectedHttpUrls = extractedText.match(httpUrlPattern) ?? []
@@ -111,10 +161,6 @@ export const assertPublicPortfolioText = extractedText => {
 
   const textWithoutHttpUrls = extractedText.replace(httpUrlPattern, " ")
 
-  assert.ok(
-    !privatePhonePatterns.some(pattern => pattern.test(textWithoutHttpUrls)),
-    "no private phone number",
-  )
   assert.doesNotMatch(
     textWithoutHttpUrls,
     /(?:^|[^\p{L}\p{N}_])(?:localhost|intranet|internal)(?=$|[^\p{L}\p{N}_])/iu,

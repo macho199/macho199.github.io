@@ -114,7 +114,6 @@ test("accepts approved URLs, dates, metrics, and page labels", async () => {
     "https://macho199.github.io/portfolio/",
     "https://github.com/macho199",
     "https://github.com/macho199/example",
-    "https://github.com/macho199/010-1234-5678",
     "https://macho199.github.io/internal",
     "https://macho199.github.io/ipv6/::1",
     "https://github.com/macho199권종성",
@@ -169,5 +168,78 @@ test("cleans the PDF.js page when text extraction rejects", async () => {
     error => error === extractionFailure,
   )
   assert.equal(pageCleaned, true)
+  assert.equal(loadingTaskDestroyed, true)
+})
+
+test("rejects phone-shaped text inside an approved URL path", async () => {
+  const { assertPublicPortfolioText } = await import(verifierUrl.href)
+  const privatePhoneTextSamples = [
+    "https://github.com/macho199/010-1234-5678",
+    "https://macho199.github.io/portfolio/+82 (0)10-1234-5678",
+  ]
+
+  for (const privatePhoneText of privatePhoneTextSamples) {
+    assert.throws(
+      () => assertPublicPortfolioText(privatePhoneText),
+      /no private phone number/,
+      privatePhoneText,
+    )
+  }
+})
+
+test("preserves document-load and loading-task cleanup failures", async () => {
+  const { extractPdfText } = await import(verifierUrl.href)
+  const loadingFailure = new Error("PDF.js loading failed")
+  const destroyFailure = new Error("PDF.js loading-task destroy failed")
+  const createLoadingTask = () => ({
+    destroy: async () => {
+      throw destroyFailure
+    },
+    promise: Promise.reject(loadingFailure),
+  })
+
+  await assert.rejects(
+    extractPdfText(new Uint8Array(), createLoadingTask),
+    error => {
+      assert.ok(error instanceof AggregateError)
+      assert.deepEqual(error.errors, [loadingFailure, destroyFailure])
+      assert.equal(error.cause, loadingFailure)
+      return true
+    },
+  )
+})
+
+test("preserves text-extraction and page-cleanup failures", async () => {
+  const { extractPdfText } = await import(verifierUrl.href)
+  const extractionFailure = new Error("PDF.js text extraction failed")
+  const pageCleanupFailure = new Error("PDF.js page cleanup failed")
+  let loadingTaskDestroyed = false
+  const page = {
+    cleanup: () => {
+      throw pageCleanupFailure
+    },
+    getTextContent: async () => {
+      throw extractionFailure
+    },
+  }
+  const createLoadingTask = () => ({
+    destroy: async () => {
+      loadingTaskDestroyed = true
+    },
+    promise: Promise.resolve({
+      getPage: async () => page,
+      numPages: 1,
+    }),
+  })
+
+  await assert.rejects(
+    extractPdfText(new Uint8Array(), createLoadingTask),
+    error => {
+      assert.ok(error instanceof AggregateError)
+      assert.deepEqual(error.errors, [extractionFailure, pageCleanupFailure])
+      assert.equal(error.cause, extractionFailure)
+      return true
+    },
+  )
   assert.equal(loadingTaskDestroyed, true)
 })

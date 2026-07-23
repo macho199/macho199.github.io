@@ -221,7 +221,7 @@ test("verifies PDF structure, metadata, text, labels, and privacy", async () => 
   assert.doesNotMatch(verifier, /\.join\(" "\)/)
   assert.match(
     verifier,
-    /finally\s*\{[\s\S]*await loadingTask\.destroy\(\)[\s\S]*\}/,
+    /return runWithCleanup\([\s\S]*\(\) => loadingTask\.destroy\(\),[\s\S]*"PDF\.js document work and loading-task cleanup both failed"/,
   )
   assert.doesNotMatch(verifier, /await pdfDocument\.destroy\(\)/)
 
