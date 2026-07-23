@@ -6,6 +6,7 @@ import {
   portfolio,
 // @ts-expect-error Node 24 imports the shared TypeScript content contract directly.
 } from "../../content/portfolio.ts"
+import { assertOneVisibleH1 } from "../../../scripts/verify-portfolio-build.mjs"
 
 const repositoryRoot = new URL("../../../", import.meta.url)
 
@@ -243,4 +244,54 @@ test("defines a verifier for the generated portfolio HTML", async () => {
   )
   assert.ok(verifier.includes("\\+82"))
   assert.ok(verifier.includes("|70)"))
+})
+
+test("rejects a generated H1 hidden directly or by an ancestor", () => {
+  const hidingAttributes = [
+    "hidden",
+    'aria-hidden="true"',
+    'class="hidden"',
+    'class="sr-only"',
+    'class="visually-hidden"',
+    'style="display: none"',
+    'style="visibility:hidden"',
+  ]
+
+  for (const attributes of hidingAttributes) {
+    assert.throws(
+      () =>
+        assertOneVisibleH1(
+          `<h1 ${attributes}>백엔드 개발자 포트폴리오</h1>`,
+        ),
+      /portfolio: h1 is visible/,
+      `direct H1 marker: ${attributes}`,
+    )
+    assert.throws(
+      () =>
+        assertOneVisibleH1(
+          `<section ${attributes}><div><h1>백엔드 개발자 포트폴리오</h1></div></section>`,
+        ),
+      /portfolio: h1 is visible/,
+      `ancestor marker: ${attributes}`,
+    )
+  }
+})
+
+test("requires exactly one generated H1 while accepting a visible nested H1", () => {
+  assert.doesNotThrow(() =>
+    assertOneVisibleH1(
+      "<section><div><h1>백엔드 개발자 포트폴리오</h1></div></section>",
+    ),
+  )
+  assert.throws(
+    () => assertOneVisibleH1("<section>본문</section>"),
+    /portfolio: exactly one h1/,
+  )
+  assert.throws(
+    () =>
+      assertOneVisibleH1(
+        "<h1>첫 제목</h1><section><h1>두 번째 제목</h1></section>",
+      ),
+    /portfolio: exactly one h1/,
+  )
 })
