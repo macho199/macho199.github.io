@@ -251,9 +251,9 @@ export const runCleanupTasks = async tasks => {
 }
 
 export const generatePortfolioPdf = async () => {
+  await rm(portfolioPdfPath, { force: true })
   await access(printHtmlPath)
   await mkdir(downloadsPath, { recursive: true })
-  await rm(portfolioPdfPath, { force: true })
 
   let browser
   let generationError

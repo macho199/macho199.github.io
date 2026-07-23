@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { readFile } from "node:fs/promises"
-import { fileURLToPath } from "node:url"
+import { BlockList, isIP } from "node:net"
+import { fileURLToPath, pathToFileURL } from "node:url"
 import { resolve } from "node:path"
 
 import { PDFDocument } from "pdf-lib"
@@ -13,6 +14,20 @@ export const PORTFOLIO_WEB_URL =
 
 const MINIMUM_PDF_SIZE = 10 * 1024
 const MAXIMUM_PDF_SIZE = 10 * 1024 * 1024
+const httpUrlPattern =
+  /https?:\/\/[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]*?(?=https?:\/\/|[^A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]|$)/giu
+const privatePhonePatterns = [
+  /(?<!\d)\+\d{1,3}(?:[\s().-]*\d){7,12}(?!\d)/u,
+  /(?<!\d)0(?:1[016789]|2|3[1-3]|4[1-4]|5[1-5]|6[1-4]|70)[\s().-]*\d{3,4}[\s.-]*\d{4}(?!\d)/u,
+]
+const ipv6CandidatePattern =
+  /\[?(?:[a-f0-9]{0,4}:){2,7}(?:(?:\d{1,3}\.){3}\d{1,3}|[a-f0-9]{0,4})(?:%[a-z0-9._~-]+)?\]?/giu
+const privateIpv6BlockList = new BlockList()
+
+privateIpv6BlockList.addAddress("::1", "ipv6")
+privateIpv6BlockList.addSubnet("fe80::", 10, "ipv6")
+privateIpv6BlockList.addSubnet("fc00::", 7, "ipv6")
+privateIpv6BlockList.addSubnet("::ffff:127.0.0.0", 104, "ipv6")
 const defaultPdfPath = fileURLToPath(
   new URL(
     "../public/downloads/kwon-jongseong-backend-portfolio.pdf",
@@ -27,27 +42,104 @@ const assertValidDate = (value, label) => {
   )
 }
 
-const extractPdfText = async pdfBytes => {
-  const loadingTask = getDocument({ data: new Uint8Array(pdfBytes) })
-  const pdfDocument = await loadingTask.promise
-  const pageTexts = []
+const createPdfLoadingTask = data => getDocument({ data })
+
+export const extractPdfText = async (
+  pdfBytes,
+  createLoadingTask = createPdfLoadingTask,
+) => {
+  const loadingTask = createLoadingTask(new Uint8Array(pdfBytes))
 
   try {
+    const pdfDocument = await loadingTask.promise
+    const pageTexts = []
+
     for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
       const page = await pdfDocument.getPage(pageNumber)
-      const textContent = await page.getTextContent()
-      const pageText = textContent.items
-        .map(item => ("str" in item ? item.str : ""))
-        .join("")
 
-      pageTexts.push(pageText)
-      page.cleanup()
+      try {
+        const textContent = await page.getTextContent()
+        const pageText = textContent.items
+          .map(item => ("str" in item ? item.str : ""))
+          .join("")
+
+        pageTexts.push(pageText)
+      } finally {
+        page.cleanup()
+      }
     }
+
+    return pageTexts
   } finally {
     await loadingTask.destroy()
   }
+}
 
-  return pageTexts
+export const assertPublicPortfolioText = extractedText => {
+  assert.doesNotMatch(
+    extractedText,
+    /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i,
+    "no private email",
+  )
+
+  const detectedHttpUrls = extractedText.match(httpUrlPattern) ?? []
+
+  for (const detectedUrl of detectedHttpUrls) {
+    let url
+
+    try {
+      url = new URL(detectedUrl)
+    } catch {
+      assert.fail("no internal URL or unapproved public URL")
+    }
+
+    const hasApprovedOrigin =
+      url.protocol === "https:" &&
+      url.port === "" &&
+      url.username === "" &&
+      url.password === "" &&
+      (url.hostname === "macho199.github.io" ||
+        (url.hostname === "github.com" &&
+          (url.pathname === "/macho199" ||
+            url.pathname.startsWith("/macho199/"))))
+
+    assert.ok(
+      hasApprovedOrigin,
+      `no internal URL or unapproved public URL: ${detectedUrl}`,
+    )
+  }
+
+  const textWithoutHttpUrls = extractedText.replace(httpUrlPattern, " ")
+
+  assert.ok(
+    !privatePhonePatterns.some(pattern => pattern.test(textWithoutHttpUrls)),
+    "no private phone number",
+  )
+  assert.doesNotMatch(
+    textWithoutHttpUrls,
+    /(?:^|[^\p{L}\p{N}_])(?:localhost|intranet|internal)(?=$|[^\p{L}\p{N}_])/iu,
+    "no internal host text",
+  )
+  assert.doesNotMatch(
+    textWithoutHttpUrls,
+    /(?:^|[^\p{L}\p{N}_])(?:[a-z0-9-]+\.)+(?:internal|local)(?=$|[^\p{L}\p{N}_])/iu,
+    "no internal host text",
+  )
+  const detectedIpv6Addresses =
+    textWithoutHttpUrls.match(ipv6CandidatePattern) ?? []
+  const hasPrivateIpv6Address = detectedIpv6Addresses.some(candidate => {
+    const unbracketedCandidate = candidate.replace(/^\[|\]$/gu, "")
+
+    return (
+      isIP(unbracketedCandidate) === 6 &&
+      privateIpv6BlockList.check(unbracketedCandidate, "ipv6")
+    )
+  })
+
+  assert.ok(
+    !hasPrivateIpv6Address,
+    "no internal host text",
+  )
 }
 
 export const verifyPortfolioPdf = async pdfPath => {
@@ -105,33 +197,25 @@ export const verifyPortfolioPdf = async pdfPath => {
 
   assert.ok(extractedText.includes("1 / 9"), "portfolio PDF contains 1 / 9")
   assert.ok(extractedText.includes("9 / 9"), "portfolio PDF contains 9 / 9")
-  assert.doesNotMatch(
-    extractedText,
-    /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i,
-    "no private email",
-  )
-  assert.doesNotMatch(
-    extractedText,
-    /(?:\+82[-.\s]?(?:0)?|0)(?:1[016789]|2|3[1-3]|4[1-4]|5[1-5]|6[1-4]|70)[-.\s]?\d{3,4}[-.\s]?\d{4}/,
-    "no private phone number",
-  )
-  assert.doesNotMatch(
-    extractedText,
-    /https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|[a-z0-9.-]+\.(?:internal|local))(?:[/:?#]|$)/i,
-    "no internal URL",
-  )
+  assertPublicPortfolioText(extractedText)
 
   console.log(
     `portfolio PDF verified: ${pdfDocument.getPageCount()} pages, ${pdfBytes.byteLength} bytes, metadata, text, and privacy contracts passed`,
   )
 }
 
-const requestedPdfPath = process.argv[2]
-const pdfPath = requestedPdfPath
-  ? resolve(process.cwd(), requestedPdfPath)
-  : defaultPdfPath
+const isDirectRun =
+  process.argv[1] &&
+  pathToFileURL(resolve(process.argv[1])).href === import.meta.url
 
-verifyPortfolioPdf(pdfPath).catch(error => {
-  console.error(error)
-  process.exitCode = 1
-})
+if (isDirectRun) {
+  const requestedPdfPath = process.argv[2]
+  const pdfPath = requestedPdfPath
+    ? resolve(process.cwd(), requestedPdfPath)
+    : defaultPdfPath
+
+  verifyPortfolioPdf(pdfPath).catch(error => {
+    console.error(error)
+    process.exitCode = 1
+  })
+}

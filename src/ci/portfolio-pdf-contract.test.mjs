@@ -84,6 +84,16 @@ test("attempts every cleanup task even when one cleanup fails", async () => {
   assert.deepEqual(cleanupErrors, [browserFailure])
 })
 
+test("removes a stale stable PDF before requiring built print HTML", async () => {
+  const generator = await readRepositoryFile("scripts/generate-portfolio-pdf.mjs")
+
+  assertInOrder(generator, [
+    "await rm(portfolioPdfPath",
+    "await access(printHtmlPath)",
+    "await mkdir(downloadsPath",
+  ])
+})
+
 test("defines stable portfolio PDF interfaces and an isolated static server", async () => {
   const generator = await readRepositoryFile("scripts/generate-portfolio-pdf.mjs")
 
