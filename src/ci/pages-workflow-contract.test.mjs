@@ -323,6 +323,21 @@ const assertNoCredentialReferences = source => {
   )
 }
 
+/** @param {string} source */
+const assertNoGithubContextReferences = source => {
+  const scalarValues = readYamlEntries(source).flatMap(entry =>
+    typeof entry.value === "string" ? [entry.value] : [],
+  )
+
+  for (const value of scalarValues) {
+    assert.doesNotMatch(
+      value,
+      /\bgithub\s*(?:\.|\[)|\btoJSON\s*\(\s*github\s*\)|\$\{\{\s*github\s*\}\}/i,
+      "build job must not reference the GitHub context",
+    )
+  }
+}
+
 /** @param {string} buildJob */
 const assertBuildJobIsUnprivileged = buildJob => {
   const permissions = readJobMapping(buildJob, "permissions")
@@ -337,6 +352,7 @@ const assertBuildJobIsUnprivileged = buildJob => {
   }
 
   assertNoCredentialReferences(buildJob)
+  assertNoGithubContextReferences(buildJob)
 }
 
 /** @param {string} buildJob */
@@ -619,7 +635,7 @@ test("rejects serialization of the entire GitHub context", async () => {
   assert.throws(() => assertBuildJobIsUnprivileged(mutation))
 })
 
-test("allows an ordinary non-sensitive GitHub ref", async () => {
+test("rejects an ordinary GitHub ref in the build job", async () => {
   const buildJob = await readBuildJobFixture()
   const mutation = replaceRequired(
     buildJob,
@@ -627,7 +643,18 @@ test("allows an ordinary non-sensitive GitHub ref", async () => {
     "    runs-on: ubuntu-latest\n    env:\n      SOURCE_REF: ${{ github.ref }}",
   )
 
-  assert.doesNotThrow(() => assertBuildJobIsUnprivileged(mutation))
+  assert.throws(() => assertBuildJobIsUnprivileged(mutation))
+})
+
+test("rejects computed GitHub token access in the build job", async () => {
+  const buildJob = await readBuildJobFixture()
+  const mutation = replaceRequired(
+    buildJob,
+    "    runs-on: ubuntu-latest",
+    "    runs-on: ubuntu-latest\n    env:\n      RELEASE_TOKEN: ${{ github[format('{0}', 'token')] }}",
+  )
+
+  assert.throws(() => assertBuildJobIsUnprivileged(mutation))
 })
 
 test("rejects a decoded GitHub token expression in the build job", async () => {
