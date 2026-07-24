@@ -244,6 +244,34 @@ test("defines token-based responsive portfolio presentation without inline UI", 
 
   assert.match(
     portfolioCss,
+    /\.portfolio-hero h1\s*\{[^}]*max-width:\s*none;[^}]*text-wrap:\s*pretty;[^}]*word-break:\s*keep-all;/s,
+  )
+  assert.match(
+    portfolioCss,
+    /\.portfolio-positioning\s*\{[^}]*max-width:\s*52rem;/s,
+  )
+  assert.match(
+    portfolioCss,
+    /\.portfolio-summary\s*\{[^}]*max-width:\s*52rem;/s,
+  )
+  assert.match(
+    portfolioCss,
+    /\.portfolio-project-header\s*\{[^}]*max-width:\s*52rem;/s,
+  )
+  assert.match(
+    portfolioCss,
+    /\.portfolio-project section\[aria-label\]\s*\{[^}]*max-width:\s*52rem;/s,
+  )
+  assert.match(
+    portfolioCss,
+    /\.portfolio-achievements ul,\s*\.portfolio-working-style ul\s*\{[^}]*max-width:\s*52rem;/s,
+  )
+  assert.match(
+    portfolioCss,
+    /\.portfolio-summary p\s*\{[^}]*overflow-wrap:\s*break-word;[^}]*word-break:\s*keep-all;/s,
+  )
+  assert.match(
+    portfolioCss,
     /\.portfolio-project h2\s*\{[^}]*word-break:\s*keep-all;[^}]*overflow-wrap:\s*break-word;/s,
   )
   assert.match(

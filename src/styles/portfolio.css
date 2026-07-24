@@ -47,16 +47,16 @@
   }
 
   .portfolio-hero h1 {
-    max-width: 16ch;
+    max-width: none;
     color: var(--fg);
     font-size: clamp(32px, 5vw, 48px);
     overflow-wrap: break-word;
-    text-wrap: balance;
+    text-wrap: pretty;
     word-break: keep-all;
   }
 
   .portfolio-positioning {
-    max-width: 70ch;
+    max-width: 52rem;
     color: var(--fg-2);
     font-size: var(--text-lg);
     font-weight: 500;
@@ -69,14 +69,15 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-2);
-    max-width: 70ch;
+    max-width: 52rem;
     padding-left: var(--space-5);
     border-left: 3px solid var(--accent);
     color: var(--muted);
   }
 
   .portfolio-summary p {
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: keep-all;
   }
 
   .portfolio-hero-technologies {
@@ -222,7 +223,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-3);
-    max-width: 70ch;
+    max-width: 52rem;
   }
 
   .portfolio-project-meta {
@@ -255,7 +256,7 @@
     column-gap: var(--space-6);
     row-gap: var(--space-3);
     min-width: 0;
-    max-width: 70ch;
+    max-width: 52rem;
   }
 
   .portfolio-project section[aria-label]::before {
@@ -276,7 +277,8 @@
 
   .portfolio-project section[aria-label] > p {
     color: var(--fg-2);
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: keep-all;
   }
 
   .portfolio-project ul,
@@ -292,7 +294,8 @@
   .portfolio-achievements li,
   .portfolio-working-style li {
     padding-left: var(--space-1);
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    word-break: keep-all;
   }
 
   .portfolio-project li + li,
@@ -315,7 +318,7 @@
 
   .portfolio-achievements ul,
   .portfolio-working-style ul {
-    max-width: 70ch;
+    max-width: 52rem;
   }
 
   .portfolio-links {
