@@ -9,12 +9,15 @@
     "build": "gatsby build",
     "serve": "gatsby serve --host 127.0.0.1",
     "clean": "gatsby clean",
-    "test": "node --test",
+    "test": "node --experimental-strip-types --test",
     "typecheck": "tsc --noEmit",
     "verify:styles": "node scripts/verify-style-build.mjs",
     "verify:layout": "node scripts/verify-layout-build.mjs",
     "verify:home": "node scripts/verify-home-build.mjs",
-    "verify:post": "node scripts/verify-post-build.mjs"
+    "verify:post": "node scripts/verify-post-build.mjs",
+    "verify:portfolio": "node scripts/verify-portfolio-build.mjs",
+    "generate:portfolio-pdf": "node scripts/generate-portfolio-pdf.mjs",
+    "verify:portfolio-pdf": "node scripts/verify-portfolio-pdf.mjs"
   },
   "engines": {
     "node": "24.14.1",
@@ -40,6 +43,9 @@
     "@types/node": "24.13.3",
     "@types/react": "18.3.31",
     "@types/react-dom": "18.3.7",
+    "pdf-lib": "1.17.1",
+    "pdfjs-dist": "6.1.200",
+    "playwright": "1.61.1",
     "postcss": "8.5.19",
     "rehype-slug": "6.0.0",
     "tailwindcss": "4.3.3",

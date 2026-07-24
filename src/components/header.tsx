@@ -24,15 +24,20 @@ const Header = () => (
         <Link to="/" className="site-logo" aria-label="kjs.log 홈">
           kjs.log
         </Link>
-        <a
-          className="site-github-link"
-          href={GITHUB_PROFILE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="GitHub 프로필 (새 탭)"
-        >
-          <GitHubIcon />
-        </a>
+        <nav className="site-navigation" aria-label="주요 메뉴">
+          <Link to="/portfolio/" className="site-portfolio-link">
+            포트폴리오
+          </Link>
+          <a
+            className="site-github-link"
+            href={GITHUB_PROFILE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub 프로필 (새 탭)"
+          >
+            <GitHubIcon />
+          </a>
+        </nav>
       </div>
     </ContentContainer>
   </header>

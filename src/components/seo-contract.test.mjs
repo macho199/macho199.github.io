@@ -4,6 +4,8 @@ import { readFile } from "node:fs/promises"
 import { test } from "node:test"
 import sharp from "sharp"
 
+import gatsbyConfig from "../../gatsby-config.mjs"
+
 const repositoryRoot = new URL("../../", import.meta.url)
 
 test("uses one local profile favicon from every page Head", async () => {
@@ -101,5 +103,39 @@ test("publishes one crawl policy with the production sitemap location", async ()
   assert.equal(
     robots,
     "User-agent: *\nAllow: /\n\nSitemap: https://macho199.github.io/sitemap-index.xml\n",
+  )
+})
+
+test("renders an optional robots directive without changing existing page metadata", async () => {
+  const seo = await readFile(
+    new URL("src/components/seo.tsx", repositoryRoot),
+    "utf8",
+  )
+
+  assert.match(
+    seo,
+    /type SeoProps = Readonly<\{[\s\S]*robots\?: "noindex, nofollow"[\s\S]*\}>/,
+  )
+  assert.match(
+    seo,
+    /\{robots \? \([\s\S]*<meta id="robots" name="robots" content=\{robots\} \/>[\s\S]*\) : null\}/,
+  )
+})
+
+test("excludes both portfolio print path forms from the sitemap", async () => {
+  const sitemapPlugin = gatsbyConfig.plugins?.find(
+    plugin =>
+      typeof plugin === "object" &&
+      plugin !== null &&
+      plugin.resolve === "gatsby-plugin-sitemap",
+  )
+
+  assert.ok(sitemapPlugin && typeof sitemapPlugin === "object")
+  const sitemapOptions = Reflect.get(sitemapPlugin, "options")
+
+  assert.ok(sitemapOptions && typeof sitemapOptions === "object")
+  assert.deepEqual(
+    Reflect.get(sitemapOptions, "excludes"),
+    ["/404.html", "/portfolio/print/", "/portfolio/print"],
   )
 })

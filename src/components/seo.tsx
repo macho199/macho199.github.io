@@ -6,14 +6,15 @@ import {
   serializeJsonLd,
 } from "../lib/blog-posting.mjs"
 
-type SeoProps = {
+type SeoProps = Readonly<{
   title?: string
   description?: string
   pathname: string
   type?: "article" | "website"
   publishedAt?: string
   tags?: string[]
-}
+  robots?: "noindex, nofollow"
+}>
 
 type SiteMetadataQuery = {
   site: {
@@ -35,6 +36,7 @@ const Seo = ({
   type = "website",
   publishedAt,
   tags = [],
+  robots,
 }: SeoProps) => {
   const {
     site: { siteMetadata },
@@ -88,6 +90,9 @@ const Seo = ({
       <meta id="twitter-card" name="twitter:card" content="summary" />
       <meta id="twitter-title" name="twitter:title" content={pageTitle} />
       <meta id="twitter-description" name="twitter:description" content={pageDescription} />
+      {robots ? (
+        <meta id="robots" name="robots" content={robots} />
+      ) : null}
       {type === "article" && publishedAt ? (
         <meta id="article-published-time" property="article:published_time" content={publishedAt} />
       ) : null}
